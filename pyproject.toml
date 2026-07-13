@@ -1,7 +1,49 @@
 [project]
-name = "project"
+name = "ai-sqli-detection"
 version = "0.1.0"
-description = "Add your description here"
+description = "AI-based SQL Injection Detection System (two-branch: supervised + anomaly detection)"
 readme = "README.md"
 requires-python = ">=3.12"
-dependencies = []
+
+# Core (lightweight) stack — safe to install; needed for the Day-1 experiment,
+# the TF-IDF+GBM branch, anomaly detection, decision layer, and the API.
+dependencies = [
+    "pyyaml>=6.0",
+    "python-dotenv>=1.0",
+    "numpy>=1.26",
+    "pandas>=2.2",
+    "scikit-learn>=1.5",
+    "scipy>=1.13",
+    "fastapi>=0.111",
+    "uvicorn>=0.30",
+    "pydantic>=2.7",
+]
+
+[project.optional-dependencies]
+# Gradient boosting candidates for Branch 1.
+gbm = [
+    "xgboost>=2.0",
+    "lightgbm>=4.3",
+]
+# Transformer path — HEAVY (torch, transformers). Install only if the Day-1
+# experiment picks DistilBERT over the lightweight option.
+transformer = [
+    "torch>=2.3",
+    "transformers>=4.42",
+]
+# Optional inference optimisation for the transformer path.
+inference = [
+    "ctranslate2>=4.3",
+]
+dev = [
+    "pytest>=8.2",
+    "matplotlib>=3.9",
+    "jupyter>=1.0",
+]
+
+[tool.pytest.ini_options]
+pythonpath = ["."]
+testpaths = ["tests"]
+
+[tool.setuptools.packages.find]
+include = ["src*", "api*"]
