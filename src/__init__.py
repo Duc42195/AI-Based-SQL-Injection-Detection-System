@@ -1,10 +1,12 @@
 """AI-based SQL Injection Detection System.
 
-Top-level package for the two-branch detection pipeline:
+Top-level package for the three-branch detection pipeline:
 
-* Branch 1 (supervised): binary SQLi / Normal classifier.
+* Branch 1 (supervised): multi-class classifier (Normal + SQLi subtypes).
 * Branch 2 (anomaly detection): One-Class model trained only on Normal
-  traffic to catch zero-day / novel attacks.
+  traffic to catch zero-day / novel attacks; emits a continuous score.
+* Branch 3 (session-level): sequence model over a session that fuses Branch-1
+  embeddings with Branch-2 scores to catch Blind SQLi / query-splitting.
 
 Sub-packages
 ------------

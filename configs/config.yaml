@@ -24,23 +24,59 @@ preprocessing:
   lowercase_keywords: true
   mark_comments: true
 
+# Multi-class label schema for Branch 1 (adjust to what the data actually has).
+# Branch 3 (session) inherits these as its per-query base labels.
+labels:
+  classes:
+    normal: 0
+    union_based: 1
+    error_based: 2
+    boolean_blind: 3
+    time_blind: 4
+    stacked: 5
+
 branch1_supervised:
-  # Candidate architectures compared on Day 1; final choice is data-driven.
-  #   "tfidf_gbm" (lightweight)  |  "distilbert" (transformer)
+  # Candidate architectures compared Day 1-2; final choice is data-driven
+  # (F1-macro vs latency vs model size). Do NOT default to a transformer.
+  #   "tfidf_gbm"  |  "distilbert"  |  "cnn_sqltok"
   architecture: "tfidf_gbm"
-  # Probability threshold above which a query is flagged as SQLi.
+  multiclass: true
+  # Probability threshold above which a query is flagged as SQLi (any attack class).
   decision_threshold: 0.5
   tfidf:
     analyzer: "char_wb"
     ngram_min: 2
     ngram_max: 4
     max_features: 50000
+  distilbert:
+    pretrained: "distilbert-base-uncased"
+    max_length: 128
+    batch_size: 32
+    epochs: 3
+    learning_rate: 5.0e-5
 
 branch2_anomaly:
+  # Trained on BENIGN ONLY. Output is a continuous anomaly score used both as a
+  # per-query zero-day flag and as an extra feature dim fed into Branch 3.
   # "isolation_forest" | "one_class_svm"
   algorithm: "isolation_forest"
   # Expected fraction of anomalies in the (Normal) training data.
   contamination: 0.01
+
+branch3_session:
+  # Session-level sequence model (main contribution). Per-step input =
+  # [content embedding (Branch 1 encoder) ⊕ anomaly score (Branch 2)].
+  # Session = session-id, or (client IP + idle-gap window).
+  enabled: true
+  session_idle_gap_seconds: 1800   # 30-min inactivity ends a session
+  sequence_model: "gru"            # "gru" | "transformer"
+  max_session_len: 64
+  # Session label schema (0=benign; attack types that only appear across queries).
+  session_classes:
+    benign: 0
+    boolean_blind: 1
+    time_blind: 2
+    query_splitting: 3
 
 decision:
   # Overkill policy: SQLi=0 & Anomaly=1 -> hold for Admin review.
