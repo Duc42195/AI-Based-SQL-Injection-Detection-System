@@ -8,3 +8,22 @@ wheels/
 
 # Virtual environments
 .venv
+
+# Local env / secrets
+.env
+
+# Data artifacts (keep dir structure via .gitkeep, ignore contents)
+data/**/*.csv
+data/**/*.jsonl
+data/**/*.db
+data/**/*.parquet
+
+# Model binaries (versioned dirs tracked, large weights ignored)
+models/**/*.pkl
+models/**/*.joblib
+models/**/*.bin
+models/**/*.pt
+models/**/*.safetensors
+
+# Notebook checkpoints
+.ipynb_checkpoints/
