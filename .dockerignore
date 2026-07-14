@@ -1,0 +1,12 @@
+.git/
+.gitignore
+.gitkeep
+data/
+models/
+notebooks/
+__pycache__/
+*.pyc
+.env
+.venv/
+.ruff_cache/
+.pytest_cache/
