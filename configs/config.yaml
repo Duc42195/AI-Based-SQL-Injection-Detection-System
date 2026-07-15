@@ -54,6 +54,16 @@ branch1_supervised:
     batch_size: 32
     epochs: 3
     learning_rate: 5.0e-5
+  # Per-class undersample target when building data/processed/nhanh1_train.csv.
+  # Classes with fewer available rows than this are kept in full (see
+  # data_contract.md Muc 2.1). synthetic_stacked_count = size of the
+  # generated `stacked` batch (no real-world source has this class).
+  balance:
+    target_per_class: 15000
+    # Full unique pool from src/preprocessing/synthetic_stacked.py (11 prefixes
+    # x 11 statements x 3 terminators = 363). No real source has this class.
+    synthetic_stacked_count: 363
+    test_fraction: 0.2
 
 branch2_anomaly:
   # Trained on BENIGN ONLY. Output is a continuous anomaly score used both as a

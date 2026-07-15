@@ -32,7 +32,13 @@ LABEL_NAMES: dict[int, str] = {
 
 # Checked in this exact order; first match wins.
 _RULES: list[tuple[int, re.Pattern[str]]] = [
-    (LABEL_STACKED, re.compile(r";\s*(DROP|INSERT|UPDATE|DELETE|EXEC)", re.IGNORECASE)),
+    (
+        LABEL_STACKED,
+        re.compile(
+            r";\s*(DROP|INSERT|UPDATE|DELETE|EXEC|TRUNCATE|CREATE|GRANT|ALTER)",
+            re.IGNORECASE,
+        ),
+    ),
     (
         LABEL_TIME_BLIND,
         re.compile(r"SLEEP\(|BENCHMARK\(|WAITFOR\s+DELAY|PG_SLEEP\(", re.IGNORECASE),

@@ -49,7 +49,7 @@ File: `data/processed/nhanh1_train.csv` (sản phẩm Ngày 2).
 | `error_based` | 373 | 0 | 7.423 | 7.796 | giữ hết (~7.800) |
 | `boolean_blind` | 8.619 | 145 | 126.926 | 135.690 | ~15.000 (undersample) |
 | `time_blind` | 141 | 16 | 32.747 | 32.904 | ~15.000 (undersample) |
-| `stacked` | 0 | 0 | 0 | **0** | ~1.000-2.000 (**sinh tổng hợp**, không nguồn thật nào có) |
+| `stacked` | 0 | 0 | 0 | **0** | **363** (**sinh tổng hợp** — toàn bộ pool duy nhất từ `src/preprocessing/synthetic_stacked.py`, 11 prefix × 11 câu lệnh × 3 hậu tố, không nguồn thật nào có) |
 
 **3 vấn đề đã xác nhận, cần xử lý ở Ngày 2:**
 1. **`stacked` = 0 tuyệt đối** ở cả 3 nguồn (đã thử regex chặt lẫn lỏng) → phải tự viết payload tổng hợp theo template (`'; DROP TABLE...`, `'; EXEC xp_cmdshell...`), gắn `source=synthetic_stacked`, ghi rõ trong báo cáo đây là dữ liệu tự tạo không phải thu thập thật.
@@ -73,7 +73,7 @@ Thứ tự ưu tiên khi một payload khớp nhiều dấu hiệu: **stacked > 
 | `2` | `error_based` | Ép DB lộ dữ liệu qua lỗi | `EXTRACTVALUE\|UPDATEXML\|FLOOR\(RAND\|CAST\(.*AS\|CONVERT\(` |
 | `3` | `boolean_blind` | Suy luận qua điều kiện đúng/sai | `(OR\|AND)\s+\d+\s*=\s*\d+`, `'\s*OR\s*'?1'?\s*=\s*'?1` (rổ chứa cuối cho các payload tấn công còn lại không khớp luật khác) |
 | `4` | `time_blind` | Suy luận qua độ trễ phản hồi | `SLEEP\(\|BENCHMARK\(\|WAITFOR\s+DELAY\|PG_SLEEP\(` |
-| `5` | `stacked` | Nối câu lệnh thứ 2 qua `;` | `;\s*(DROP\|INSERT\|UPDATE\|DELETE\|EXEC)` |
+| `5` | `stacked` | Nối câu lệnh thứ 2 qua `;` | `;\s*(DROP\|INSERT\|UPDATE\|DELETE\|EXEC\|TRUNCATE\|CREATE\|GRANT\|ALTER)` |
 
 **Sanity-check bắt buộc (Ngày 2):** lấy mẫu ngẫu nhiên ~100 payload/lớp, kiểm tra tay tỷ lệ tagger gán đúng — ghi số liệu vào báo cáo (Mục 6.2). Nhãn tự động, không phải nhãn "vàng" (gold), phải minh bạch điều này.
 

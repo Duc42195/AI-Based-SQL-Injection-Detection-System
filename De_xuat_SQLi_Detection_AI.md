@@ -104,7 +104,7 @@ Verify thực tế trên D1 (SQLiV3) cho thấy dataset quá nghèo để phân 
 
 - **D7 — SR-BH 2020** ([Harvard Dataverse](https://dataverse.harvard.edu/dataset.xhtml?persistentId=doi:10.7910/DVN/OGOIXX)): honeypot thật, thu 12 ngày (2020), đa nhãn CAPEC. 527.813 dòng, 250.285 dòng gắn nhãn gốc `SQL Injection`.
 - Sau khi tự tag lại (không tin nhãn gốc — phát hiện nhiễu nhãn, có dòng static asset bị gắn nhầm SQLi): bổ sung thêm `union_based` +83.189, `error_based` +7.423, `boolean_blind` +126.926, `time_blind` +32.747.
-- **`stacked` = 0 mẫu ở cả D1+D4+D7** (đã thử cả regex chặt lẫn lỏng) → không có nguồn public nào chứa kỹ thuật này. Xử lý: **sinh tổng hợp** ~1.000-2.000 mẫu theo template (`'; DROP TABLE...`, `'; EXEC xp_cmdshell...`), gắn nguồn `synthetic_stacked` và nêu rõ trong Hạn chế (Mục 7) — đây là dữ liệu tự tạo, không phải thu thập thật.
+- **`stacked` = 0 mẫu ở cả D1+D4+D7** (đã thử cả regex chặt lẫn lỏng) → không có nguồn public nào chứa kỹ thuật này. Xử lý: **sinh tổng hợp 363 mẫu duy nhất** (template hoá 11 prefix × 11 câu lệnh phá hoại/leo thang quyền × 3 hậu tố comment — con số thực tế, không phải ước tính ban đầu ~1-2K), gắn nguồn `synthetic_stacked` và nêu rõ trong Hạn chế (Mục 7) — đây là dữ liệu tự tạo, không phải thu thập thật. Quy mô nhỏ hơn nhiều so với các lớp khác (~15K) là hạn chế cần nêu rõ.
 - **Chiến lược cân bằng:** undersample các lớp lớn (`union_based`, `boolean_blind`, `time_blind`) về cùng bậc độ lớn (~15.000/lớp), giữ nguyên toàn bộ `error_based` (~7.800, không đủ để undersample). Dùng **F1-macro** làm metric chính cho Nhánh 1 (Accuracy không phản ánh đúng do mất cân bằng gốc).
 - Chi tiết số liệu đầy đủ (bảng theo từng nguồn, ví dụ nhiễu nhãn cụ thể): xem `data_contract.md`.
 

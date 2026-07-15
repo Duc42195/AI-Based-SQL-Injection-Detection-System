@@ -50,3 +50,9 @@ def test_priority_stacked_over_time_blind() -> None:
 def test_unmatched_attack_falls_back_to_boolean_blind() -> None:
     text = "create user name identified by pass123"
     assert tag_query(text, is_attack=True) == LABEL_BOOLEAN_BLIND
+
+
+def test_stacked_with_ddl_and_privilege_keywords() -> None:
+    for stmt in ["TRUNCATE TABLE users", "CREATE USER hacker", "GRANT ALL PRIVILEGES", "ALTER TABLE users"]:
+        text = f"1; {stmt}--"
+        assert tag_query(text, is_attack=True) == LABEL_STACKED, text
