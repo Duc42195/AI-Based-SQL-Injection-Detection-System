@@ -98,6 +98,16 @@ Vì chưa dataset SQLi nào có sẵn nhãn theo session, đề tài tự địn
 - Tầng câu (per-query, giữ như D1): 0 = Normal, 1 = SQLi.
 - Tầng session (mới): 0 = Benign, 1 = Blind Boolean-based, 2 = Blind Time-based, 3 = Query-splitting/multi-step.
 
+### 4.5 Cập nhật nguồn dữ liệu Nhánh 1 — bổ sung D7, xử lý mất cân bằng lớp (15/7)
+
+Verify thực tế trên D1 (SQLiV3) cho thấy dataset quá nghèo để phân loại đa lớp: **0 mẫu `stacked`**, và lớp `boolean_blind` chỉ là "rổ chứa" các payload không khớp 4 luật kia (gồm cả DDL không liên quan). Cần bổ sung nguồn:
+
+- **D7 — SR-BH 2020** ([Harvard Dataverse](https://dataverse.harvard.edu/dataset.xhtml?persistentId=doi:10.7910/DVN/OGOIXX)): honeypot thật, thu 12 ngày (2020), đa nhãn CAPEC. 527.813 dòng, 250.285 dòng gắn nhãn gốc `SQL Injection`.
+- Sau khi tự tag lại (không tin nhãn gốc — phát hiện nhiễu nhãn, có dòng static asset bị gắn nhầm SQLi): bổ sung thêm `union_based` +83.189, `error_based` +7.423, `boolean_blind` +126.926, `time_blind` +32.747.
+- **`stacked` = 0 mẫu ở cả D1+D4+D7** (đã thử cả regex chặt lẫn lỏng) → không có nguồn public nào chứa kỹ thuật này. Xử lý: **sinh tổng hợp** ~1.000-2.000 mẫu theo template (`'; DROP TABLE...`, `'; EXEC xp_cmdshell...`), gắn nguồn `synthetic_stacked` và nêu rõ trong Hạn chế (Mục 7) — đây là dữ liệu tự tạo, không phải thu thập thật.
+- **Chiến lược cân bằng:** undersample các lớp lớn (`union_based`, `boolean_blind`, `time_blind`) về cùng bậc độ lớn (~15.000/lớp), giữ nguyên toàn bộ `error_based` (~7.800, không đủ để undersample). Dùng **F1-macro** làm metric chính cho Nhánh 1 (Accuracy không phản ánh đúng do mất cân bằng gốc).
+- Chi tiết số liệu đầy đủ (bảng theo từng nguồn, ví dụ nhiễu nhãn cụ thể): xem `data_contract.md`.
+
 ---
 
 ## 5. Cơ chế kết hợp và Ra quyết định — cập nhật 3 nhánh
