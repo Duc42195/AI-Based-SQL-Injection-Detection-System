@@ -56,6 +56,25 @@ File: `data/processed/nhanh1_train.csv` (sản phẩm Ngày 2).
 2. **`boolean_blind` là rổ chứa cuối, có nhiễu thật** — sanity-check tay trên mẫu SR-BH phát hiện dòng hoàn toàn benign (`/blog/wp-includes/js/comment-reply.min.js?ver=4.9.5`) vẫn mang nhãn gốc `SQL Injection=1` của SR-BH. **Không dùng nhãn gốc SR-BH làm chân lý tuyệt đối** — vẫn áp tagger của mình lên trên, và bắt buộc sanity-check tay ~100 mẫu/lớp trước khi train (Mục 3 gốc).
 3. **Mất cân bằng nặng tự nhiên** (`boolean_blind`/`union_based` gấp 17-350 lần `error_based`) → undersample các lớp lớn về cùng bậc độ lớn (~15K), dùng **F1-macro** làm metric chính, không dùng Accuracy.
 
+## 3.1. Kết quả build thực tế (`scripts/build_nhanh1_dataset.py`, chạy 15/7)
+
+**Kiểm tra chất lượng nhãn gốc D7 trước khi gộp** (SR-BH là multi-label, 1 dòng có thể mang nhiều cờ tấn công cùng lúc):
+- Trong 250.285 dòng `SQL Injection=1`: **99,1% "pure"** (không cờ tấn công khác nào bật cùng); **0,9% nhiễm chéo** (chủ yếu cùng bật `310 - Scanning for Vulnerable Software` — hợp lý, không phải lỗi).
+- Trong 152.587 dòng `Normal=1`: **0% mâu thuẫn** với bất kỳ cờ tấn công nào khác → pool benign của D7 đáng tin ở mức tổng hợp, dù từng dòng lẻ vẫn có thể nhiễu (ví dụ `cat /etc/passwd` bị gắn nhầm `boolean_blind` do tagger fallback — nhiễu nhãn gốc đơn lẻ, không phải lỗi hệ thống). → **Không lọc thêm theo cờ chéo** (tỷ lệ quá nhỏ để đáng công sức), giữ nguyên kế hoạch sanity-check tay ~100 mẫu/lớp.
+
+**Phân phối sau khi build (68.159 dòng, train=54.527 / test=13.632, stratified, seed=42):**
+
+| Nhãn | Có sẵn (D1+D4+D7+synthetic) | Lấy vào train+test |
+|---|---:|---:|
+| `normal` | 29.502 (19.517 D1 + 10.000 mẫu D7 normal + trùng lặp bị loại) | 15.000 |
+| `union_based` | 85.826 | 15.000 |
+| `error_based` | 7.796 | 7.796 (giữ hết) |
+| `boolean_blind` | 134.057 | 15.000 |
+| `time_blind` | 34.017 | 15.000 |
+| `stacked` | 363 | 363 (giữ hết) |
+
+File: `data/processed/nhanh1_train.csv` (68.159 dòng, cột đúng schema Mục 2). **Chưa qua sanity-check tay** — bắt buộc làm trước khi dùng để train chính thức (Mục 3, Ngày 3).
+
 ⚠️ **Đính chính:** tỷ lệ SQLi trong toàn bộ SR-BH (527.813 dòng) là **47,4%**, không phải tỷ lệ thấp đại diện traffic thực như nhận định ban đầu (ước tính nhanh từ mẫu 10MB đầu file bị sai do tấn công phân bố không đều theo thời gian). SR-BH hữu ích vì **đa dạng payload thật**, không phải vì "tỷ lệ thực tế".
 
 **Nguyên tắc:** `query_canonical` được sinh bởi `src/preprocessing/canonicalize.py` (Ngày 2) — một hàm thuần (pure function) để test dễ, không phụ thuộc I/O.

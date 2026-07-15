@@ -108,6 +108,8 @@ Verify thực tế trên D1 (SQLiV3) cho thấy dataset quá nghèo để phân 
 - **Chiến lược cân bằng:** undersample các lớp lớn (`union_based`, `boolean_blind`, `time_blind`) về cùng bậc độ lớn (~15.000/lớp), giữ nguyên toàn bộ `error_based` (~7.800, không đủ để undersample). Dùng **F1-macro** làm metric chính cho Nhánh 1 (Accuracy không phản ánh đúng do mất cân bằng gốc).
 - Chi tiết số liệu đầy đủ (bảng theo từng nguồn, ví dụ nhiễu nhãn cụ thể): xem `data_contract.md`.
 
+**Cập nhật 15/7 — đã build xong `data/processed/nhanh1_train.csv`:** kiểm tra chéo nhãn gốc D7 (dataset đa nhãn) trước khi gộp cho thấy chất lượng chấp nhận được ở mức tổng hợp — 99,1% dòng `SQL Injection=1` không dính cờ tấn công khác (0,9% còn lại chủ yếu trùng với cờ "Scanning", hợp lý), và 0% dòng `Normal=1` mâu thuẫn với cờ tấn công khác. Quyết định: **không lọc thêm theo cờ chéo**, giữ kế hoạch sanity-check tay ~100 mẫu/lớp (chưa làm — bắt buộc trước khi train chính thức Ngày 3). Kết quả: **68.159 dòng** (train 54.527 / test 13.632, stratified, seed=42), 15.000/lớp cho 3 lớp lớn, giữ nguyên `error_based` (7.796) và `stacked` (363).
+
 ---
 
 ## 5. Cơ chế kết hợp và Ra quyết định — cập nhật 3 nhánh
