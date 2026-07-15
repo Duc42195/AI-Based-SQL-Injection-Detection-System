@@ -19,11 +19,11 @@ from __future__ import annotations
 import csv
 import random
 from pathlib import Path
-from urllib.parse import unquote_plus
 
 from sklearn.model_selection import train_test_split
 
 from src.preprocessing.canonicalize import canonicalize
+from src.preprocessing.data_sources import load_d1, load_d4, load_d7
 from src.preprocessing.multiclass_tagger import LABEL_NAMES, matches_any_attack_signature, tag_query
 from src.preprocessing.synthetic_stacked import generate_synthetic_stacked
 from src.utils import get_logger, load_config
@@ -31,95 +31,6 @@ from src.utils import get_logger, load_config
 logger = get_logger(__name__)
 
 csv.field_size_limit(10_000_000)
-
-
-def _load_d1(path: Path) -> list[tuple[str, bool, str]]:
-    """Load D1 SQLiV3 raw rows, dropping null/empty text.
-
-    Returns:
-        List of (raw_text, is_attack, source) tuples.
-    """
-    rows: list[tuple[str, bool, str]] = []
-    seen: set[str] = set()
-    with path.open(encoding="utf-8") as f:
-        for r in csv.reader(f):
-            if len(r) < 2 or r[1] not in ("0", "1"):
-                continue
-            text = r[0].strip()
-            if not text or text in seen:
-                continue
-            seen.add(text)
-            rows.append((text, r[1] == "1", "d1_sqliv3"))
-    logger.info("D1: loaded %d unique non-empty rows from %s", len(rows), path)
-    return rows
-
-
-def _load_d4(dir_path: Path) -> list[tuple[str, bool, str]]:
-    """Load D4 payload-box lines (all treated as attack payloads).
-
-    Returns:
-        List of (raw_text, is_attack, source) tuples.
-    """
-    rows: list[tuple[str, bool, str]] = []
-    seen: set[str] = set()
-    for file in sorted(dir_path.glob("*.txt")):
-        for line in file.read_text(encoding="utf-8", errors="ignore").splitlines():
-            line = line.strip()
-            if not line or line in seen:
-                continue
-            seen.add(line)
-            rows.append((line, True, "d4_payloadbox"))
-    logger.info("D4: loaded %d unique payload lines from %s", len(rows), dir_path)
-    return rows
-
-
-def _load_d7(path: Path, normal_sample_size: int, seed: int) -> list[tuple[str, bool, str]]:
-    """Load D7 SR-BH 2020 attack rows (full) + a sampled subset of normal rows.
-
-    Args:
-        path: Path to data_capec_multilabel.csv.
-        normal_sample_size: Max number of Normal==1 rows to sample for
-            benign diversity (source dataset has 152,587 such rows).
-        seed: Random seed for the normal-row reservoir sample.
-
-    Returns:
-        List of (raw_text, is_attack, source) tuples.
-    """
-    attack_rows: list[tuple[str, bool, str]] = []
-    normal_pool: list[str] = []
-    rng = random.Random(seed)
-    normal_seen = 0
-
-    with path.open(encoding="utf-8", errors="replace", newline="") as f:
-        reader = csv.DictReader(f)
-        sqli_col = next(c for c in reader.fieldnames if "SQL Injection" in c)
-        normal_col = next(c for c in reader.fieldnames if "Normal" in c)
-        for row in reader:
-            text = (row.get("request_http_request") or "") + " " + (row.get("request_body") or "")
-            text = unquote_plus(text).strip()
-            if not text:
-                continue
-            if row.get(sqli_col) == "1":
-                attack_rows.append((text, True, "d7_srbh2020"))
-            elif row.get(normal_col) == "1":
-                normal_seen += 1
-                # reservoir sampling to get an unbiased sample without loading all 152K
-                if len(normal_pool) < normal_sample_size:
-                    normal_pool.append(text)
-                else:
-                    j = rng.randint(0, normal_seen - 1)
-                    if j < normal_sample_size:
-                        normal_pool[j] = text
-
-    logger.info(
-        "D7: loaded %d attack rows, sampled %d/%d normal rows from %s",
-        len(attack_rows),
-        len(normal_pool),
-        normal_seen,
-        path,
-    )
-    normal_rows = [(t, False, "d7_srbh2020_normal") for t in normal_pool]
-    return attack_rows + normal_rows
 
 
 def _load_synthetic_stacked(limit: int) -> list[tuple[str, bool, str]]:
@@ -181,12 +92,17 @@ def main() -> None:
     processed_dir.mkdir(parents=True, exist_ok=True)
 
     logger.info("=== Loading raw sources ===")
-    all_rows = (
-        _load_d1(raw_dir / "d1_sqliv3_raw.csv")
-        + _load_d4(raw_dir / "payload_box")
-        + _load_d7(raw_dir / "sr_bh_2020" / "data_capec_multilabel.csv", normal_sample_size=10000, seed=seed)
-        + _load_synthetic_stacked(limit=synthetic_count)
+    d1_rows = load_d1(raw_dir / "d1_sqliv3_raw.csv")
+    logger.info("D1: loaded %d unique non-empty rows", len(d1_rows))
+    d4_rows = load_d4(raw_dir / "payload_box")
+    logger.info("D4: loaded %d unique payload lines", len(d4_rows))
+    d7_rows = load_d7(
+        raw_dir / "sr_bh_2020" / "data_capec_multilabel.csv", normal_sample_size=10000, seed=seed
     )
+    logger.info("D7: loaded %d rows (attack + sampled normal)", len(d7_rows))
+    synthetic_rows = _load_synthetic_stacked(limit=synthetic_count)
+
+    all_rows = d1_rows + d4_rows + d7_rows + synthetic_rows
     logger.info("Total raw rows before canonicalize/tag: %d", len(all_rows))
 
     logger.info("=== Canonicalizing + tagging ===")

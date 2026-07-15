@@ -81,6 +81,11 @@ def test_matches_any_attack_signature_true_for_ssi_injection() -> None:
     assert matches_any_attack_signature('<!--#exec cmd="ls /"-->')
 
 
+def test_matches_any_attack_signature_true_for_xss() -> None:
+    assert matches_any_attack_signature("/'\"<script>alert(1);</script>/page")
+    assert matches_any_attack_signature("<img onerror=alert(1)>")
+
+
 def test_matches_any_attack_signature_false_for_benign_text() -> None:
     assert not matches_any_attack_signature("/blog/wp-content/uploads/2020/04/photo.png")
     assert not matches_any_attack_signature("select * from users where id = 1")

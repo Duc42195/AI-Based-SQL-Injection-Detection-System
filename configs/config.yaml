@@ -72,6 +72,15 @@ branch2_anomaly:
   algorithm: "isolation_forest"
   # Expected fraction of anomalies in the (Normal) training data.
   contamination: 0.01
+  # Statistical/structural features extracted per query (not TF-IDF - Branch 2
+  # needs to generalize to unseen syntax, so features describe SHAPE not content).
+  features:
+    - "length"
+    - "special_char_ratio"
+    - "sql_keyword_count"
+    - "entropy"
+  # Held-out split of the benign pool for evaluating FPR (build_nhanh2_dataset.py).
+  test_fraction: 0.2
 
 branch3_session:
   # Session-level sequence model (main contribution). Per-step input =

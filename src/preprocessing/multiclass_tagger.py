@@ -74,6 +74,13 @@ _OS_COMMAND_INJECTION_RE = re.compile(
 # command injection cases above.
 _SSI_INJECTION_RE = re.compile(r"<!--#(exec|include|echo)\s", re.IGNORECASE)
 
+# XSS markers, also found during manual sanity-check ('/blog/\'"<script>alert(1);
+# </script>/...' labeled "Normal" by SR-BH). Still not a general web-attack
+# filter: SSRF callback URLs (e.g. requests to an external oastify/owasp.org
+# domain) have no generic, non-dataset-specific signature and are NOT covered
+# here - documented as a residual limitation.
+_XSS_RE = re.compile(r"<script[^>]*>|javascript:|on(error|load)\s*=", re.IGNORECASE)
+
 
 def matches_any_attack_signature(text: str) -> bool:
     """Check whether text matches any known SQLi or OS-command-injection signature.
@@ -89,7 +96,11 @@ def matches_any_attack_signature(text: str) -> bool:
         True if any attack signature (SQLi sub-type or OS command injection)
         is found in ``text``.
     """
-    if _OS_COMMAND_INJECTION_RE.search(text) or _SSI_INJECTION_RE.search(text):
+    if (
+        _OS_COMMAND_INJECTION_RE.search(text)
+        or _SSI_INJECTION_RE.search(text)
+        or _XSS_RE.search(text)
+    ):
         return True
     return any(pattern.search(text) for _, pattern in _RULES)
 

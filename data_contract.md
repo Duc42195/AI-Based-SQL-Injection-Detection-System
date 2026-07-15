@@ -90,6 +90,28 @@ File: `data/processed/nhanh1_train.csv` (68.159 dòng, cột đúng schema Mục
 
 ---
 
+## 3.2. Kết quả build Nhánh 2 (`scripts/build_nhanh2_dataset.py`, chạy 15/7)
+
+**Quyết định kiến trúc:** dùng chung module lọc benign (`matches_any_attack_signature`, `data_sources.py`) với Nhánh 1 thay vì viết pipeline riêng — tránh 2 nguồn "sự thật" lệch nhau về thế nào là normal sạch. Khác biệt với Nhánh 1: **không cap số lượng** (Nhánh 2 không cần cân bằng lớp, càng nhiều normal càng tốt cho ước lượng "vùng an toàn"), và **không dùng TF-IDF** — dùng 4 đặc trưng thống kê/cấu trúc (`length`, `special_char_ratio`, `sql_keyword_count`, `entropy` — xem `src/preprocessing/statistical_features.py`) vì Nhánh 2 cần tổng quát hoá tới cú pháp chưa từng thấy, không thể dựa vào từ khóa cụ thể.
+
+**Nguồn:** D1 (30.789) + D3 CSIC2010 cả 2 split normal (97.065, đã trích URL+body từ raw HTTP qua `load_d3()`) + D7 toàn bộ `Normal=1` (không sample như Nhánh 1) → tổng 402.870 dòng ứng viên trước lọc.
+
+**Kết quả:**
+| Bước | Số dòng |
+|---|---:|
+| Ứng viên ban đầu (D1+D3+D7 normal) | ~528.724 |
+| Sau lọc `matches_any_attack_signature` | 204.934 (loại 39.153, ~7,4%) |
+| Sau dedup theo `query_canonical` | **91.935** (loại thêm 112.999 trùng lặp — D3/D7 có nhiều URL asset tĩnh lặp lại) |
+| Train / Test (seed=42) | 73.548 / 18.387 |
+
+File: `data/processed/nhanh2_normal.csv` (91.935 dòng) + `data/processed/nhanh2_anomalous_eval.csv` (25.065 dòng D3 anomalous, giữ riêng để đánh giá FPR/detection rate ở Ngày 5-6, không dùng để train).
+
+**⚠️ Phát hiện khi so sánh feature giữa 2 tập (đáng lưu ý khi train/đánh giá thật):** tập `anomalous` (D3) có `sql_keyword_count` trung bình **thấp hơn** tập normal (0,13 vs 0,35) dù dài hơn (137 vs 92 ký tự). Lý do: D3 "anomalous" gồm **nhiều loại tấn công** (buffer overflow, XSS, path traversal, CRLF...), không chỉ SQLi — đặc trưng `sql_keyword_count` không phải tín hiệu mạnh cho toàn bộ tập test này. Cần lọc riêng phần SQLi trong D3 anomalous nếu muốn đánh giá đúng khả năng bắt SQLi zero-day của Nhánh 2, hoặc chấp nhận đây là benchmark "phát hiện bất thường nói chung", không riêng SQLi.
+
+**Also phát hiện:** `length` có outlier rất lớn (max 5.370 ký tự trong pool normal) — cần cân nhắc chuẩn hoá/log-transform feature này trước khi train Isolation Forest, tránh outlier chi phối khoảng cách.
+
+---
+
 ## 3. Bảng nhãn đa lớp (Nhánh 1) — áp dụng bằng rule-based tagger
 
 Thứ tự ưu tiên khi một payload khớp nhiều dấu hiệu: **stacked > time_blind > error_based > union_based > boolean_blind**.
@@ -139,7 +161,10 @@ File: `data/processed/nhanh3_sessions_labeled.csv` (Ngày 8, sau khi có D1 gán
 
 ## 5. Việc còn lại liên quan tới contract này (không thuộc phạm vi Ngày 1)
 
-- [ ] Viết `src/preprocessing/canonicalize.py` theo đúng cột `query_canonical` + `has_comment_marker` ở trên (Ngày 2).
-- [ ] Viết rule-based tagger đa lớp (Mục 3) + sanity-check tay (Ngày 2, trước khi train Ngày 3).
-- [ ] Trích tham số từ `raw_request` của D3 (query string/POST body) trước khi canonicalize (Ngày 2, phần Nhánh 2 — Bách).
+- [x] Viết `src/preprocessing/canonicalize.py` theo đúng cột `query_canonical` + `has_comment_marker` ở trên (Ngày 2).
+- [x] Viết rule-based tagger đa lớp (Mục 3) + sanity-check tay (Ngày 2, trước khi train Ngày 3).
+- [x] Trích tham số từ `raw_request` của D3 (query string/POST body) trước khi canonicalize — `load_d3()` trong `src/preprocessing/data_sources.py` (15/7).
+- [x] Build `data/processed/nhanh2_normal.csv` (Mục 3.2, 15/7).
 - [ ] Bổ sung D4 (payload-box) cho lớp hiếm sau khi đo phân phối thực tế.
+- [ ] Train Isolation Forest thật cho Nhánh 2 (chưa làm — mới build dataset), đánh giá FPR/detection rate trên `nhanh2_anomalous_eval.csv`.
+- [ ] Nhánh 3: chưa bắt đầu — phụ thuộc Docker lab + sqlmap traffic (Ngày 8-9 theo kế hoạch), chưa nên build data giả trước khi có traffic thật.
