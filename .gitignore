@@ -17,6 +17,7 @@ data/**/*.csv
 data/**/*.jsonl
 data/**/*.db
 data/**/*.parquet
+data/**/*.txt
 
 # Model binaries (versioned dirs tracked, large weights ignored)
 models/**/*.pkl
