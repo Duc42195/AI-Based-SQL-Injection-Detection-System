@@ -9,6 +9,7 @@ from src.preprocessing.multiclass_tagger import (
     LABEL_STACKED,
     LABEL_TIME_BLIND,
     LABEL_UNION_BASED,
+    matches_any_attack_signature,
     tag_query,
 )
 
@@ -56,3 +57,22 @@ def test_stacked_with_ddl_and_privilege_keywords() -> None:
     for stmt in ["TRUNCATE TABLE users", "CREATE USER hacker", "GRANT ALL PRIVILEGES", "ALTER TABLE users"]:
         text = f"1; {stmt}--"
         assert tag_query(text, is_attack=True) == LABEL_STACKED, text
+
+
+def test_matches_any_attack_signature_true_for_sqli() -> None:
+    assert matches_any_attack_signature("/blog / sleep(15) /index.php")
+
+
+def test_matches_any_attack_signature_true_for_os_command_injection() -> None:
+    assert matches_any_attack_signature("/blog/wp-includes/js;cat /etc/passwd;/jquery")
+    assert matches_any_attack_signature("test $(whoami) end")
+    assert matches_any_attack_signature("test `whoami` end")
+
+
+def test_matches_any_attack_signature_true_for_shellshock() -> None:
+    assert matches_any_attack_signature("() { :;}; /bin/sleep 15")
+
+
+def test_matches_any_attack_signature_false_for_benign_text() -> None:
+    assert not matches_any_attack_signature("/blog/wp-content/uploads/2020/04/photo.png")
+    assert not matches_any_attack_signature("select * from users where id = 1")

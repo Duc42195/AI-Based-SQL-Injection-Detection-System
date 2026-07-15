@@ -60,20 +60,25 @@ File: `data/processed/nhanh1_train.csv` (sản phẩm Ngày 2).
 
 **Kiểm tra chất lượng nhãn gốc D7 trước khi gộp** (SR-BH là multi-label, 1 dòng có thể mang nhiều cờ tấn công cùng lúc):
 - Trong 250.285 dòng `SQL Injection=1`: **99,1% "pure"** (không cờ tấn công khác nào bật cùng); **0,9% nhiễm chéo** (chủ yếu cùng bật `310 - Scanning for Vulnerable Software` — hợp lý, không phải lỗi).
-- Trong 152.587 dòng `Normal=1`: **0% mâu thuẫn** với bất kỳ cờ tấn công nào khác → pool benign của D7 đáng tin ở mức tổng hợp, dù từng dòng lẻ vẫn có thể nhiễu (ví dụ `cat /etc/passwd` bị gắn nhầm `boolean_blind` do tagger fallback — nhiễu nhãn gốc đơn lẻ, không phải lỗi hệ thống). → **Không lọc thêm theo cờ chéo** (tỷ lệ quá nhỏ để đáng công sức), giữ nguyên kế hoạch sanity-check tay ~100 mẫu/lớp.
+- Trong 152.587 dòng `Normal=1`: **0% mâu thuẫn** với bất kỳ **cờ nhãn khác** trong SR-BH. Nhưng đây chỉ là so cờ, **không phải kiểm tra nội dung**.
 
-**Phân phối sau khi build (68.159 dòng, train=54.527 / test=13.632, stratified, seed=42):**
+**⚠️ Sanity-check tay đọc trực tiếp nội dung (không chỉ so cờ) phát hiện lỗi nghiêm trọng hơn:** trong mẫu 5-20 dòng `Normal=1` của D7 đọc tay, có dòng chứa `sleep(15)` (time-blind SQLi) và `cat /etc/passwd`, `() {{ :;}}; /bin/sleep 15` (Shellshock CVE-2014-6271) — **tấn công thật bị SR-BH tự gắn nhầm `Normal=1`**, dù không mâu thuẫn với cờ nào khác của chính nó. Đây là **nhiễu nhãn thật ở mức nội dung**, không phải chỉ nhiễm chéo giữa các cờ.
+- **Xử lý:** thêm hàm `matches_any_attack_signature()` (`src/preprocessing/multiclass_tagger.py`) — lưới lọc độc lập với nhãn nguồn, kiểm tra nội dung canonical hoá có khớp bất kỳ regex tấn công SQLi (5 loại) hoặc OS command injection/Shellshock hay không. Áp cho mọi dòng được gắn `is_attack=False` trước khi chấp nhận vào pool `normal`.
+- **Kết quả:** loại **1.561 dòng** (~5,6% pool normal ứng viên) bị gắn nhầm `Normal=1` nhưng nội dung thực chất là tấn công.
+- **Giới hạn còn lại (không xử lý, ghi rõ vì ngoài phạm vi):** SR-BH có 12 loại tấn công (SSRF, path traversal...), filter hiện tại chỉ nhắm SQLi + OS command injection — các URL callback SSRF kiểu `owasp.org` vẫn có thể lọt vào pool `normal`. Chấp nhận được cho phạm vi Nhánh 1 (chỉ quan tâm SQLi), nhưng **cần làm kỹ hơn khi xây benign pool cho Nhánh 2** (anomaly detector nhạy với nhiễu benign hơn nhiều).
 
-| Nhãn | Có sẵn (D1+D4+D7+synthetic) | Lấy vào train+test |
+**Phân phối sau khi build + lọc (68.159 dòng, train=54.527 / test=13.632, stratified, seed=42):**
+
+| Nhãn | Có sẵn (D1+D4+D7+synthetic, sau lọc) | Lấy vào train+test |
 |---|---:|---:|
-| `normal` | 29.502 (19.517 D1 + 10.000 mẫu D7 normal + trùng lặp bị loại) | 15.000 |
+| `normal` | 27.941 (19.517 D1 + ~8.439 D7 normal sau khi loại 1.561 dòng nhiễu) | 15.000 |
 | `union_based` | 85.826 | 15.000 |
 | `error_based` | 7.796 | 7.796 (giữ hết) |
 | `boolean_blind` | 134.057 | 15.000 |
 | `time_blind` | 34.017 | 15.000 |
 | `stacked` | 363 | 363 (giữ hết) |
 
-File: `data/processed/nhanh1_train.csv` (68.159 dòng, cột đúng schema Mục 2). **Chưa qua sanity-check tay** — bắt buộc làm trước khi dùng để train chính thức (Mục 3, Ngày 3).
+File: `data/processed/nhanh1_train.csv` (68.159 dòng, cột đúng schema Mục 2). **Chưa qua sanity-check tay đầy đủ ~100 mẫu/lớp** (mới chỉ soi mẫu nhỏ 15-20/lớp) — nên làm thêm trước khi công bố số liệu chính thức trong báo cáo, nhưng đủ tin cậy để bắt đầu train baseline (Ngày 3).
 
 ⚠️ **Đính chính:** tỷ lệ SQLi trong toàn bộ SR-BH (527.813 dòng) là **47,4%**, không phải tỷ lệ thấp đại diện traffic thực như nhận định ban đầu (ước tính nhanh từ mẫu 10MB đầu file bị sai do tấn công phân bố không đều theo thời gian). SR-BH hữu ích vì **đa dạng payload thật**, không phải vì "tỷ lệ thực tế".
 

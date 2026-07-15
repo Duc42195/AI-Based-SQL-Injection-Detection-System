@@ -57,6 +57,37 @@ _RULES: list[tuple[int, re.Pattern[str]]] = [
     ),
 ]
 
+# Also flag plain shell/command-injection markers (";cat ", "|whoami", "$(", "` `",
+# Shellshock's "() { :;};" prefix) so rows mislabeled "Normal" by an upstream
+# source but actually containing an OS command injection / RCE attempt get
+# rejected from the benign pool too (see data_contract.md Muc 3.1 - SR-BH
+# "Normal=1" rows found containing sleep(), "cat /etc/passwd", and Shellshock
+# payloads during manual sanity-check). This is NOT a general web-attack
+# filter (SSRF callback URLs etc. from SR-BH still slip through) - out of
+# scope for a SQLi-focused Nhanh 1 dataset, documented as a known limitation.
+_OS_COMMAND_INJECTION_RE = re.compile(
+    r";\s*(cat|whoami|ping|wget|curl|nc)\s|\$\(|`[^`]+`|\(\)\s*\{\s*:;\s*\}"
+)
+
+
+def matches_any_attack_signature(text: str) -> bool:
+    """Check whether text matches any known SQLi or OS-command-injection signature.
+
+    Used as a content-based safety net: a row labeled "normal" by an upstream
+    source should still be rejected from a benign training pool if it matches
+    one of these signatures, regardless of the source's own label.
+
+    Args:
+        text: Canonicalized query/payload text.
+
+    Returns:
+        True if any attack signature (SQLi sub-type or OS command injection)
+        is found in ``text``.
+    """
+    if _OS_COMMAND_INJECTION_RE.search(text):
+        return True
+    return any(pattern.search(text) for _, pattern in _RULES)
+
 
 def tag_attack_payload(text: str) -> int:
     """Assign an attack sub-label (1-5) to a payload already known to be SQLi.

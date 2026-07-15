@@ -24,7 +24,7 @@ from urllib.parse import unquote_plus
 from sklearn.model_selection import train_test_split
 
 from src.preprocessing.canonicalize import canonicalize
-from src.preprocessing.multiclass_tagger import LABEL_NAMES, tag_query
+from src.preprocessing.multiclass_tagger import LABEL_NAMES, matches_any_attack_signature, tag_query
 from src.preprocessing.synthetic_stacked import generate_synthetic_stacked
 from src.utils import get_logger, load_config
 
@@ -191,8 +191,19 @@ def main() -> None:
 
     logger.info("=== Canonicalizing + tagging ===")
     tagged_rows: list[dict] = []
+    rejected_mislabeled_normal = 0
     for i, (text, is_attack, source) in enumerate(all_rows):
         canonical = canonicalize(text, max_decode_iterations=max_decode)
+
+        # Content-based safety net: a row an upstream source calls "normal"
+        # is still rejected if it matches a known attack signature (found via
+        # manual sanity-check: SR-BH "Normal=1" rows containing sleep() and
+        # "cat /etc/passwd" - see data_contract.md Muc 3.1). We don't trust
+        # the source's negative label blindly, only its positive one.
+        if not is_attack and matches_any_attack_signature(canonical.query_canonical):
+            rejected_mislabeled_normal += 1
+            continue
+
         label = tag_query(canonical.query_canonical, is_attack=is_attack)
         tagged_rows.append(
             {
@@ -206,6 +217,11 @@ def main() -> None:
         )
         if (i + 1) % 100000 == 0:
             logger.info("  ... processed %d/%d rows", i + 1, len(all_rows))
+
+    logger.info(
+        "Rejected %d rows labeled 'normal' by source but matching an attack signature",
+        rejected_mislabeled_normal,
+    )
 
     logger.info("=== Undersampling to target_per_class=%d ===", target_per_class)
     balanced_rows = _undersample(tagged_rows, target_per_class, seed)
