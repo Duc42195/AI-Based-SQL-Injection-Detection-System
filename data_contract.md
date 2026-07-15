@@ -13,6 +13,8 @@
 | `data/raw/csic2010/normalTrafficTest.txt` | nt. | **36.000** HTTP request thô |
 | `data/raw/csic2010/anomalousTrafficTest.txt` | nt. | **25.065** HTTP request thô |
 | `data/raw/d3_csic2010_raw.csv` | Đóng gói 3 file trên bằng `scripts/fetch_and_wrap_d3_csic2010.py` | **97.065** dòng (72.000 normal + 25.065 anomalous), cột: `id, split, label, raw_request`. Có header `Cookie: JSESSIONID=...` → dùng để nhóm session ở Nhánh 3 (Cách B benign). |
+| `data/raw/sr_bh_2020/data_capec_multilabel.csv` | **D7 — [SR-BH 2020](https://dataverse.harvard.edu/dataset.xhtml?persistentId=doi:10.7910/DVN/OGOIXX)** (honeypot thật, 12 ngày, 2020, đa nhãn CAPEC) | **527.813** dòng thật (không phải ~1 triệu như ước tính mẫu 10MB ban đầu — phân bố tấn công không đều theo thời gian trong file, ước tính bằng sampling đầu file bị sai lệch nặng). Cột `66 - SQL Injection`: **250.285** dòng (47,4% — **không phải tỷ lệ traffic thực tế**, đính chính lại nhận định trước đó). `000 - Normal`: 152.587 dòng. **Field cần decode URL-encoding trước khi tag** (`request_http_request`, `request_body`) — bỏ qua bước này làm sai lệch nghiêm trọng kết quả tagging ở lần chạy đầu. |
+| `data/raw/payload_box/*.txt` | D4 — payload-box | 177 dòng payload thô (5 file theo DBMS + burp-intruder combined) |
 
 **Lưu ý D1 (cần xử lý ở Ngày 2 — canonicalization/cleaning):**
 - Dòng lỗi CSV (dấu phẩy/quote không đúng chuẩn trong text) → phải parse bằng `csv` module với `quoting=csv.QUOTE_ALL` hoặc sửa tay dòng lỗi, không dùng `pd.read_csv` mặc định.
@@ -35,8 +37,26 @@ File: `data/processed/nhanh1_train.csv` (sản phẩm Ngày 2).
 | `has_comment_marker` | int (0/1) | Cờ đánh dấu có `/* */` hoặc `--` (KHÔNG xóa comment, chỉ đánh dấu — feature chống evasion) |
 | `label` | int (0-5) | Nhãn đa lớp — xem bảng nhãn Mục 3 |
 | `label_name` | str | Tên nhãn dạng người đọc (`normal`, `union_based`, ...) |
-| `source` | str | Nguồn gốc dòng: `d1_sqliv3`, `d1_benign_enriched_csic`, `d4_payloadbox` |
+| `source` | str | Nguồn gốc dòng: `d1_sqliv3`, `d1_benign_enriched_csic`, `d4_payloadbox`, `d7_srbh2020`, `synthetic_stacked` |
 | `split` | str | `train` / `test` / `adversarial_test` — **cố định ngay từ đầu, không random lại giữa các lần chạy** (dùng seed=42, xem `configs/config.yaml: project.random_seed`) |
+
+### 2.1. Phân phối tổng hợp thực tế (D1 + D4 + D7, đã tag bằng `src/preprocessing/multiclass_tagger.py`, decode URL trước khi tag)
+
+| Nhãn | D1 | D4 | D7 (SR-BH) | **Tổng có sẵn** | **Target lấy cho train** |
+|---|---:|---:|---:|---:|---:|
+| `normal` | 19.517 | – | 152.587 (chưa gộp) | 19.517+ | ~15.000-20.000 |
+| `union_based` | 2.213 | 16 | 83.189 | 85.418 | ~15.000 (undersample) |
+| `error_based` | 373 | 0 | 7.423 | 7.796 | giữ hết (~7.800) |
+| `boolean_blind` | 8.619 | 145 | 126.926 | 135.690 | ~15.000 (undersample) |
+| `time_blind` | 141 | 16 | 32.747 | 32.904 | ~15.000 (undersample) |
+| `stacked` | 0 | 0 | 0 | **0** | ~1.000-2.000 (**sinh tổng hợp**, không nguồn thật nào có) |
+
+**3 vấn đề đã xác nhận, cần xử lý ở Ngày 2:**
+1. **`stacked` = 0 tuyệt đối** ở cả 3 nguồn (đã thử regex chặt lẫn lỏng) → phải tự viết payload tổng hợp theo template (`'; DROP TABLE...`, `'; EXEC xp_cmdshell...`), gắn `source=synthetic_stacked`, ghi rõ trong báo cáo đây là dữ liệu tự tạo không phải thu thập thật.
+2. **`boolean_blind` là rổ chứa cuối, có nhiễu thật** — sanity-check tay trên mẫu SR-BH phát hiện dòng hoàn toàn benign (`/blog/wp-includes/js/comment-reply.min.js?ver=4.9.5`) vẫn mang nhãn gốc `SQL Injection=1` của SR-BH. **Không dùng nhãn gốc SR-BH làm chân lý tuyệt đối** — vẫn áp tagger của mình lên trên, và bắt buộc sanity-check tay ~100 mẫu/lớp trước khi train (Mục 3 gốc).
+3. **Mất cân bằng nặng tự nhiên** (`boolean_blind`/`union_based` gấp 17-350 lần `error_based`) → undersample các lớp lớn về cùng bậc độ lớn (~15K), dùng **F1-macro** làm metric chính, không dùng Accuracy.
+
+⚠️ **Đính chính:** tỷ lệ SQLi trong toàn bộ SR-BH (527.813 dòng) là **47,4%**, không phải tỷ lệ thấp đại diện traffic thực như nhận định ban đầu (ước tính nhanh từ mẫu 10MB đầu file bị sai do tấn công phân bố không đều theo thời gian). SR-BH hữu ích vì **đa dạng payload thật**, không phải vì "tỷ lệ thực tế".
 
 **Nguyên tắc:** `query_canonical` được sinh bởi `src/preprocessing/canonicalize.py` (Ngày 2) — một hàm thuần (pure function) để test dễ, không phụ thuộc I/O.
 
