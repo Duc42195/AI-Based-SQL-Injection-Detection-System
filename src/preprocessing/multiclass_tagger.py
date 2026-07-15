@@ -66,8 +66,13 @@ _RULES: list[tuple[int, re.Pattern[str]]] = [
 # filter (SSRF callback URLs etc. from SR-BH still slip through) - out of
 # scope for a SQLi-focused Nhanh 1 dataset, documented as a known limitation.
 _OS_COMMAND_INJECTION_RE = re.compile(
-    r";\s*(cat|whoami|ping|wget|curl|nc)\s|\$\(|`[^`]+`|\(\)\s*\{\s*:;\s*\}"
+    r"[;&|]\s*(cat|whoami|ping|wget|curl|nc)\s|\$\(|`[^`]+`|\(\)\s*\{\s*:;\s*\}"
 )
+
+# Server-Side Include injection (e.g. `<!--#exec cmd="ls /"-->`), found during
+# manual sanity-check mixed into SR-BH "Normal=1" rows alongside the OS
+# command injection cases above.
+_SSI_INJECTION_RE = re.compile(r"<!--#(exec|include|echo)\s", re.IGNORECASE)
 
 
 def matches_any_attack_signature(text: str) -> bool:
@@ -84,7 +89,7 @@ def matches_any_attack_signature(text: str) -> bool:
         True if any attack signature (SQLi sub-type or OS command injection)
         is found in ``text``.
     """
-    if _OS_COMMAND_INJECTION_RE.search(text):
+    if _OS_COMMAND_INJECTION_RE.search(text) or _SSI_INJECTION_RE.search(text):
         return True
     return any(pattern.search(text) for _, pattern in _RULES)
 

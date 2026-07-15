@@ -64,19 +64,23 @@ File: `data/processed/nhanh1_train.csv` (sản phẩm Ngày 2).
 
 **⚠️ Sanity-check tay đọc trực tiếp nội dung (không chỉ so cờ) phát hiện lỗi nghiêm trọng hơn:** trong mẫu 5-20 dòng `Normal=1` của D7 đọc tay, có dòng chứa `sleep(15)` (time-blind SQLi) và `cat /etc/passwd`, `() {{ :;}}; /bin/sleep 15` (Shellshock CVE-2014-6271) — **tấn công thật bị SR-BH tự gắn nhầm `Normal=1`**, dù không mâu thuẫn với cờ nào khác của chính nó. Đây là **nhiễu nhãn thật ở mức nội dung**, không phải chỉ nhiễm chéo giữa các cờ.
 - **Xử lý:** thêm hàm `matches_any_attack_signature()` (`src/preprocessing/multiclass_tagger.py`) — lưới lọc độc lập với nhãn nguồn, kiểm tra nội dung canonical hoá có khớp bất kỳ regex tấn công SQLi (5 loại) hoặc OS command injection/Shellshock hay không. Áp cho mọi dòng được gắn `is_attack=False` trước khi chấp nhận vào pool `normal`.
-- **Kết quả:** loại **1.561 dòng** (~5,6% pool normal ứng viên) bị gắn nhầm `Normal=1` nhưng nội dung thực chất là tấn công.
-- **Giới hạn còn lại (không xử lý, ghi rõ vì ngoài phạm vi):** SR-BH có 12 loại tấn công (SSRF, path traversal...), filter hiện tại chỉ nhắm SQLi + OS command injection — các URL callback SSRF kiểu `owasp.org` vẫn có thể lọt vào pool `normal`. Chấp nhận được cho phạm vi Nhánh 1 (chỉ quan tâm SQLi), nhưng **cần làm kỹ hơn khi xây benign pool cho Nhánh 2** (anomaly detector nhạy với nhiễu benign hơn nhiều).
+- **Kết quả vòng 1:** loại 1.561 dòng bị gắn nhầm `Normal=1`.
+- **Sanity-check vòng 2 (soi tay 30/lớp, seed khác):** phát hiện thêm biến thể lọt lưới — `&cat /etc/passwd&` (dùng `&` thay `;` để phân tách lệnh, regex vòng 1 chỉ bắt `;cat`) và `<!--#exec cmd="ls /"-->` (SSI injection). Mở rộng regex (`[;&|]` thay vì chỉ `;`, thêm pattern SSI) → **tổng loại 2.731 dòng** (~9,8% pool normal ứng viên, tăng gần gấp đôi so với vòng 1).
+- **Sanity-check vòng 3:** vẫn còn sót biến thể **né tránh có chủ đích** — `cat$jj $jj/etc$jj/passwd` (fuzzer chèn token rác `$jj` giữa từ khóa để né keyword-matching). **Quyết định dừng vá regex tại đây** — đây là bài toán evasion vô hạn biến thể, đúng chỗ xử lý là bước canonicalization + tập test adversarial (Ngày 7), không phải lặp vá filter tĩnh này mãi. Ghi nhận là rủi ro còn lại chấp nhận được cho MVP.
+- **Giới hạn còn lại (ngoài phạm vi, không xử lý):** SR-BH có 12 loại tấn công, filter chỉ nhắm SQLi + OS command injection/SSI — XSS (`<script>alert(1)</script>`), SSRF callback (`owasp.org`) vẫn lọt vào pool `normal`. Chấp nhận được cho Nhánh 1 (chỉ quan tâm SQLi), nhưng **cần làm kỹ hơn khi xây benign pool cho Nhánh 2** (anomaly detector nhạy với nhiễu benign hơn nhiều).
 
 **Phân phối sau khi build + lọc (68.159 dòng, train=54.527 / test=13.632, stratified, seed=42):**
 
 | Nhãn | Có sẵn (D1+D4+D7+synthetic, sau lọc) | Lấy vào train+test |
 |---|---:|---:|
-| `normal` | 27.941 (19.517 D1 + ~8.439 D7 normal sau khi loại 1.561 dòng nhiễu) | 15.000 |
+| `normal` | 26.771 (19.517 D1 + ~7.254 D7 normal sau khi loại 2.731 dòng nhiễu) | 15.000 |
 | `union_based` | 85.826 | 15.000 |
 | `error_based` | 7.796 | 7.796 (giữ hết) |
 | `boolean_blind` | 134.057 | 15.000 |
 | `time_blind` | 34.017 | 15.000 |
 | `stacked` | 363 | 363 (giữ hết) |
+
+**Sanity-check nhãn phía tấn công (30/lớp, không phải chỉ phía `normal`):** `union_based`, `error_based`, `time_blind`, `stacked` đều **30/30 đúng rõ ràng** (do bản chất regex đã match cụ thể). Riêng `boolean_blind` (rổ chứa cuối) — soi 30 mẫu: **~26/30 (87%) hợp lý** (boolean thật hoặc probing SQLi rõ ràng), **~4/30 (13%) sai hẳn** — SSRF callback, CRLF/header injection, 1 dòng benign hoàn toàn (`wp-comments-post.php` submit form bình thường) bị SR-BH tự gắn `SQL Injection=1`. Xác nhận lại: **nhiễu nhãn tồn tại ở cả 2 phía** (không chỉ phía `normal`), tập trung ở rổ `boolean_blind` — ghi rõ là hạn chế đã đo được (~13%), không phải ước tính.
 
 File: `data/processed/nhanh1_train.csv` (68.159 dòng, cột đúng schema Mục 2). **Chưa qua sanity-check tay đầy đủ ~100 mẫu/lớp** (mới chỉ soi mẫu nhỏ 15-20/lớp) — nên làm thêm trước khi công bố số liệu chính thức trong báo cáo, nhưng đủ tin cậy để bắt đầu train baseline (Ngày 3).
 

@@ -73,6 +73,14 @@ def test_matches_any_attack_signature_true_for_shellshock() -> None:
     assert matches_any_attack_signature("() { :;}; /bin/sleep 15")
 
 
+def test_matches_any_attack_signature_true_for_ampersand_delimited_command() -> None:
+    assert matches_any_attack_signature("/blog&cat /etc/passwd&/index.php")
+
+
+def test_matches_any_attack_signature_true_for_ssi_injection() -> None:
+    assert matches_any_attack_signature('<!--#exec cmd="ls /"-->')
+
+
 def test_matches_any_attack_signature_false_for_benign_text() -> None:
     assert not matches_any_attack_signature("/blog/wp-content/uploads/2020/04/photo.png")
     assert not matches_any_attack_signature("select * from users where id = 1")
