@@ -32,7 +32,13 @@ LABEL_NAMES: dict[int, str] = {
 
 # Checked in this exact order; first match wins.
 _RULES: list[tuple[int, re.Pattern[str]]] = [
-    (LABEL_STACKED, re.compile(r";\s*(DROP|INSERT|UPDATE|DELETE|EXEC)", re.IGNORECASE)),
+    (
+        LABEL_STACKED,
+        re.compile(
+            r";\s*(DROP|INSERT|UPDATE|DELETE|EXEC|TRUNCATE|CREATE|GRANT|ALTER)",
+            re.IGNORECASE,
+        ),
+    ),
     (
         LABEL_TIME_BLIND,
         re.compile(r"SLEEP\(|BENCHMARK\(|WAITFOR\s+DELAY|PG_SLEEP\(", re.IGNORECASE),
@@ -50,6 +56,53 @@ _RULES: list[tuple[int, re.Pattern[str]]] = [
         re.compile(r"(OR|AND)\s+\d+\s*=\s*\d+|'\s*OR\s*'?1'?\s*=\s*'?1", re.IGNORECASE),
     ),
 ]
+
+# Also flag plain shell/command-injection markers (";cat ", "|whoami", "$(", "` `",
+# Shellshock's "() { :;};" prefix) so rows mislabeled "Normal" by an upstream
+# source but actually containing an OS command injection / RCE attempt get
+# rejected from the benign pool too (see data_contract.md Muc 3.1 - SR-BH
+# "Normal=1" rows found containing sleep(), "cat /etc/passwd", and Shellshock
+# payloads during manual sanity-check). This is NOT a general web-attack
+# filter (SSRF callback URLs etc. from SR-BH still slip through) - out of
+# scope for a SQLi-focused Nhanh 1 dataset, documented as a known limitation.
+_OS_COMMAND_INJECTION_RE = re.compile(
+    r"[;&|]\s*(cat|whoami|ping|wget|curl|nc)\s|\$\(|`[^`]+`|\(\)\s*\{\s*:;\s*\}"
+)
+
+# Server-Side Include injection (e.g. `<!--#exec cmd="ls /"-->`), found during
+# manual sanity-check mixed into SR-BH "Normal=1" rows alongside the OS
+# command injection cases above.
+_SSI_INJECTION_RE = re.compile(r"<!--#(exec|include|echo)\s", re.IGNORECASE)
+
+# XSS markers, also found during manual sanity-check ('/blog/\'"<script>alert(1);
+# </script>/...' labeled "Normal" by SR-BH). Still not a general web-attack
+# filter: SSRF callback URLs (e.g. requests to an external oastify/owasp.org
+# domain) have no generic, non-dataset-specific signature and are NOT covered
+# here - documented as a residual limitation.
+_XSS_RE = re.compile(r"<script[^>]*>|javascript:|on(error|load)\s*=", re.IGNORECASE)
+
+
+def matches_any_attack_signature(text: str) -> bool:
+    """Check whether text matches any known SQLi or OS-command-injection signature.
+
+    Used as a content-based safety net: a row labeled "normal" by an upstream
+    source should still be rejected from a benign training pool if it matches
+    one of these signatures, regardless of the source's own label.
+
+    Args:
+        text: Canonicalized query/payload text.
+
+    Returns:
+        True if any attack signature (SQLi sub-type or OS command injection)
+        is found in ``text``.
+    """
+    if (
+        _OS_COMMAND_INJECTION_RE.search(text)
+        or _SSI_INJECTION_RE.search(text)
+        or _XSS_RE.search(text)
+    ):
+        return True
+    return any(pattern.search(text) for _, pattern in _RULES)
 
 
 def tag_attack_payload(text: str) -> int:

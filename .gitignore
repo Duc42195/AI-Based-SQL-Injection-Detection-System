@@ -19,12 +19,18 @@ data/**/*.db
 data/**/*.parquet
 data/**/*.txt
 
-# Model binaries (versioned dirs tracked, large weights ignored)
+# Model binaries (versioned dirs tracked via metadata.json, weights ignored)
 models/**/*.pkl
 models/**/*.joblib
 models/**/*.bin
 models/**/*.pt
 models/**/*.safetensors
+models/**/*.json
+models/**/*.txt
+# Exception: keep the small metadata.json describing each versioned model
+!models/**/metadata.json
+# Throwaway architecture-comparison artifacts (incl. 256MB DistilBERT) - never commit
+models/nhanh1_comparison/
 
 # Notebook checkpoints
 .ipynb_checkpoints/

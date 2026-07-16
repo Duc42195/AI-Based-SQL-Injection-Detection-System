@@ -1,0 +1,25 @@
+{
+  "version": "nhanh1_v1",
+  "branch": "nhanh1_supervised_multiclass",
+  "architecture": "tfidf_logreg",
+  "trained_at": "2026-07-16T08:06:18",
+  "train_rows": 54527,
+  "test_rows": 13632,
+  "f1_macro": 0.9849336109968765,
+  "train_time_s": 10.74991338100017,
+  "labels": {
+    "0": "normal",
+    "1": "union_based",
+    "2": "error_based",
+    "3": "boolean_blind",
+    "4": "time_blind",
+    "5": "stacked"
+  },
+  "dataset": "data/processed/nhanh1_train.csv",
+  "tfidf": {
+    "analyzer": "char_wb",
+    "ngram_min": 2,
+    "ngram_max": 4,
+    "max_features": 50000
+  }
+}

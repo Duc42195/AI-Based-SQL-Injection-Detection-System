@@ -36,10 +36,14 @@ labels:
     stacked: 5
 
 branch1_supervised:
-  # Candidate architectures compared Day 1-2; final choice is data-driven
-  # (F1-macro vs latency vs model size). Do NOT default to a transformer.
-  #   "tfidf_gbm"  |  "distilbert"  |  "cnn_sqltok"
-  architecture: "tfidf_gbm"
+  # CHOSEN (16/7) after comparing 4 candidates on F1-macro vs latency vs size
+  # (see reports/nhanh1_architecture_comparison.json + notebook). All 4 scored
+  # F1-macro 0.985-0.993 (differences negligible); tfidf_logreg picked for the
+  # best latency/size/simplicity trade-off. LightGBM had the top F1 but ~60ms
+  # p50 latency (too slow for a real-time proxy); DistilBERT gave no F1 gain
+  # for 256MB + GPU + 24-min training; cnn_sqltok is the fast/tiny fallback.
+  #   "tfidf_logreg"  |  "tfidf_lightgbm"  |  "distilbert"  |  "cnn_sqltok"
+  architecture: "tfidf_logreg"
   multiclass: true
   # Probability threshold above which a query is flagged as SQLi (any attack class).
   decision_threshold: 0.5
@@ -54,6 +58,28 @@ branch1_supervised:
     batch_size: 32
     epochs: 3
     learning_rate: 5.0e-5
+  cnn_sqltok:
+    # SQL-keyword-aware tokenizer + small 1D-CNN (~69K params reference
+    # architecture from the Related Work survey - a lightweight alternative
+    # to a full transformer).
+    vocab_size: 2000
+    max_length: 128
+    embedding_dim: 32
+    num_filters: 64
+    kernel_sizes: [3, 4, 5]
+    epochs: 5
+    batch_size: 64
+    learning_rate: 1.0e-3
+  # Per-class undersample target when building data/processed/nhanh1_train.csv.
+  # Classes with fewer available rows than this are kept in full (see
+  # data_contract.md Muc 2.1). synthetic_stacked_count = size of the
+  # generated `stacked` batch (no real-world source has this class).
+  balance:
+    target_per_class: 15000
+    # Full unique pool from src/preprocessing/synthetic_stacked.py (11 prefixes
+    # x 11 statements x 3 terminators = 363). No real source has this class.
+    synthetic_stacked_count: 363
+    test_fraction: 0.2
 
 branch2_anomaly:
   # Trained on BENIGN ONLY. Output is a continuous anomaly score used both as a
@@ -62,6 +88,15 @@ branch2_anomaly:
   algorithm: "isolation_forest"
   # Expected fraction of anomalies in the (Normal) training data.
   contamination: 0.01
+  # Statistical/structural features extracted per query (not TF-IDF - Branch 2
+  # needs to generalize to unseen syntax, so features describe SHAPE not content).
+  features:
+    - "length"
+    - "special_char_ratio"
+    - "sql_keyword_count"
+    - "entropy"
+  # Held-out split of the benign pool for evaluating FPR (build_nhanh2_dataset.py).
+  test_fraction: 0.2
 
 branch3_session:
   # Session-level sequence model (main contribution). Per-step input =

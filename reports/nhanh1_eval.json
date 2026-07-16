@@ -1,0 +1,111 @@
+{
+  "branch": "nhanh1_supervised_multiclass",
+  "chosen_architecture": "tfidf_logreg",
+  "decision_date": "2026-07-16",
+  "decision_rationale": "Best F1-macro vs latency vs size trade-off among 4 candidates; F1 differences negligible (0.985-0.993), tfidf_logreg has near-lowest latency and simplest deployment.",
+  "f1_macro": 0.9849336109968765,
+  "per_class": {
+    "normal": {
+      "precision": 0.9656,
+      "recall": 0.945,
+      "f1-score": 0.9552,
+      "support": 3000.0
+    },
+    "union_based": {
+      "precision": 0.9993,
+      "recall": 0.991,
+      "f1-score": 0.9951,
+      "support": 3000.0
+    },
+    "error_based": {
+      "precision": 0.9981,
+      "recall": 1.0,
+      "f1-score": 0.999,
+      "support": 1559.0
+    },
+    "boolean_blind": {
+      "precision": 0.9472,
+      "recall": 0.974,
+      "f1-score": 0.9604,
+      "support": 3000.0
+    },
+    "time_blind": {
+      "precision": 0.9997,
+      "recall": 1.0,
+      "f1-score": 0.9998,
+      "support": 3000.0
+    },
+    "stacked": {
+      "precision": 1.0,
+      "recall": 1.0,
+      "f1-score": 1.0,
+      "support": 73.0
+    }
+  },
+  "confusion_matrix": [
+    [
+      2835,
+      2,
+      0,
+      163,
+      0,
+      0
+    ],
+    [
+      27,
+      2973,
+      0,
+      0,
+      0,
+      0
+    ],
+    [
+      0,
+      0,
+      1559,
+      0,
+      0,
+      0
+    ],
+    [
+      74,
+      0,
+      3,
+      2922,
+      1,
+      0
+    ],
+    [
+      0,
+      0,
+      0,
+      0,
+      3000,
+      0
+    ],
+    [
+      0,
+      0,
+      0,
+      0,
+      0,
+      73
+    ]
+  ],
+  "confusion_matrix_labels": [
+    "normal",
+    "union_based",
+    "error_based",
+    "boolean_blind",
+    "time_blind",
+    "stacked"
+  ],
+  "latency_p50_ms": 0.5113475000371182,
+  "latency_p95_ms": 0.7005673000776369,
+  "model_size_bytes": 4081292,
+  "caveats": [
+    "F1 ~0.99 across all candidates and 100% recall on synthetic stacked class => data likely too easily separable; NOT representative of obfuscated/adversarial attacks.",
+    "boolean_blind class has ~13% measured label noise (see data_contract.md Muc 3.1).",
+    "True robustness must be measured on the Day-7 adversarial test set, not this clean test split."
+  ]
+}

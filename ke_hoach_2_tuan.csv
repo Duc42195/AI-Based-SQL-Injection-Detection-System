@@ -1,17 +1,17 @@
 ﻿Ngay,NgayThang,Thu,NguoiPhuTrach,VaiTro,CongViec,PhuThuoc,SanPham,TrangThai
 1,13/7,Th2,Toi,Du lieu + Train Nhanh 1 & 3,"Chot data contract (schema CSV Nhanh1, schema session Nhanh3) cung ca nhom; tai D1 (SQLiV3) ban tho; test nhanh kien truc Nhanh 1: DistilBERT vs TF-IDF+GBM vs CNN nhe tren tap con",Khong co,data_contract.md; data/raw/d1_sqliv3_raw.csv; notebooks/model_comparison_nhanh1.ipynb,Tre han
-1,13/7,Th2,Bach,Nhanh 2 (Anomaly) - doc lap,Tai D3 (CSIC2010) ban tho; test nhanh phuong an trich dac trung cho Nhanh 2 (TF-IDF/embedding),Khong co,data/raw/d3_csic2010_raw.csv,Chua bat dau
+1,13/7,Th2,Bach,Nhanh 2 (Anomaly) - doc lap,Tai D3 (CSIC2010) ban tho; test nhanh phuong an trich dac trung cho Nhanh 2 (TF-IDF/embedding),Khong co,data/raw/d3_csic2010_raw.csv,Hoan thanh
 1,13/7,Th2,Minh,Streamlit Web App - doc lap,"Dung khung Streamlit app (trang nhap query test, hien ket qua mock)",Khong co,app/streamlit_app.py,Chua bat dau
 1,13/7,Th2,Diep,Support - Bao cao,"Viet Muc 1-2 bao cao (Mo dau, Related Work) tu file khao sat da co",Khong co,report/muc1_muc2.md,Chua bat dau
-2,14/7,Th3,Toi,Du lieu + Train Nhanh 1 & 3,Lam sach D1 day du; viet pipeline canonicalization; chot kien truc Nhanh 1,Ngay 1 - Toi,src/preprocessing/canonicalize.py; data/processed/nhanh1_train.csv,Chua bat dau
-2,14/7,Th3,Bach,Nhanh 2 (Anomaly) - doc lap,"Lam sach D3, xay baseline normal traffic",Ngay 1 - Bach,data/processed/nhanh2_normal.csv,Chua bat dau
+2,14/7,Th3,Toi,Du lieu + Train Nhanh 1 & 3,Lam sach D1 day du; viet pipeline canonicalization; chot kien truc Nhanh 1,Ngay 1 - Toi,src/preprocessing/canonicalize.py; data/processed/nhanh1_train.csv,Hoan thanh
+2,14/7,Th3,Bach,Nhanh 2 (Anomaly) - doc lap,"Lam sach D3, xay baseline normal traffic",Ngay 1 - Bach,data/processed/nhanh2_normal.csv,Hoan thanh
 2,14/7,Th3,Minh,Streamlit Web App - doc lap,"Trang Dashboard giam sat (log truy van, bieu do)",Ngay 1 - Minh,app/pages/dashboard.py,Chua bat dau
 2,14/7,Th3,Diep,Support - Bao cao,Viet Muc 3 (Phuong phap) theo kien truc vua chot,Ngay 1 - Toi,report/muc3.md,Chua bat dau
-3,15/7,Th4,Toi,Du lieu + Train Nhanh 1 & 3,Train Nhanh 1 baseline,Ngay 2 - Toi,models/nhanh1_v1/,Chua bat dau
+3,15/7,Th4,Toi,Du lieu + Train Nhanh 1 & 3,Train Nhanh 1 baseline,Ngay 2 - Toi,models/nhanh1_v1/,Hoan thanh
 3,15/7,Th4,Bach,Nhanh 2 (Anomaly) - doc lap,Trich dac trung/embedding cho tap normal,Ngay 2 - Bach,src/models/nhanh2_embed.py,Chua bat dau
 3,15/7,Th4,Minh,Streamlit Web App - doc lap,"Trang Admin - hang doi Overkill (duyet/tu choi, du lieu mock)",Ngay 2 - Minh,app/pages/admin_queue.py,Chua bat dau
 3,15/7,Th4,Diep,Support - Bao cao,"Theo doi tien do, chuan bi template bang ket qua",Khong co,report/template_bang_ketqua.md,Chua bat dau
-4,16/7,Th5,Toi,Du lieu + Train Nhanh 1 & 3,Danh gia Nhanh 1 (P/R/F1); bat dau setup Docker lab (DVWA/WebGoat) cho Nhanh 3,Ngay 3 - Toi,reports/nhanh1_eval.json; docker/dvwa/docker-compose.yml,Chua bat dau
+4,16/7,Th5,Toi,Du lieu + Train Nhanh 1 & 3,Danh gia Nhanh 1 (P/R/F1); bat dau setup Docker lab (DVWA/WebGoat) cho Nhanh 3,Ngay 3 - Toi,reports/nhanh1_eval.json; docker/dvwa/docker-compose.yml,Dang thuc hien
 4,16/7,Th5,Bach,Nhanh 2 (Anomaly) - doc lap,Train OC-SVM/Isolation Forest (+PCA neu can),Ngay 3 - Bach,models/nhanh2_v1/,Chua bat dau
 4,16/7,Th5,Minh,Streamlit Web App - doc lap,"Trang Metrics (P/R/F1, latency) - doc tu file JSON report khi co",Ngay 3 - Minh,app/pages/metrics.py,Chua bat dau
 4,16/7,Th5,Diep,Support - Bao cao,Cap nhat Muc 6 khung (danh gia) voi ket qua so bo Nhanh 1,Ngay 4 - Toi,report/muc6_draft.md,Chua bat dau
