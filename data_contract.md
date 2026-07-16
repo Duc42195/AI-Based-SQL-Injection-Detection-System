@@ -114,6 +114,18 @@ File: `data/processed/nhanh2_normal.csv` (91.935 dòng) + `data/processed/nhanh2
 
 ---
 
+## 3.3. Bỏ lớp `stacked` khỏi training + fix bug tính F1-macro (16/7)
+
+**Lý do bỏ `stacked`:** sau khi so sánh 4 kiến trúc (Mục 4.1 `De_xuat_SQLi_Detection_AI.md`), cả 4 model đều đạt **100% recall** trên lớp `stacked` — dù lớp này **100% synthetic** (363 template). Đây là dấu hiệu dữ liệu quá dễ phân biệt (template lặp lại cấu trúc `; DROP/INSERT/...`), không phải tín hiệu chất lượng thật. Quyết định: loại khỏi tập train, giữ nguyên code sinh (`src/preprocessing/synthetic_stacked.py`) để dùng lại khi có data thật (vd. từ Docker lab/sqlmap Ngày 5-6).
+
+**Cách xử lý:** thêm `branch1_supervised.balance.exclude_labels: [5]` vào `config.yaml`; `scripts/build_nhanh1_dataset.py` đọc config này để (a) bỏ qua nguồn `synthetic_stacked` khi load, (b) lọc phòng vệ mọi dòng có nhãn nằm trong `exclude_labels` sau khi tag. Dataset mới: **67.796 dòng, 5 lớp** (train 54.236 / test 13.560).
+
+**⚠️ Bug thật phát hiện khi retrain:** sau khi bỏ `stacked`, `scripts/train_nhanh1.py` báo F1-macro tụt từ 0.985 xuống **0.8185** — tưởng là dữ liệu xấu đi, nhưng verify tay bằng script riêng cho ra **0.982** (khớp kỳ vọng). Nguyên nhân: code cũ hardcode `LABEL_ORDER = sorted(LABEL_NAMES.keys())` (luôn có đủ 6 nhãn tĩnh) rồi truyền vào `classification_report(labels=LABEL_ORDER, ...)` — khi nhãn 5 (`stacked`) không còn xuất hiện trong dữ liệu, sklearn vẫn tính nó như 1 lớp có `f1-score=0` (0 support), kéo macro-average xuống sai. **Đã sửa** cả `train_nhanh1.py` và `compare_nhanh1_architectures.py`: tính danh sách nhãn **từ dữ liệu thực tế** (`sorted(set(y_true) | set(y_pred))`), không hardcode theo schema tĩnh. Đây là bug đáng nhớ: bất kỳ lúc nào bớt/thêm lớp, phải kiểm tra lại các đoạn code hardcode danh sách nhãn cho `classification_report`/`confusion_matrix`.
+
+**F1-macro đúng của model 5 lớp: 0.9822** (`models/nhanh1_v1/metadata.json`, TF-IDF + LogReg, không đổi kiến trúc).
+
+---
+
 ## 3. Bảng nhãn đa lớp (Nhánh 1) — áp dụng bằng rule-based tagger
 
 Thứ tự ưu tiên khi một payload khớp nhiều dấu hiệu: **stacked > time_blind > error_based > union_based > boolean_blind**.

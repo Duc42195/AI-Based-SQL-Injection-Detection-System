@@ -24,9 +24,6 @@ from src.utils import get_logger, load_config
 
 logger = get_logger(__name__)
 
-LABEL_ORDER = sorted(LABEL_NAMES.keys())
-LABEL_NAMES_ORDERED = [LABEL_NAMES[i] for i in LABEL_ORDER]
-
 
 def main() -> None:
     """Train and version the chosen Branch-1 model."""
@@ -63,11 +60,18 @@ def main() -> None:
     train_time_s = time.perf_counter() - t0
 
     X_test = vectorizer.transform(test_df["query_canonical"].astype(str))
+    # Labels actually present in this dataset (NOT the static full schema) -
+    # excluding an unused label (e.g. `stacked`, currently disabled) avoids
+    # scoring a phantom class with 0 support as f1=0, which silently corrupts
+    # the macro average (caught 16/7: reported F1 dropped 0.985->0.82 purely
+    # from this bug, real F1 was ~0.98).
+    labels_present = sorted(set(train_df["label"]) | set(test_df["label"]))
+    target_names = [LABEL_NAMES[i] for i in labels_present]
     report = classification_report(
         test_df["label"].to_numpy(),
         clf.predict(X_test),
-        labels=LABEL_ORDER,
-        target_names=LABEL_NAMES_ORDERED,
+        labels=labels_present,
+        target_names=target_names,
         output_dict=True,
         zero_division=0,
     )
@@ -86,7 +90,7 @@ def main() -> None:
         "test_rows": len(test_df),
         "f1_macro": f1_macro,
         "train_time_s": train_time_s,
-        "labels": {str(i): LABEL_NAMES[i] for i in LABEL_ORDER},
+        "labels": {str(i): LABEL_NAMES[i] for i in labels_present},
         "dataset": "data/processed/nhanh1_train.csv",
         "tfidf": dict(tfidf_cfg),
     }

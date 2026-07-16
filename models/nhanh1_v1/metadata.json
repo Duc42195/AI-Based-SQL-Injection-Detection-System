@@ -2,18 +2,17 @@
   "version": "nhanh1_v1",
   "branch": "nhanh1_supervised_multiclass",
   "architecture": "tfidf_logreg",
-  "trained_at": "2026-07-16T08:06:18",
-  "train_rows": 54527,
-  "test_rows": 13632,
-  "f1_macro": 0.9849336109968765,
-  "train_time_s": 10.74991338100017,
+  "trained_at": "2026-07-16T12:16:08",
+  "train_rows": 54236,
+  "test_rows": 13560,
+  "f1_macro": 0.9821905121114611,
+  "train_time_s": 14.00293961600255,
   "labels": {
     "0": "normal",
     "1": "union_based",
     "2": "error_based",
     "3": "boolean_blind",
-    "4": "time_blind",
-    "5": "stacked"
+    "4": "time_blind"
   },
   "dataset": "data/processed/nhanh1_train.csv",
   "tfidf": {

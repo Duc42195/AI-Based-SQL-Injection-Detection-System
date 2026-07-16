@@ -15,7 +15,11 @@ paths:
   data_processed: "data/processed"
   data_adversarial: "data/adversarial"
   models_dir: "models"
-  # Active model version (a subdirectory under models_dir). Enables fast rollback.
+  # Directory holding evaluation/report JSON artifacts (served by the metrics API).
+  reports_dir: "reports"
+  # DEPRECATED generic active version — kept for backward-compat but unused; the
+  # real model folders are versioned per-branch (see each branch's
+  # `active_version` below, e.g. branch1_supervised.active_version).
   active_version: "v0"
 
 preprocessing:
@@ -45,6 +49,9 @@ branch1_supervised:
   #   "tfidf_logreg"  |  "tfidf_lightgbm"  |  "distilbert"  |  "cnn_sqltok"
   architecture: "tfidf_logreg"
   multiclass: true
+  # Model folder under models_dir loaded by the API at inference time
+  # (models/<active_version>/{model.joblib,vectorizer.joblib,metadata.json}).
+  active_version: "nhanh1_v1"
   # Probability threshold above which a query is flagged as SQLi (any attack class).
   decision_threshold: 0.5
   tfidf:
@@ -80,12 +87,22 @@ branch1_supervised:
     # x 11 statements x 3 terminators = 363). No real source has this class.
     synthetic_stacked_count: 363
     test_fraction: 0.2
+    # Labels EXCLUDED from data/processed/nhanh1_train.csv entirely (16/7).
+    # `stacked` (5) disabled: 100% synthetic (363 templated payloads) and hit
+    # 100% recall across all 4 compared architectures - a red flag that the
+    # synthetic data is trivially separable, not a real signal of model
+    # quality. Re-enable (remove from this list) once real stacked-query
+    # examples are available (e.g. from D6 Docker-lab/sqlmap traffic).
+    exclude_labels: [5]
 
 branch2_anomaly:
   # Trained on BENIGN ONLY. Output is a continuous anomaly score used both as a
   # per-query zero-day flag and as an extra feature dim fed into Branch 3.
   # "isolation_forest" | "one_class_svm"
   algorithm: "isolation_forest"
+  # Model folder under models_dir (created once Branch 2 is trained). Until then
+  # the API reports this branch as "not_ready" instead of crashing.
+  active_version: "nhanh2_v1"
   # Expected fraction of anomalies in the (Normal) training data.
   contamination: 0.01
   # Statistical/structural features extracted per query (not TF-IDF - Branch 2
@@ -103,6 +120,9 @@ branch3_session:
   # [content embedding (Branch 1 encoder) ⊕ anomaly score (Branch 2)].
   # Session = session-id, or (client IP + idle-gap window).
   enabled: true
+  # Model folder under models_dir (created once Branch 3 is trained). Until then
+  # the API reports this branch as "not_ready" instead of crashing.
+  active_version: "nhanh3_v1"
   session_idle_gap_seconds: 1800   # 30-min inactivity ends a session
   sequence_model: "gru"            # "gru" | "transformer"
   max_session_len: 64
@@ -136,3 +156,10 @@ monitoring:
 api:
   host: "0.0.0.0"
   port: 8000
+  title: "SQLi Detection API"
+  # API contract version — also the URL prefix (/api/v1/...). Bump on breaking
+  # changes so the Streamlit client can pin against a stable shape.
+  api_version: "v1"
+  # CORS allow-origins for the Streamlit frontend (runs on a different port).
+  # "*" is fine for the local demo; tighten for any real deployment.
+  cors_origins: ["*"]

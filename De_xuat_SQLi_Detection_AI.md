@@ -60,7 +60,7 @@
 ### 4.1 Lựa chọn kiến trúc mô hình cho Nhánh 1 (per-query)
 Giữ nguyên như V2: so sánh DistilBERT vs. TF-IDF/char n-gram + Gradient Boosting vs. CNN nhẹ kiểu tokenizer-riêng-cho-SQL (tham khảo kiến trúc nhẹ trong khảo sát Related Work — ~69K tham số, nhanh hơn DistilBERT hàng chục lần). Chọn theo F1/latency đo thực tế, không mặc định chọn transformer.
 
-**Kết quả thực nghiệm (16/7) — đã chốt: TF-IDF + Logistic Regression.** So sánh 4 candidate trên tập test 13.632 dòng (`scripts/compare_nhanh1_architectures.py`, kết quả đầy đủ ở `reports/nhanh1_architecture_comparison.json` + `notebooks/model_comparison_nhanh1.ipynb`):
+**Kết quả thực nghiệm (16/7) — đã chốt: TF-IDF + Logistic Regression.** So sánh 4 candidate trên tập test 13.632 dòng, **6 lớp gồm cả `stacked`** (`scripts/compare_nhanh1_architectures.py`, kết quả đầy đủ ở `reports/nhanh1_architecture_comparison.json` + `notebooks/model_comparison_nhanh1.ipynb`):
 
 | Model | F1-macro | p50 latency | Size | Train time |
 |---|---|---|---|---|
@@ -71,7 +71,9 @@ Giữ nguyên như V2: so sánh DistilBERT vs. TF-IDF/char n-gram + Gradient Boo
 
 Lý do chọn LogReg: chênh lệch F1 giữa 4 model không đáng kể (0.985–0.993), trong khi LightGBM chậm gấp ~120 lần (60 ms — quá cao cho proxy real-time), DistilBERT tốn 256 MB + cần GPU + train 24 phút mà không hơn F1. CNN là ứng viên dự phòng tốt (nhanh/nhỏ nhất) nếu sau này cần học đặc trưng mạnh hơn.
 
-**⚠️ Cảnh báo cần đưa vào Hạn chế (Mục 7):** cả 4 model đạt F1 ~0.99 và lớp `stacked` (363 mẫu synthetic) đạt **100% recall ở cả 4** → dấu hiệu dữ liệu **quá dễ phân biệt**, KHÔNG phản ánh độ khó thật của tấn công che giấu (obfuscated). Con số F1 này không nên hiểu là hệ thống "gần hoàn hảo" — thước đo thật là tập test adversarial (Ngày 7). Confusion matrix cho thấy nhầm lẫn duy nhất đáng kể là `normal ↔ boolean_blind` (khớp với ~13% nhiễu nhãn đã đo ở rổ `boolean_blind`).
+**⚠️ Phát hiện sau khi train (16/7) — đã bỏ lớp `stacked` khỏi dataset:** cả 4 model đạt F1 ~0.99 và lớp `stacked` (363 mẫu synthetic) đạt **100% recall ở cả 4** → dấu hiệu dữ liệu **quá dễ phân biệt** (template lặp cấu trúc), KHÔNG phải tín hiệu chất lượng thật. Quyết định: **loại `stacked` khỏi training** (`branch1_supervised.balance.exclude_labels: [5]` trong `config.yaml`), giữ code sinh (`synthetic_stacked.py`) để dùng lại khi có data thật từ Docker lab/sqlmap (Ngày 5-6). Dataset còn **5 lớp, 67.796 dòng**.
+
+**F1-macro đúng sau khi bỏ `stacked`: 0.9822** (`models/nhanh1_v1/`, kiến trúc không đổi — TF-IDF+LogReg). Lưu ý: lần retrain đầu tiên báo nhầm F1=0.8185 do bug tính `classification_report` (hardcode đủ 6 nhãn dù `stacked` không còn trong data → sklearn tính điểm 0 cho nhãn không tồn tại, kéo macro-average sai) — đã sửa ở cả `train_nhanh1.py` và `compare_nhanh1_architectures.py` (chi tiết: `data_contract.md` Mục 3.3). Confusion matrix cho thấy nhầm lẫn duy nhất đáng kể là `normal ↔ boolean_blind` (khớp với ~13% nhiễu nhãn đã đo ở rổ `boolean_blind`) — con số F1 này vẫn không nên hiểu là hệ thống "gần hoàn hảo", thước đo thật là tập test adversarial (Ngày 7).
 
 ### 4.2 Nhánh 2: Phát hiện bất thường theo từng câu (giữ nguyên V2)
 
