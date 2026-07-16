@@ -2,6 +2,8 @@
 
 > Chốt Ngày 1 (13/7). Định nghĩa schema đích cho dữ liệu đã xử lý, để mọi thành viên (và code sau này) dùng chung một chuẩn. Số liệu dưới đây đã verify thực tế trên dữ liệu vừa tải, không phải ước tính.
 
+> 📦 **Data đã xử lý tải ở đây, không có trong repo git:** https://huggingface.co/datasets/Jason-42195/VNU-SQLi-Detection (`nhanh1_train.csv`, `nhanh2_normal.csv`, `nhanh2_anomalous_eval.csv`). Xem README.md gốc repo, mục "Data đã xử lý — tải ở đâu".
+
 ---
 
 ## 1. Dữ liệu thô đã tải (Ngày 1)
