@@ -1,0 +1,48 @@
+{
+  "version": "nhanh2_v1",
+  "branch": "nhanh2_anomaly",
+  "trained_at": "2026-07-16T11:38:29",
+  "feature_names": [
+    "length",
+    "special_char_ratio",
+    "sql_keyword_count",
+    "entropy"
+  ],
+  "train_rows": 12000,
+  "algorithms": {
+    "isolation_forest": {
+      "algorithm": "isolation_forest",
+      "contamination": 0.01,
+      "fpr": 0.005667,
+      "n_benign": 3000,
+      "n_false_positives": 17,
+      "detection_rate": 0.1232,
+      "n_anomalous": 25065,
+      "n_true_positives": 3088,
+      "auc": 0.734127
+    },
+    "one_class_svm": {
+      "algorithm": "one_class_svm",
+      "contamination": 0.01,
+      "fpr": 0.007333,
+      "n_benign": 3000,
+      "n_false_positives": 22,
+      "detection_rate": 0.236705,
+      "n_anomalous": 25065,
+      "n_true_positives": 5933,
+      "auc": 0.804767
+    }
+  },
+  "chosen_algorithm": "isolation_forest",
+  "chosen": {
+    "algorithm": "isolation_forest",
+    "contamination": 0.01,
+    "fpr": 0.005667,
+    "n_benign": 3000,
+    "n_false_positives": 17,
+    "detection_rate": 0.1232,
+    "n_anomalous": 25065,
+    "n_true_positives": 3088,
+    "auc": 0.734127
+  }
+}

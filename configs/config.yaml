@@ -19,7 +19,8 @@ paths:
   reports_dir: "reports"
   # DEPRECATED generic active version — kept for backward-compat but unused; the
   # real model folders are versioned per-branch (see each branch's
-  # `active_version` below, e.g. branch1_supervised.active_version).
+  # `active_version` below, e.g. branch1_supervised.active_version,
+  # branch2_anomaly.active_version).
   active_version: "v0"
 
 preprocessing:
@@ -99,12 +100,33 @@ branch2_anomaly:
   # Trained on BENIGN ONLY. Output is a continuous anomaly score used both as a
   # per-query zero-day flag and as an extra feature dim fed into Branch 3.
   # "isolation_forest" | "one_class_svm"
-  algorithm: "isolation_forest"
+  # CHOSEN (training audit 16/7): OCSVM (gamma=0.01, nu=0.005) AUC=0.887
+  #   — significantly out-performs IF (AUC=0.734) and the untuned OCSVM (0.805).
+  algorithm: "one_class_svm"
   # Model folder under models_dir (created once Branch 2 is trained). Until then
   # the API reports this branch as "not_ready" instead of crashing.
   active_version: "nhanh2_v1"
   # Expected fraction of anomalies in the (Normal) training data.
+  # NOTE: training data is 100 % benign (0 % anomaly), so this should be very
+  # small — IF='auto' uses the algorithm's own estimate; OCSVM default nu=0.001.
+  # Shared contamination (used for Isolation Forest). One-Class SVM uses its
+  # own ocsvm_nu below — each algorithm independently tuned.
   contamination: 0.01
+  # One-Class SVM specific hyperparameters (tuned via grid search 16/7).
+  ocsvm_nu: 0.005
+  ocsvm_gamma: 0.01
+  # Scale all features with StandardScaler before training.  EMPIRICAL NOTE
+  # (training audit 16/7): scaling all features *hurt* AUC for both algorithms
+  # (IF 0.734→0.678, OCSVM 0.805→0.533) because length carries most of the
+  # discriminative power (permutation-importance drop 0.288) while other features
+  # (e.g. special_char_ratio, mean 0.039 for both groups) are noisy.  Scaling
+  # equalises their influence and dilutes the length signal.  Keep disabled
+  # unless feature selection is applied first.
+  scale_features: false
+  # Feature names to apply log1p-transform before scaling (handles extreme
+  # right-skewed distributions — "length" has max 5 370 vs mean 47).
+  log_transform_features:
+    - "length"
   # Statistical/structural features extracted per query (not TF-IDF - Branch 2
   # needs to generalize to unseen syntax, so features describe SHAPE not content).
   features:
@@ -114,6 +136,19 @@ branch2_anomaly:
     - "entropy"
   # Held-out split of the benign pool for evaluating FPR (build_nhanh2_dataset.py).
   test_fraction: 0.2
+  # Hyperparameter tuning via grid search (disabled by default; enable for
+  # production).
+  tune:
+    enabled: false
+    validation_fraction: 0.2
+    scoring: "roc_auc"
+    # Grids are expanded as Cartesian product.
+    isolation_forest:
+      n_estimators: [50, 100, 200]
+      contamination: [0.001, 0.005, 0.01, "auto"]
+    one_class_svm:
+      gamma: ["scale", "auto", 0.1, 0.01]
+      contamination: [0.001, 0.005, 0.01, 0.05]
 
 branch3_session:
   # Session-level sequence model (main contribution). Per-step input =
