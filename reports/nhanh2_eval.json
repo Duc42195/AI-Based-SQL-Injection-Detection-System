@@ -1,0 +1,58 @@
+{
+  "version": "nhanh2_v1",
+  "branch": "nhanh2_anomaly",
+  "trained_at": "2026-07-16T06:01:21Z",
+  "feature_names": [
+    "length",
+    "special_char_ratio",
+    "sql_keyword_count",
+    "entropy"
+  ],
+  "train_rows": 12000,
+  "preprocessing": {
+    "scale_features": false,
+    "log_transform_features": [
+      "length"
+    ]
+  },
+  "tuning": {
+    "enabled": false,
+    "validation_fraction": 0.2
+  },
+  "algorithms": {
+    "isolation_forest": {
+      "algorithm": "isolation_forest",
+      "contamination": 0.01,
+      "fpr": 0.005,
+      "n_benign": 3000,
+      "n_false_positives": 15,
+      "detection_rate": 0.035947,
+      "n_anomalous": 25065,
+      "n_true_positives": 901,
+      "auc": 0.677482
+    },
+    "one_class_svm": {
+      "algorithm": "one_class_svm",
+      "contamination": 0.005,
+      "fpr": 0.004,
+      "n_benign": 3000,
+      "n_false_positives": 12,
+      "detection_rate": 0.199761,
+      "n_anomalous": 25065,
+      "n_true_positives": 5007,
+      "auc": 0.886823
+    }
+  },
+  "chosen_algorithm": "one_class_svm",
+  "chosen": {
+    "algorithm": "one_class_svm",
+    "contamination": 0.005,
+    "fpr": 0.004,
+    "n_benign": 3000,
+    "n_false_positives": 12,
+    "detection_rate": 0.199761,
+    "n_anomalous": 25065,
+    "n_true_positives": 5007,
+    "auc": 0.886823
+  }
+}
