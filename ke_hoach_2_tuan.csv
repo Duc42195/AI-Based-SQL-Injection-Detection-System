@@ -15,43 +15,63 @@
 4,16/7,Th5,Bach,Nhanh 2 (Anomaly) - doc lap,Train OC-SVM/Isolation Forest (+PCA neu can),Ngay 3 - Bach,models/nhanh2_v1/,Chua bat dau
 4,16/7,Th5,Minh,Streamlit Web App - doc lap,"Trang Metrics (P/R/F1, latency) - noi API THAT: GET /api/v1/metrics/nhanh1 (backend da san sang tu Ngay 4, xem api/README.md)",Ngay 4 - Toi (API backend),app/pages/metrics.py,Chua bat dau
 4,16/7,Th5,Diep,Support - Bao cao,Cap nhat Muc 6 khung (danh gia) voi ket qua so bo Nhanh 1,Ngay 4 - Toi,report/muc6_draft.md,Chua bat dau
-5,17/7,Th6,Toi,MLOps - Bo xu ly trung tam,Bat dau xay Bo xu ly trung tam (Decision Logic 3 nhanh) + hang doi Overkill,Ngay 4 - Toi; Ngay 4 - Bach,src/decision/central_processor.py,Chua bat dau
-5,17/7,Th6,Bach,Train tat ca - Nhanh 3 bat dau,Danh gia Nhanh 2 xong (audit da co); dung Docker lab (DVWA/WebGoat) + cai sqlmap/mitmproxy cho Nhanh 3,Ngay 4 - Bach,docker/dvwa/docker-compose.yml; reports/nhanh2_eval.json,Dang thuc hien
+5,17/7,Th6,Toi,MLOps (rut gon),"Bo xu ly trung tam BAN (decision logic 3 nhanh, chua can Session Store phuc tap) + tiep tuc API Nhanh 1+2",Ngay 4 - Toi; Ngay 4 - Bach,src/decision/central_processor.py,Chua bat dau
+5,17/7,Th6,Bach,Train tat ca - Nhanh 3 bat dau,Nhanh 2 da xong; dung Docker lab (DVWA/WebGoat) + cai sqlmap/mitmproxy cho Nhanh 3,Ngay 4 - Bach,docker/dvwa/docker-compose.yml,Dang thuc hien
 5,17/7,Th6,Minh,Streamlit Web App - doc lap,"Noi API THAT Nhanh 1 + POST /api/v1/detect (verdict BLOCK/OVERKILL/ALLOW) - da san sang tu Ngay 4; trang test query bo mock. Nhanh 2/3 tra not_ready, render placeholder",Ngay 4 - Toi (API backend),app/streamlit_app.py (cap nhat),Chua bat dau
-5,17/7,Th6,Diep,Support - Bao cao,Cap nhat voi ket qua Nhanh 2 tu Bach,Ngay 5 - Bach,report/muc6_draft.md (cap nhat),Chua bat dau
-6,18/7,Th7,Toi,MLOps,Thiet ke Session Store (TTL/eviction) cho Nhanh 3; tiep tuc Bo xu ly trung tam,Ngay 5 - Toi,src/session_store/,Chua bat dau
+5,17/7,Th6,Diep,Support - Bao cao + Bai RIVF,BAT DAU SOM viet Intro + Related Work cho bai RIVF 2026 (dung lai khao sat da co); song song bao cao do an,Khong co,paper/rivf2026/intro_related_work.tex,Chua bat dau
+6,18/7,Th7,Toi,MLOps (rut gon),Hoan thien central processor co ban + hang doi Overkill don gian (chua can TTL/eviction phuc tap),Ngay 5 - Toi,src/decision/overkill_queue.py,Chua bat dau
 6,18/7,Th7,Bach,Train tat ca,"Chay sqlmap --technique=B va --technique=T qua proxy, thu thap traffic that cho Nhanh 3",Ngay 5 - Bach,data/raw/nhanh3_sqlmap_sessions/,Chua bat dau
 6,18/7,Th7,Minh,Streamlit Web App - doc lap,"Polish UI, them bieu do so sanh kien truc (tu notebook Ngay 1)",Ngay 5 - Minh,app/streamlit_app.py (cap nhat),Chua bat dau
-6,18/7,Th7,Diep,Support - Bao cao,Viet Muc 4 (Du lieu) cung Toi,Ngay 6 - Toi,report/muc4.md,Chua bat dau
-7,19/7,CN,Toi,MLOps,"Dong goi API tong (FastAPI) - dang lam (api/main.py, routers/); tich hop Nhanh 1+2 that vao API",Ngay 6 - Toi,api/main.py; api/routers/,Dang thuc hien
-7,19/7,CN,Bach,Train tat ca,Parse traffic bat duoc thanh session; sinh tap adversarial (WAF-A-MoLE) cho Nhanh 1,Ngay 6 - Bach,src/preprocessing/parse_sessions.py; data/adversarial/,Chua bat dau
+6,18/7,Th7,Diep,Support - Bao cao + Bai RIVF,Viet Method section bai RIVF (kien truc 3 nhanh + decision logic da chot),Ngay 5 - Diep,paper/rivf2026/method.tex,Chua bat dau
+7,19/7,CN,Toi,MLOps (rut gon),"Hoan thien API tong (FastAPI) cho Nhanh 1+2, test qua demo",Ngay 6 - Toi,api/main.py; api/routers/,Dang thuc hien
+7,19/7,CN,Bach,Train tat ca,Parse traffic thanh session; sinh tap adversarial nho (WAF-A-MoLE) ap cho Nhanh 1,Ngay 6 - Bach,src/preprocessing/parse_sessions.py; data/adversarial/,Chua bat dau
 7,19/7,CN,Minh,Streamlit Web App - doc lap,Buffer / review tien do,Khong co,Khong co,Chua bat dau
-7,19/7,CN,Diep,Support - Bao cao,Kiem dinh cheo mot phan nhan Nhanh 3 cung Toi,Ngay 8 - Toi,report/nhan_kiemdinh_note.md,Chua bat dau
-8,20/7,Th2,Toi,MLOps,Test API Nhanh 1+2 that; chuan bi endpoint cho Nhanh 3 (chua co model),Ngay 7 - Toi,tests/test_api.py (cap nhat),Chua bat dau
-8,20/7,Th2,Bach,Train tat ca,"Gan nhan 2 tang, sanity-check (giu session sqlmap bao thanh cong), them benign session (crawler/CSIC group)",Ngay 7 - Bach,data/processed/nhanh3_sessions_labeled.csv,Chua bat dau
+7,19/7,CN,Diep,Support - Bao cao + Bai RIVF,Tiep tuc Method + Related Work bai RIVF,Ngay 6 - Diep,paper/rivf2026/method.tex (cap nhat),Chua bat dau
+8,20/7,Th2,Toi,MLOps (rut gon),Test API Nhanh 1+2 qua demo Streamlit that,Ngay 7 - Toi,tests/test_api.py (cap nhat),Chua bat dau
+8,20/7,Th2,Bach,Train tat ca,"Gan nhan 2 tang cho session, sanity-check (giu session sqlmap bao thanh cong)",Ngay 7 - Bach,data/processed/nhanh3_sessions_labeled.csv,Chua bat dau
 8,20/7,Th2,Minh,Streamlit Web App - doc lap,Cap nhat giao dien cho du lieu Nhanh 3 (dung mock tiep),Khong co,app/pages/nhanh3_placeholder.py,Chua bat dau
-8,20/7,Th2,Diep,Support - Bao cao,Viet Muc 5 (Co che ket hop),Ngay 8 - Bach,report/muc5.md,Chua bat dau
-9,21/7,Th3,Toi,MLOps,Benchmark latency/throughput Nhanh 1+2 qua API,Ngay 8 - Toi,reports/latency_benchmark.json,Chua bat dau
-9,21/7,Th3,Bach,Train tat ca,"Test nhanh Tang 2 Nhanh 3 (GRU vs 1D-CNN vs Transformer nho), chot kien truc, bat dau train",Ngay 8 - Bach,notebooks/model_comparison_nhanh3.ipynb,Chua bat dau
+8,20/7,Th2,Diep,Support - Bao cao + Bai RIVF,Bat dau Experiments section bai RIVF voi so lieu that Nhanh 1 (F1=0.982) + Nhanh 2 (AUC=0.887),Ngay 7 - Diep,paper/rivf2026/experiments.tex,Chua bat dau
+9,21/7,Th3,Toi,MLOps (rut gon),"Chuan bi endpoint Nhanh 3 (chua co model, tra not_ready)",Ngay 8 - Toi,api/routers/nhanh3.py,Chua bat dau
+9,21/7,Th3,Bach,Train tat ca,"So sanh kien truc Tang 2 Nhanh 3 (GRU/1D-CNN/Transformer nho), chot kien truc, bat dau train",Ngay 8 - Bach,notebooks/model_comparison_nhanh3.ipynb,Chua bat dau
 9,21/7,Th3,Minh,Streamlit Web App - doc lap,Trang ket qua 3 nhanh: da noi /api/v1/detect (Nhanh 1 that + verdict); cho Nhanh 3,Khong co,app/pages/nhanh_results.py,Chua bat dau
-9,21/7,Th3,Diep,Support - Bao cao,Tiep tuc Muc 6 (cho so lieu Nhanh 3),Ngay 9 - Toi,report/muc6_draft.md (cap nhat),Chua bat dau
-10,22/7,Th4,Toi,MLOps,Cho model Nhanh 3 tu Bach; chuan bi tich hop endpoint + Bo xu ly trung tam day du 3 nhanh,Ngay 9 - Toi,api/routers/nhanh3.py (cap nhat),Chua bat dau
+9,21/7,Th3,Diep,Support - Bao cao + Bai RIVF,Tiep Experiments; chuan bi template bang ket qua 3 nhanh,Ngay 8 - Diep,paper/rivf2026/experiments.tex (cap nhat),Chua bat dau
+10,22/7,Th4,Toi,MLOps (rut gon),Cho model Nhanh 3 tu Bach; chuan bi tich hop endpoint,Ngay 9 - Toi,api/routers/nhanh3.py (cap nhat),Chua bat dau
 10,22/7,Th4,Bach,Train tat ca,Train + danh gia Nhanh 3; ban giao model cho Toi tich hop API,Ngay 9 - Bach,models/nhanh3_v1/; reports/nhanh3_eval.json,Chua bat dau
 10,22/7,Th4,Minh,Streamlit Web App - doc lap,Ket noi API Nhanh 2 + Bo xu ly trung tam that (Toi vua xong),Ngay 9 - Toi,app/streamlit_app.py (cap nhat),Chua bat dau
-10,22/7,Th4,Diep,Support - Bao cao,"Viet Muc 7 (Threat model, rui ro)",Khong co,report/muc7.md,Chua bat dau
-11,23/7,Th5,Toi,MLOps,Tich hop Nhanh 3 that vao API + Bo xu ly trung tam; benchmark toan he thong,Ngay 10 - Toi; Ngay 10 - Bach,reports/latency_benchmark_full.json,Chua bat dau
-11,23/7,Th5,Bach,Train tat ca,Ho tro Toi tich hop Nhanh 3; tinh chinh lai Nhanh 1/2 neu can dua tren tap adversarial,Ngay 10 - Bach,reports/nhanh1_adversarial_eval.json,Chua bat dau
+10,22/7,Th4,Diep,Support - Bao cao + Bai RIVF,Viet nhap Threat Model / Limitations cho bai RIVF (neu ro Continual Learning/Concept Drift la Future Work),Ngay 9 - Diep,paper/rivf2026/limitations.tex,Chua bat dau
+11,23/7,Th5,Toi,MLOps (rut gon),Tich hop Nhanh 3 that vao API + central processor - DU 3 NHANH CHAY END-TO-END,Ngay 10 - Toi; Ngay 10 - Bach,api/main.py (3 nhanh),Chua bat dau
+11,23/7,Th5,Bach,Train tat ca,Ho tro Toi tich hop Nhanh 3; test payload SQLi that co ban,Ngay 10 - Bach,tests/e2e_test_results.md (nhap),Chua bat dau
 11,23/7,Th5,Minh,Streamlit Web App - doc lap,"Nhanh 1 da noi tu truoc; gio noi not Nhanh 3 that (Bach vua xong train, Toi vua tich hop API)",Ngay 11 - Toi,app/streamlit_app.py (cap nhat),Chua bat dau
-11,23/7,Th5,Diep,Support - Bao cao,Tong hop bang benchmark vao bao cao,Ngay 11 - Bach,report/muc_benchmark.md,Chua bat dau
-12,24/7,Th6,Toi,MLOps,Test end-to-end cung Bach (payload that + adversarial + query-splitting),Ngay 11 - Toi; Ngay 11 - Bach,tests/e2e_test_results.md,Chua bat dau
+11,23/7,Th5,Diep,Support - Bao cao + Bai RIVF,Viet Experiments voi du 3 nhanh (Nhanh 3 vua tich hop),Ngay 11 - Toi,paper/rivf2026/experiments.tex (day du),Chua bat dau
+12,24/7,Th6,Toi,MLOps (rut gon),Test end-to-end cung Bach (payload that + adversarial co ban - KHONG can benchmark day tai),Ngay 11 - Toi; Ngay 11 - Bach,tests/e2e_test_results.md,Chua bat dau
 12,24/7,Th6,Bach,Train tat ca,Test end-to-end cung Toi,Ngay 11 - Bach,tests/e2e_test_results.md,Chua bat dau
 12,24/7,Th6,Minh,Streamlit Web App - doc lap,"Ket noi end-to-end toan bo, test cung nhom",Ngay 11 - Minh,app/streamlit_app.py (final),Chua bat dau
-12,24/7,Th6,Diep,Support - Bao cao,Review cheo toan bo ket qua,Khong co,report/review_note.md,Chua bat dau
-13,25/7,Th7,Toi,MLOps,"Continual learning pipeline (queue Overkill -> retrain trigger, rehearsal, validation gate) + Concept Drift monitoring",Ngay 12 - Toi,src/continual_learning/; src/monitoring/,Chua bat dau
-13,25/7,Th7,Bach,Train tat ca,Ho tro continual learning phan retrain script cho ca 3 nhanh neu kip,Ngay 12 - Bach,src/continual_learning/retrain_all.py,Chua bat dau
+12,24/7,Th6,Diep,Support - Bao cao + Bai RIVF,"Viet Discussion/Limitations; neu ro Future Work (Continual Learning, Concept Drift, benchmark day tai)",Ngay 11 - Diep,paper/rivf2026/discussion.tex,Chua bat dau
+13,25/7,Th7,Toi,MLOps (rut gon),Buffer: sua loi phat sinh tu test end-to-end,Ngay 12 - Toi; Ngay 12 - Bach,Khong co,Chua bat dau
+13,25/7,Th7,Bach,Train tat ca,Buffer: ho tro sua loi Nhanh 3 neu can,Ngay 12 - Bach,Khong co,Chua bat dau
 13,25/7,Th7,Minh,Streamlit Web App - doc lap,Them trang hien thi Concept Drift/Continual Learning neu co,Ngay 13 - Toi; Ngay 13 - Bach,app/pages/monitoring.py,Chua bat dau
-13,25/7,Th7,Diep,Support - Bao cao,"Viet Muc 8-9 (Continual Learning/Concept Drift) neu co, hoac tong hop som",Ngay 13 - Toi,report/muc8_muc9.md,Chua bat dau
-14,26/7,CN,Toi,Du lieu + Train Nhanh 1 & 3,"Tong hop ket qua, ho tro demo",Ca tuan,report/final_summary.md,Chua bat dau
-14,26/7,CN,Bach,Nhanh 2 (Anomaly) - doc lap,"Tong hop ket qua, ho tro demo",Ca tuan,report/final_summary.md,Chua bat dau
+13,25/7,Th7,Diep,Support - Bao cao + Bai RIVF,Hoan thien Conclusion + Future Work draft cho bai RIVF,Ngay 12 - Diep,paper/rivf2026/conclusion.tex,Chua bat dau
+14,26/7,CN,Toi,MLOps (rut gon),"Polish demo Streamlit + API, dam bao chay muot",Ngay 13 - Toi,Khong co,Chua bat dau
+14,26/7,CN,Bach,Train tat ca,"Ho tro polish demo, kiem tra lai ket qua Nhanh 3",Ngay 13 - Bach,Khong co,Chua bat dau
 14,26/7,CN,Minh,Streamlit Web App - doc lap,"Hoan thien demo, dam bao chay muot cho buoi bao cao",Ca tuan,app/streamlit_app.py (release),Chua bat dau
-14,26/7,CN,Diep,Support - Bao cao,"Tong hop toan bo bao cao, chuan bi slide",Toan bo cac muc,report/BAO_CAO_FINAL.docx; slide/DEMO_SLIDE.pptx,Chua bat dau
+14,26/7,CN,Diep,Support - Bao cao + Bai RIVF,Tong hop bao cao do an (khac voi bai RIVF),Ngay 13 - Diep,report/bao_cao_do_an_final.md,Chua bat dau
+15,27/7,Th2,Toi,MLOps (rut gon),"Review cuoi demo + API 3 nhanh, sua loi con lai",Ngay 14 - Toi,Khong co,Chua bat dau
+15,27/7,Th2,Bach,Train tat ca,"Review cuoi ket qua 3 nhanh (F1/AUC/session), chuan bi so lieu cho bai RIVF",Ngay 14 - Bach,reports/nhanh1_eval.json; reports/nhanh2_eval.json; reports/nhanh3_eval.json,Chua bat dau
+15,27/7,Th2,Minh,Streamlit,"Review cuoi demo, quay video/chup anh minh hoa cho bai RIVF neu can",Ngay 14 - Minh,Khong co,Chua bat dau
+15,27/7,Th2,Diep,Support - Bao cao + Bai RIVF,Ra soat toan bo bao cao do an truoc khi nop,Ngay 14 - Diep,report/bao_cao_do_an_final.md (rieng),Chua bat dau
+16,28/7,Th3,Toi,MLOps (rut gon),"MOC: chot demo + API 3 nhanh, nop bao cao do an (neu truong yeu cau)",Ngay 15 - Toi,Khong co,Chua bat dau
+16,28/7,Th3,Bach,Train tat ca,MOC: chot so lieu ky thuat 3 nhanh (khong lam them Continual Learning/Concept Drift - xem Future Work),Ngay 15 - Bach,Khong co,Chua bat dau
+16,28/7,Th3,Minh,Streamlit,"MOC: demo hoan thien, san sang cho bao cao do an",Ngay 15 - Minh,Khong co,Chua bat dau
+16,28/7,Th3,Diep,Support - Bao cao + Bai RIVF,Nop bao cao do an; ca nhom chuyen trong tam sang bai RIVF tu day,Ngay 15 - Diep,report/bao_cao_do_an_final.md,Chua bat dau
+17,29/7,Th4,Toi,Bai RIVF,Viet Abstract + gop Intro/Related Work/Method vao template IEEEtran,Ngay 16 - Toi; Ngay 6 - Diep,paper/rivf2026/main.tex,Chua bat dau
+17,29/7,Th4,Bach,Bai RIVF,"Chuan bi bang/bieu do so lieu 3 nhanh cho phan Experiments (F1, AUC, latency)",Ngay 15 - Bach,paper/rivf2026/figures/,Chua bat dau
+17,29/7,Th4,Minh,Bai RIVF,Ve so do kien truc he thong (3 nhanh + decision logic) cho bai RIVF,Ngay 15 - Minh,paper/rivf2026/figures/architecture.png,Chua bat dau
+17,29/7,Th4,Diep,Bai RIVF,Ghep Intro + Related Work + Method da viet truoc vao ban thao chinh,Ngay 16 - Diep,paper/rivf2026/main.tex (cap nhat),Chua bat dau
+18,30/7,Th5,Toi,Bai RIVF,Viet Experiments + Discussion/Limitations/Future Work vao ban thao,Ngay 17 - Toi,paper/rivf2026/main.tex (cap nhat),Chua bat dau
+18,30/7,Th5,Bach,Bai RIVF,Kiem tra lai moi so lieu trong bai khop voi reports/*.json that,Ngay 17 - Bach,Khong co,Chua bat dau
+18,30/7,Th5,Minh,Bai RIVF,Hoan thien hinh minh hoa demo (screenshot/so do luong xu ly),Ngay 17 - Minh,paper/rivf2026/figures/,Chua bat dau
+18,30/7,Th5,Diep,Bai RIVF,Viet Conclusion; format toan bai dung IEEEtran 6 trang; kiem tra chinh ta/van phong tieng Anh,Ngay 18 - Toi,paper/rivf2026/main.pdf (draft),Chua bat dau
+19,31/7,Th6,Toi,Bai RIVF,"Ra soat cuoi toan bai, kiem tra dinh dang IEEE + gioi han 6 trang",Ngay 18 - Diep,Khong co,Chua bat dau
+19,31/7,Th6,Bach,Bai RIVF,Ra soat cuoi phan so lieu/ket qua,Ngay 18 - Bach,Khong co,Chua bat dau
+19,31/7,Th6,Minh,Bai RIVF,Ra soat cuoi hinh anh/so do trong bai,Ngay 18 - Minh,Khong co,Chua bat dau
+19,31/7,Th6,Diep,Bai RIVF,MOC: NOP BAI qua EDAS (https://edas.info/N35414) truoc 23:59 31/7,Ngay 19 - Toi; Ngay 19 - Bach; Ngay 19 - Minh,"paper/rivf2026/main.pdf (final, da nop)",Chua bat dau
