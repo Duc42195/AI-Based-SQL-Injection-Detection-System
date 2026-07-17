@@ -13,42 +13,42 @@
 3,15/7,Th4,Diep,Support - Bao cao,"Theo doi tien do, chuan bi template bang ket qua",Khong co,report/template_bang_ketqua.md,Chua bat dau
 4,16/7,Th5,Toi,Du lieu + Train Nhanh 1 & 3,Danh gia Nhanh 1 (P/R/F1); bat dau setup Docker lab (DVWA/WebGoat) cho Nhanh 3,Ngay 3 - Toi,reports/nhanh1_eval.json; docker/dvwa/docker-compose.yml,Dang thuc hien
 4,16/7,Th5,Bach,Nhanh 2 (Anomaly) - doc lap,Train OC-SVM/Isolation Forest (+PCA neu can),Ngay 3 - Bach,models/nhanh2_v1/,Chua bat dau
-4,16/7,Th5,Minh,Streamlit Web App - doc lap,"Trang Metrics (P/R/F1, latency) - doc tu file JSON report khi co",Ngay 3 - Minh,app/pages/metrics.py,Chua bat dau
+4,16/7,Th5,Minh,Streamlit Web App - doc lap,"Trang Metrics (P/R/F1, latency) - noi API THAT: GET /api/v1/metrics/nhanh1 (backend da san sang tu Ngay 4, xem api/README.md)",Ngay 4 - Toi (API backend),app/pages/metrics.py,Chua bat dau
 4,16/7,Th5,Diep,Support - Bao cao,Cap nhat Muc 6 khung (danh gia) voi ket qua so bo Nhanh 1,Ngay 4 - Toi,report/muc6_draft.md,Chua bat dau
-5,17/7,Th6,Toi,Du lieu + Train Nhanh 1 & 3,Cai sqlmap + mitmproxy; chay thu 1 luot boolean-blind tren lab,Ngay 4 - Toi,data/raw/nhanh3_sample_capture.log,Chua bat dau
-5,17/7,Th6,Bach,Nhanh 2 (Anomaly) - doc lap,"Danh gia Nhanh 2 (FPR, ty le phat hien)",Ngay 4 - Bach,reports/nhanh2_eval.json,Chua bat dau
-5,17/7,Th6,Minh,Streamlit Web App - doc lap,Ket noi API that cua Nhanh 2 (Bach vua xong danh gia),Ngay 5 - Bach,app/streamlit_app.py (cap nhat),Chua bat dau
+5,17/7,Th6,Toi,MLOps - Bo xu ly trung tam,Bat dau xay Bo xu ly trung tam (Decision Logic 3 nhanh) + hang doi Overkill,Ngay 4 - Toi; Ngay 4 - Bach,src/decision/central_processor.py,Chua bat dau
+5,17/7,Th6,Bach,Train tat ca - Nhanh 3 bat dau,Danh gia Nhanh 2 xong (audit da co); dung Docker lab (DVWA/WebGoat) + cai sqlmap/mitmproxy cho Nhanh 3,Ngay 4 - Bach,docker/dvwa/docker-compose.yml; reports/nhanh2_eval.json,Dang thuc hien
+5,17/7,Th6,Minh,Streamlit Web App - doc lap,"Noi API THAT Nhanh 1 + POST /api/v1/detect (verdict BLOCK/OVERKILL/ALLOW) - da san sang tu Ngay 4; trang test query bo mock. Nhanh 2/3 tra not_ready, render placeholder",Ngay 4 - Toi (API backend),app/streamlit_app.py (cap nhat),Chua bat dau
 5,17/7,Th6,Diep,Support - Bao cao,Cap nhat voi ket qua Nhanh 2 tu Bach,Ngay 5 - Bach,report/muc6_draft.md (cap nhat),Chua bat dau
-6,18/7,Th7,Toi,Du lieu + Train Nhanh 1 & 3,"Chay sqlmap --technique=B va --technique=T day du qua proxy, thu thap traffic that",Ngay 5 - Toi,data/raw/nhanh3_sqlmap_sessions/,Chua bat dau
-6,18/7,Th7,Bach,Nhanh 2 (Anomaly) - doc lap,Tinh chinh mo hinh Nhanh 2,Ngay 5 - Bach,models/nhanh2_v2/,Chua bat dau
+6,18/7,Th7,Toi,MLOps,Thiet ke Session Store (TTL/eviction) cho Nhanh 3; tiep tuc Bo xu ly trung tam,Ngay 5 - Toi,src/session_store/,Chua bat dau
+6,18/7,Th7,Bach,Train tat ca,"Chay sqlmap --technique=B va --technique=T qua proxy, thu thap traffic that cho Nhanh 3",Ngay 5 - Bach,data/raw/nhanh3_sqlmap_sessions/,Chua bat dau
 6,18/7,Th7,Minh,Streamlit Web App - doc lap,"Polish UI, them bieu do so sanh kien truc (tu notebook Ngay 1)",Ngay 5 - Minh,app/streamlit_app.py (cap nhat),Chua bat dau
 6,18/7,Th7,Diep,Support - Bao cao,Viet Muc 4 (Du lieu) cung Toi,Ngay 6 - Toi,report/muc4.md,Chua bat dau
-7,19/7,CN,Toi,Du lieu + Train Nhanh 1 & 3,Buffer - bat dau parse traffic bat duoc thanh session,Ngay 6 - Toi,src/preprocessing/parse_sessions.py,Chua bat dau
-7,19/7,CN,Bach,Nhanh 2 (Anomaly) - doc lap,Buffer / review tien do,Khong co,Khong co,Chua bat dau
+7,19/7,CN,Toi,MLOps,"Dong goi API tong (FastAPI) - dang lam (api/main.py, routers/); tich hop Nhanh 1+2 that vao API",Ngay 6 - Toi,api/main.py; api/routers/,Dang thuc hien
+7,19/7,CN,Bach,Train tat ca,Parse traffic bat duoc thanh session; sinh tap adversarial (WAF-A-MoLE) cho Nhanh 1,Ngay 6 - Bach,src/preprocessing/parse_sessions.py; data/adversarial/,Chua bat dau
 7,19/7,CN,Minh,Streamlit Web App - doc lap,Buffer / review tien do,Khong co,Khong co,Chua bat dau
 7,19/7,CN,Diep,Support - Bao cao,Kiem dinh cheo mot phan nhan Nhanh 3 cung Toi,Ngay 8 - Toi,report/nhan_kiemdinh_note.md,Chua bat dau
-8,20/7,Th2,Toi,Du lieu + Train Nhanh 1 & 3,"Gan nhan 2 tang, sanity-check (giu session sqlmap bao thanh cong), them benign session (crawler/CSIC group)",Ngay 7 - Toi,data/processed/nhanh3_sessions_labeled.csv,Chua bat dau
-8,20/7,Th2,Bach,Nhanh 2 (Anomaly) - doc lap,Bat dau xay Bo xu ly trung tam (Decision Logic 3 nhanh) + hang doi Overkill,Ngay 6 - Bach,src/decision/central_processor.py,Chua bat dau
+8,20/7,Th2,Toi,MLOps,Test API Nhanh 1+2 that; chuan bi endpoint cho Nhanh 3 (chua co model),Ngay 7 - Toi,tests/test_api.py (cap nhat),Chua bat dau
+8,20/7,Th2,Bach,Train tat ca,"Gan nhan 2 tang, sanity-check (giu session sqlmap bao thanh cong), them benign session (crawler/CSIC group)",Ngay 7 - Bach,data/processed/nhanh3_sessions_labeled.csv,Chua bat dau
 8,20/7,Th2,Minh,Streamlit Web App - doc lap,Cap nhat giao dien cho du lieu Nhanh 3 (dung mock tiep),Khong co,app/pages/nhanh3_placeholder.py,Chua bat dau
 8,20/7,Th2,Diep,Support - Bao cao,Viet Muc 5 (Co che ket hop),Ngay 8 - Bach,report/muc5.md,Chua bat dau
-9,21/7,Th3,Toi,Du lieu + Train Nhanh 1 & 3,"Test nhanh Tang 2 Nhanh 3 (GRU vs 1D-CNN vs Transformer nho), chot kien truc, bat dau train",Ngay 8 - Toi,notebooks/model_comparison_nhanh3.ipynb,Chua bat dau
-9,21/7,Th3,Bach,Nhanh 2 (Anomaly) - doc lap,"Thiet ke Session Store (TTL/eviction), tich hop API Nhanh 2",Ngay 8 - Bach,src/session_store/,Chua bat dau
-9,21/7,Th3,Minh,Streamlit Web App - doc lap,Cho ket noi API Nhanh 1/3 - chuan bi giao dien hien thi ket qua 3 nhanh,Khong co,app/pages/nhanh_results.py,Chua bat dau
+9,21/7,Th3,Toi,MLOps,Benchmark latency/throughput Nhanh 1+2 qua API,Ngay 8 - Toi,reports/latency_benchmark.json,Chua bat dau
+9,21/7,Th3,Bach,Train tat ca,"Test nhanh Tang 2 Nhanh 3 (GRU vs 1D-CNN vs Transformer nho), chot kien truc, bat dau train",Ngay 8 - Bach,notebooks/model_comparison_nhanh3.ipynb,Chua bat dau
+9,21/7,Th3,Minh,Streamlit Web App - doc lap,Trang ket qua 3 nhanh: da noi /api/v1/detect (Nhanh 1 that + verdict); cho Nhanh 3,Khong co,app/pages/nhanh_results.py,Chua bat dau
 9,21/7,Th3,Diep,Support - Bao cao,Tiep tuc Muc 6 (cho so lieu Nhanh 3),Ngay 9 - Toi,report/muc6_draft.md (cap nhat),Chua bat dau
-10,22/7,Th4,Toi,Du lieu + Train Nhanh 1 & 3,Train + danh gia Nhanh 3,Ngay 9 - Toi,models/nhanh3_v1/; reports/nhanh3_eval.json,Chua bat dau
-10,22/7,Th4,Bach,Nhanh 2 (Anomaly) - doc lap,Dong goi API tong (FastAPI) + tich hop CTranslate2 neu can,Ngay 9 - Bach,api/main.py,Chua bat dau
-10,22/7,Th4,Minh,Streamlit Web App - doc lap,Ket noi API Nhanh 2 + Bo xu ly trung tam that (Bach vua xong),Ngay 10 - Bach,app/streamlit_app.py (cap nhat),Chua bat dau
+10,22/7,Th4,Toi,MLOps,Cho model Nhanh 3 tu Bach; chuan bi tich hop endpoint + Bo xu ly trung tam day du 3 nhanh,Ngay 9 - Toi,api/routers/nhanh3.py (cap nhat),Chua bat dau
+10,22/7,Th4,Bach,Train tat ca,Train + danh gia Nhanh 3; ban giao model cho Toi tich hop API,Ngay 9 - Bach,models/nhanh3_v1/; reports/nhanh3_eval.json,Chua bat dau
+10,22/7,Th4,Minh,Streamlit Web App - doc lap,Ket noi API Nhanh 2 + Bo xu ly trung tam that (Toi vua xong),Ngay 9 - Toi,app/streamlit_app.py (cap nhat),Chua bat dau
 10,22/7,Th4,Diep,Support - Bao cao,"Viet Muc 7 (Threat model, rui ro)",Khong co,report/muc7.md,Chua bat dau
-11,23/7,Th5,Toi,Du lieu + Train Nhanh 1 & 3,"Dong goi Nhanh 1+3 thanh API endpoint, ban giao cho Bach de tich hop",Ngay 10 - Toi,api/nhanh1_endpoint.py; api/nhanh3_endpoint.py,Chua bat dau
-11,23/7,Th5,Bach,Nhanh 2 (Anomaly) - doc lap,Benchmark latency/throughput toan he thong,Ngay 10 - Bach,reports/latency_benchmark.json,Chua bat dau
-11,23/7,Th5,Minh,Streamlit Web App - doc lap,Ket noi API Nhanh 1 + Nhanh 3 that,Ngay 11 - Toi,app/streamlit_app.py (cap nhat),Chua bat dau
+11,23/7,Th5,Toi,MLOps,Tich hop Nhanh 3 that vao API + Bo xu ly trung tam; benchmark toan he thong,Ngay 10 - Toi; Ngay 10 - Bach,reports/latency_benchmark_full.json,Chua bat dau
+11,23/7,Th5,Bach,Train tat ca,Ho tro Toi tich hop Nhanh 3; tinh chinh lai Nhanh 1/2 neu can dua tren tap adversarial,Ngay 10 - Bach,reports/nhanh1_adversarial_eval.json,Chua bat dau
+11,23/7,Th5,Minh,Streamlit Web App - doc lap,"Nhanh 1 da noi tu truoc; gio noi not Nhanh 3 that (Bach vua xong train, Toi vua tich hop API)",Ngay 11 - Toi,app/streamlit_app.py (cap nhat),Chua bat dau
 11,23/7,Th5,Diep,Support - Bao cao,Tong hop bang benchmark vao bao cao,Ngay 11 - Bach,report/muc_benchmark.md,Chua bat dau
-12,24/7,Th6,Toi,Du lieu + Train Nhanh 1 & 3,Test end-to-end cung Bach (payload that + adversarial + query-splitting),Ngay 11 - Toi; Ngay 11 - Bach,tests/e2e_test_results.md,Chua bat dau
-12,24/7,Th6,Bach,Nhanh 2 (Anomaly) - doc lap,Test end-to-end cung Toi,Ngay 11 - Bach,tests/e2e_test_results.md,Chua bat dau
+12,24/7,Th6,Toi,MLOps,Test end-to-end cung Bach (payload that + adversarial + query-splitting),Ngay 11 - Toi; Ngay 11 - Bach,tests/e2e_test_results.md,Chua bat dau
+12,24/7,Th6,Bach,Train tat ca,Test end-to-end cung Toi,Ngay 11 - Bach,tests/e2e_test_results.md,Chua bat dau
 12,24/7,Th6,Minh,Streamlit Web App - doc lap,"Ket noi end-to-end toan bo, test cung nhom",Ngay 11 - Minh,app/streamlit_app.py (final),Chua bat dau
 12,24/7,Th6,Diep,Support - Bao cao,Review cheo toan bo ket qua,Khong co,report/review_note.md,Chua bat dau
-13,25/7,Th7,Toi,Du lieu + Train Nhanh 1 & 3,Continual learning pipeline cho Nhanh 1&3 (neu kip) hoac ho tro viet Muc 4/8,Ngay 12 - Toi,src/continual_learning/retrain_nhanh1_nhanh3.py,Chua bat dau
-13,25/7,Th7,Bach,Nhanh 2 (Anomaly) - doc lap,Continual learning backend (queue -> retrain trigger) neu kip,Ngay 12 - Bach,src/continual_learning/retrain_nhanh2.py,Chua bat dau
+13,25/7,Th7,Toi,MLOps,"Continual learning pipeline (queue Overkill -> retrain trigger, rehearsal, validation gate) + Concept Drift monitoring",Ngay 12 - Toi,src/continual_learning/; src/monitoring/,Chua bat dau
+13,25/7,Th7,Bach,Train tat ca,Ho tro continual learning phan retrain script cho ca 3 nhanh neu kip,Ngay 12 - Bach,src/continual_learning/retrain_all.py,Chua bat dau
 13,25/7,Th7,Minh,Streamlit Web App - doc lap,Them trang hien thi Concept Drift/Continual Learning neu co,Ngay 13 - Toi; Ngay 13 - Bach,app/pages/monitoring.py,Chua bat dau
 13,25/7,Th7,Diep,Support - Bao cao,"Viet Muc 8-9 (Continual Learning/Concept Drift) neu co, hoac tong hop som",Ngay 13 - Toi,report/muc8_muc9.md,Chua bat dau
 14,26/7,CN,Toi,Du lieu + Train Nhanh 1 & 3,"Tong hop ket qua, ho tro demo",Ca tuan,report/final_summary.md,Chua bat dau
