@@ -80,6 +80,11 @@ def measure_latency(predict_one: Callable[[str], int], texts: list[str], n: int 
 def evaluate_predictions(y_true: np.ndarray, y_pred: np.ndarray) -> dict[str, Any]:
     """Compute F1-macro, per-class report, and confusion matrix.
 
+    Uses only labels actually present in y_true/y_pred (NOT the full static
+    schema) - scoring a label with 0 support as f1=0 silently corrupts the
+    macro average if a class is disabled (see
+    branch1_supervised.balance.exclude_labels in configs/config.yaml).
+
     Args:
         y_true: Ground-truth labels.
         y_pred: Predicted labels.
@@ -87,13 +92,15 @@ def evaluate_predictions(y_true: np.ndarray, y_pred: np.ndarray) -> dict[str, An
     Returns:
         Dict with f1_macro, per_class report (dict), and confusion_matrix (list of lists).
     """
+    labels_present = sorted(set(y_true.tolist()) | set(y_pred.tolist()))
+    target_names = [LABEL_NAMES[i] for i in labels_present]
     report = classification_report(
-        y_true, y_pred, labels=LABEL_ORDER, target_names=LABEL_NAMES_ORDERED, output_dict=True, zero_division=0
+        y_true, y_pred, labels=labels_present, target_names=target_names, output_dict=True, zero_division=0
     )
-    cm = confusion_matrix(y_true, y_pred, labels=LABEL_ORDER)
+    cm = confusion_matrix(y_true, y_pred, labels=labels_present)
     return {
         "f1_macro": report["macro avg"]["f1-score"],
-        "per_class": {name: report[name] for name in LABEL_NAMES_ORDERED},
+        "per_class": {name: report[name] for name in target_names},
         "confusion_matrix": cm.tolist(),
     }
 

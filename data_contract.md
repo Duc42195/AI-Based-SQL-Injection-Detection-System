@@ -2,6 +2,8 @@
 
 > Chốt Ngày 1 (13/7). Định nghĩa schema đích cho dữ liệu đã xử lý, để mọi thành viên (và code sau này) dùng chung một chuẩn. Số liệu dưới đây đã verify thực tế trên dữ liệu vừa tải, không phải ước tính.
 
+> 📦 **Data đã xử lý tải ở đây, không có trong repo git:** https://huggingface.co/datasets/Jason-42195/VNU-SQLi-Detection (`nhanh1_train.csv`, `nhanh2_normal.csv`, `nhanh2_anomalous_eval.csv`). Xem README.md gốc repo, mục "Data đã xử lý — tải ở đâu".
+
 ---
 
 ## 1. Dữ liệu thô đã tải (Ngày 1)
@@ -109,6 +111,18 @@ File: `data/processed/nhanh2_normal.csv` (91.935 dòng) + `data/processed/nhanh2
 **⚠️ Phát hiện khi so sánh feature giữa 2 tập (đáng lưu ý khi train/đánh giá thật):** tập `anomalous` (D3) có `sql_keyword_count` trung bình **thấp hơn** tập normal (0,13 vs 0,35) dù dài hơn (137 vs 92 ký tự). Lý do: D3 "anomalous" gồm **nhiều loại tấn công** (buffer overflow, XSS, path traversal, CRLF...), không chỉ SQLi — đặc trưng `sql_keyword_count` không phải tín hiệu mạnh cho toàn bộ tập test này. Cần lọc riêng phần SQLi trong D3 anomalous nếu muốn đánh giá đúng khả năng bắt SQLi zero-day của Nhánh 2, hoặc chấp nhận đây là benchmark "phát hiện bất thường nói chung", không riêng SQLi.
 
 **Also phát hiện:** `length` có outlier rất lớn (max 5.370 ký tự trong pool normal) — cần cân nhắc chuẩn hoá/log-transform feature này trước khi train Isolation Forest, tránh outlier chi phối khoảng cách.
+
+---
+
+## 3.3. Bỏ lớp `stacked` khỏi training + fix bug tính F1-macro (16/7)
+
+**Lý do bỏ `stacked`:** sau khi so sánh 4 kiến trúc (Mục 4.1 `De_xuat_SQLi_Detection_AI.md`), cả 4 model đều đạt **100% recall** trên lớp `stacked` — dù lớp này **100% synthetic** (363 template). Đây là dấu hiệu dữ liệu quá dễ phân biệt (template lặp lại cấu trúc `; DROP/INSERT/...`), không phải tín hiệu chất lượng thật. Quyết định: loại khỏi tập train, giữ nguyên code sinh (`src/preprocessing/synthetic_stacked.py`) để dùng lại khi có data thật (vd. từ Docker lab/sqlmap Ngày 5-6).
+
+**Cách xử lý:** thêm `branch1_supervised.balance.exclude_labels: [5]` vào `config.yaml`; `scripts/build_nhanh1_dataset.py` đọc config này để (a) bỏ qua nguồn `synthetic_stacked` khi load, (b) lọc phòng vệ mọi dòng có nhãn nằm trong `exclude_labels` sau khi tag. Dataset mới: **67.796 dòng, 5 lớp** (train 54.236 / test 13.560).
+
+**⚠️ Bug thật phát hiện khi retrain:** sau khi bỏ `stacked`, `scripts/train_nhanh1.py` báo F1-macro tụt từ 0.985 xuống **0.8185** — tưởng là dữ liệu xấu đi, nhưng verify tay bằng script riêng cho ra **0.982** (khớp kỳ vọng). Nguyên nhân: code cũ hardcode `LABEL_ORDER = sorted(LABEL_NAMES.keys())` (luôn có đủ 6 nhãn tĩnh) rồi truyền vào `classification_report(labels=LABEL_ORDER, ...)` — khi nhãn 5 (`stacked`) không còn xuất hiện trong dữ liệu, sklearn vẫn tính nó như 1 lớp có `f1-score=0` (0 support), kéo macro-average xuống sai. **Đã sửa** cả `train_nhanh1.py` và `compare_nhanh1_architectures.py`: tính danh sách nhãn **từ dữ liệu thực tế** (`sorted(set(y_true) | set(y_pred))`), không hardcode theo schema tĩnh. Đây là bug đáng nhớ: bất kỳ lúc nào bớt/thêm lớp, phải kiểm tra lại các đoạn code hardcode danh sách nhãn cho `classification_report`/`confusion_matrix`.
+
+**F1-macro đúng của model 5 lớp: 0.9822** (`models/nhanh1_v1/metadata.json`, TF-IDF + LogReg, không đổi kiến trúc).
 
 ---
 
