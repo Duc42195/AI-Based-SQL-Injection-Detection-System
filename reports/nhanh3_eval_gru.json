@@ -1,0 +1,60 @@
+{
+  "version": "nhanh3_gru_v1",
+  "branch": "nhanh3_session",
+  "model": "GRU",
+  "model_params": 38722,
+  "config": {
+    "hidden_dim": 64,
+    "num_layers": 2,
+    "dropout": 0.3,
+    "bidirectional": false,
+    "epochs_trained": 22,
+    "batch_size": 32,
+    "learning_rate": 0.001
+  },
+  "device": "cpu",
+  "trained_at": "2026-07-20T04:35:47Z",
+  "n_train": 15981,
+  "n_test": 4019,
+  "test_metrics": {
+    "weighted_f1": 0.9965,
+    "roc_auc": 0.9991,
+    "classification_report": {
+      "benign": {
+        "precision": 1.0,
+        "recall": 0.9854014598540146,
+        "f1-score": 0.9926470588235294,
+        "support": 959.0
+      },
+      "attack": {
+        "precision": 0.9954456733897202,
+        "recall": 1.0,
+        "f1-score": 0.9977176393870232,
+        "support": 3060.0
+      },
+      "accuracy": 0.9965165464045782,
+      "macro avg": {
+        "precision": 0.9977228366948601,
+        "recall": 0.9927007299270073,
+        "f1-score": 0.9951823491052763,
+        "support": 4019.0
+      },
+      "weighted avg": {
+        "precision": 0.9965324111899835,
+        "recall": 0.9965165464045782,
+        "f1-score": 0.996507714838531,
+        "support": 4019.0
+      }
+    },
+    "confusion_matrix": [
+      [
+        945,
+        14
+      ],
+      [
+        0,
+        3060
+      ]
+    ]
+  }
+}

@@ -1,0 +1,737 @@
+{
+  "n_val_sessions": 51,
+  "n_test_sessions": 35,
+  "best_threshold_val": 0.001,
+  "val_metrics_at_best": {
+    "threshold": 0.001,
+    "f1": 1.0,
+    "precision": 1.0,
+    "recall": 1.0,
+    "accuracy": 1.0,
+    "tn": 33,
+    "fp": 0,
+    "fn": 0,
+    "tp": 18,
+    "confusion_matrix": [
+      [
+        33,
+        0
+      ],
+      [
+        0,
+        18
+      ]
+    ]
+  },
+  "test_metrics_at_best": {
+    "threshold": 0.001,
+    "f1": 1.0,
+    "precision": 1.0,
+    "recall": 1.0,
+    "accuracy": 1.0,
+    "tn": 23,
+    "fp": 0,
+    "fn": 0,
+    "tp": 12,
+    "confusion_matrix": [
+      [
+        23,
+        0
+      ],
+      [
+        0,
+        12
+      ]
+    ]
+  },
+  "test_metrics_default_0_5": {
+    "threshold": 0.5,
+    "f1": 0.8571,
+    "precision": 1.0,
+    "recall": 0.75,
+    "accuracy": 0.9143,
+    "tn": 23,
+    "fp": 0,
+    "fn": 3,
+    "tp": 9,
+    "confusion_matrix": [
+      [
+        23,
+        0
+      ],
+      [
+        3,
+        9
+      ]
+    ]
+  },
+  "val_sessions": [
+    {
+      "session_id": 0,
+      "label": 1,
+      "label_name": "sqlmap_attack",
+      "attack_conf": 0.992240309715271
+    },
+    {
+      "session_id": 4,
+      "label": 1,
+      "label_name": "sqlmap_attack",
+      "attack_conf": 0.9999642372131348
+    },
+    {
+      "session_id": 5,
+      "label": 1,
+      "label_name": "sqlmap_attack",
+      "attack_conf": 0.9998307228088379
+    },
+    {
+      "session_id": 6,
+      "label": 0,
+      "label_name": "benign",
+      "attack_conf": 3.395198655198328e-05
+    },
+    {
+      "session_id": 9,
+      "label": 1,
+      "label_name": "sqlmap_attack",
+      "attack_conf": 0.011885619722306728
+    },
+    {
+      "session_id": 10,
+      "label": 1,
+      "label_name": "sqlmap_attack",
+      "attack_conf": 0.8028284907341003
+    },
+    {
+      "session_id": 11,
+      "label": 1,
+      "label_name": "sqlmap_attack",
+      "attack_conf": 0.9999638795852661
+    },
+    {
+      "session_id": 14,
+      "label": 1,
+      "label_name": "sqlmap_attack",
+      "attack_conf": 0.9942215085029602
+    },
+    {
+      "session_id": 17,
+      "label": 1,
+      "label_name": "sqlmap_attack",
+      "attack_conf": 0.7964338064193726
+    },
+    {
+      "session_id": 21,
+      "label": 0,
+      "label_name": "benign",
+      "attack_conf": 2.727216087805573e-05
+    },
+    {
+      "session_id": 22,
+      "label": 1,
+      "label_name": "sqlmap_attack",
+      "attack_conf": 0.9999867677688599
+    },
+    {
+      "session_id": 23,
+      "label": 1,
+      "label_name": "sqlmap_attack",
+      "attack_conf": 0.984732449054718
+    },
+    {
+      "session_id": 24,
+      "label": 1,
+      "label_name": "sqlmap_attack",
+      "attack_conf": 0.013156878761947155
+    },
+    {
+      "session_id": 25,
+      "label": 1,
+      "label_name": "sqlmap_attack",
+      "attack_conf": 0.978797197341919
+    },
+    {
+      "session_id": 27,
+      "label": 1,
+      "label_name": "sqlmap_attack",
+      "attack_conf": 0.9988860487937927
+    },
+    {
+      "session_id": 28,
+      "label": 0,
+      "label_name": "benign",
+      "attack_conf": 7.462309440597892e-05
+    },
+    {
+      "session_id": 29,
+      "label": 1,
+      "label_name": "sqlmap_attack",
+      "attack_conf": 0.9999852180480957
+    },
+    {
+      "session_id": 30,
+      "label": 1,
+      "label_name": "sqlmap_attack",
+      "attack_conf": 0.9841252565383911
+    },
+    {
+      "session_id": 31,
+      "label": 1,
+      "label_name": "sqlmap_attack",
+      "attack_conf": 0.05362482741475105
+    },
+    {
+      "session_id": 33,
+      "label": 1,
+      "label_name": "sqlmap_attack",
+      "attack_conf": 0.9999574422836304
+    },
+    {
+      "session_id": 34,
+      "label": 1,
+      "label_name": "sqlmap_attack",
+      "attack_conf": 0.998870313167572
+    },
+    {
+      "session_id": 35,
+      "label": 0,
+      "label_name": "benign",
+      "attack_conf": 3.7760550185339525e-05
+    },
+    {
+      "session_id": 36,
+      "label": 0,
+      "label_name": "benign",
+      "attack_conf": 9.36609212658368e-05
+    },
+    {
+      "session_id": 38,
+      "label": 0,
+      "label_name": "benign",
+      "attack_conf": 3.7080611946294084e-05
+    },
+    {
+      "session_id": 39,
+      "label": 0,
+      "label_name": "benign",
+      "attack_conf": 2.7106658308184706e-05
+    },
+    {
+      "session_id": 41,
+      "label": 0,
+      "label_name": "benign",
+      "attack_conf": 2.263467467855662e-05
+    },
+    {
+      "session_id": 42,
+      "label": 0,
+      "label_name": "benign",
+      "attack_conf": 3.179090708727017e-05
+    },
+    {
+      "session_id": 43,
+      "label": 0,
+      "label_name": "benign",
+      "attack_conf": 2.3996628442546353e-05
+    },
+    {
+      "session_id": 45,
+      "label": 0,
+      "label_name": "benign",
+      "attack_conf": 3.3090323995565996e-05
+    },
+    {
+      "session_id": 46,
+      "label": 0,
+      "label_name": "benign",
+      "attack_conf": 2.56006187555613e-05
+    },
+    {
+      "session_id": 47,
+      "label": 0,
+      "label_name": "benign",
+      "attack_conf": 1.910219361889176e-05
+    },
+    {
+      "session_id": 49,
+      "label": 0,
+      "label_name": "benign",
+      "attack_conf": 2.897652484534774e-05
+    },
+    {
+      "session_id": 54,
+      "label": 0,
+      "label_name": "benign",
+      "attack_conf": 3.507763904053718e-05
+    },
+    {
+      "session_id": 55,
+      "label": 0,
+      "label_name": "benign",
+      "attack_conf": 3.9793114410713315e-05
+    },
+    {
+      "session_id": 56,
+      "label": 0,
+      "label_name": "benign",
+      "attack_conf": 2.9651329896296374e-05
+    },
+    {
+      "session_id": 57,
+      "label": 0,
+      "label_name": "benign",
+      "attack_conf": 2.3133519789553247e-05
+    },
+    {
+      "session_id": 60,
+      "label": 0,
+      "label_name": "benign",
+      "attack_conf": 6.265675619943067e-05
+    },
+    {
+      "session_id": 61,
+      "label": 0,
+      "label_name": "benign",
+      "attack_conf": 2.5369106879225e-05
+    },
+    {
+      "session_id": 62,
+      "label": 0,
+      "label_name": "benign",
+      "attack_conf": 4.742786768474616e-05
+    },
+    {
+      "session_id": 63,
+      "label": 0,
+      "label_name": "benign",
+      "attack_conf": 1.9907876776414923e-05
+    },
+    {
+      "session_id": 64,
+      "label": 0,
+      "label_name": "benign",
+      "attack_conf": 3.0279588827397674e-05
+    },
+    {
+      "session_id": 66,
+      "label": 0,
+      "label_name": "benign",
+      "attack_conf": 3.56226009898819e-05
+    },
+    {
+      "session_id": 71,
+      "label": 0,
+      "label_name": "benign",
+      "attack_conf": 2.2498899852507748e-05
+    },
+    {
+      "session_id": 74,
+      "label": 0,
+      "label_name": "benign",
+      "attack_conf": 3.2267020287690684e-05
+    },
+    {
+      "session_id": 76,
+      "label": 0,
+      "label_name": "benign",
+      "attack_conf": 2.086620224872604e-05
+    },
+    {
+      "session_id": 77,
+      "label": 0,
+      "label_name": "benign",
+      "attack_conf": 8.997614349937066e-05
+    },
+    {
+      "session_id": 78,
+      "label": 0,
+      "label_name": "benign",
+      "attack_conf": 2.3024420443107374e-05
+    },
+    {
+      "session_id": 80,
+      "label": 0,
+      "label_name": "benign",
+      "attack_conf": 6.103346822783351e-05
+    },
+    {
+      "session_id": 82,
+      "label": 0,
+      "label_name": "benign",
+      "attack_conf": 3.813233342953026e-05
+    },
+    {
+      "session_id": 83,
+      "label": 0,
+      "label_name": "benign",
+      "attack_conf": 3.100011235801503e-05
+    },
+    {
+      "session_id": 84,
+      "label": 0,
+      "label_name": "benign",
+      "attack_conf": 2.7039193810196593e-05
+    }
+  ],
+  "test_sessions": [
+    {
+      "session_id": 1,
+      "label": 1,
+      "label_name": "sqlmap_attack",
+      "attack_conf": 0.9996852874755859
+    },
+    {
+      "session_id": 2,
+      "label": 1,
+      "label_name": "sqlmap_attack",
+      "attack_conf": 0.013513770885765553
+    },
+    {
+      "session_id": 3,
+      "label": 1,
+      "label_name": "sqlmap_attack",
+      "attack_conf": 0.805692195892334
+    },
+    {
+      "session_id": 7,
+      "label": 1,
+      "label_name": "sqlmap_attack",
+      "attack_conf": 0.07782218605279922
+    },
+    {
+      "session_id": 8,
+      "label": 1,
+      "label_name": "sqlmap_attack",
+      "attack_conf": 0.9840174317359924
+    },
+    {
+      "session_id": 12,
+      "label": 1,
+      "label_name": "sqlmap_attack",
+      "attack_conf": 0.9998317956924438
+    },
+    {
+      "session_id": 13,
+      "label": 0,
+      "label_name": "benign",
+      "attack_conf": 3.212517549400218e-05
+    },
+    {
+      "session_id": 15,
+      "label": 1,
+      "label_name": "sqlmap_attack",
+      "attack_conf": 0.9998831748962402
+    },
+    {
+      "session_id": 16,
+      "label": 1,
+      "label_name": "sqlmap_attack",
+      "attack_conf": 0.00953621231019497
+    },
+    {
+      "session_id": 18,
+      "label": 1,
+      "label_name": "sqlmap_attack",
+      "attack_conf": 0.9999639987945557
+    },
+    {
+      "session_id": 19,
+      "label": 1,
+      "label_name": "sqlmap_attack",
+      "attack_conf": 0.9998342990875244
+    },
+    {
+      "session_id": 20,
+      "label": 0,
+      "label_name": "benign",
+      "attack_conf": 3.0117740607238375e-05
+    },
+    {
+      "session_id": 26,
+      "label": 1,
+      "label_name": "sqlmap_attack",
+      "attack_conf": 0.9999570846557617
+    },
+    {
+      "session_id": 32,
+      "label": 1,
+      "label_name": "sqlmap_attack",
+      "attack_conf": 0.9782880544662476
+    },
+    {
+      "session_id": 37,
+      "label": 0,
+      "label_name": "benign",
+      "attack_conf": 4.123272083234042e-05
+    },
+    {
+      "session_id": 40,
+      "label": 0,
+      "label_name": "benign",
+      "attack_conf": 1.9955094103352167e-05
+    },
+    {
+      "session_id": 44,
+      "label": 0,
+      "label_name": "benign",
+      "attack_conf": 3.565189763321541e-05
+    },
+    {
+      "session_id": 48,
+      "label": 0,
+      "label_name": "benign",
+      "attack_conf": 2.5638712031650357e-05
+    },
+    {
+      "session_id": 50,
+      "label": 0,
+      "label_name": "benign",
+      "attack_conf": 3.698568252730183e-05
+    },
+    {
+      "session_id": 51,
+      "label": 0,
+      "label_name": "benign",
+      "attack_conf": 2.378226963628549e-05
+    },
+    {
+      "session_id": 52,
+      "label": 0,
+      "label_name": "benign",
+      "attack_conf": 2.653235787875019e-05
+    },
+    {
+      "session_id": 53,
+      "label": 0,
+      "label_name": "benign",
+      "attack_conf": 3.216526602045633e-05
+    },
+    {
+      "session_id": 58,
+      "label": 0,
+      "label_name": "benign",
+      "attack_conf": 3.59875411959365e-05
+    },
+    {
+      "session_id": 59,
+      "label": 0,
+      "label_name": "benign",
+      "attack_conf": 2.0256153220543638e-05
+    },
+    {
+      "session_id": 65,
+      "label": 0,
+      "label_name": "benign",
+      "attack_conf": 2.8222124456078745e-05
+    },
+    {
+      "session_id": 67,
+      "label": 0,
+      "label_name": "benign",
+      "attack_conf": 2.1691708752769046e-05
+    },
+    {
+      "session_id": 68,
+      "label": 0,
+      "label_name": "benign",
+      "attack_conf": 2.3733671696390957e-05
+    },
+    {
+      "session_id": 69,
+      "label": 0,
+      "label_name": "benign",
+      "attack_conf": 2.1398451281129383e-05
+    },
+    {
+      "session_id": 70,
+      "label": 0,
+      "label_name": "benign",
+      "attack_conf": 0.0003592135035432875
+    },
+    {
+      "session_id": 72,
+      "label": 0,
+      "label_name": "benign",
+      "attack_conf": 3.7463636544998735e-05
+    },
+    {
+      "session_id": 73,
+      "label": 0,
+      "label_name": "benign",
+      "attack_conf": 1.9682609490700997e-05
+    },
+    {
+      "session_id": 75,
+      "label": 0,
+      "label_name": "benign",
+      "attack_conf": 2.3686843633186072e-05
+    },
+    {
+      "session_id": 79,
+      "label": 0,
+      "label_name": "benign",
+      "attack_conf": 2.9789700420224108e-05
+    },
+    {
+      "session_id": 81,
+      "label": 0,
+      "label_name": "benign",
+      "attack_conf": 2.7068605049862526e-05
+    },
+    {
+      "session_id": 85,
+      "label": 0,
+      "label_name": "benign",
+      "attack_conf": 4.226860619382933e-05
+    }
+  ],
+  "threshold_sweep_val": [
+    {
+      "threshold": 0.0,
+      "f1": 0.5217,
+      "precision": 0.3529,
+      "recall": 1.0,
+      "accuracy": 0.3529
+    },
+    {
+      "threshold": 0.05,
+      "f1": 0.9412,
+      "precision": 1.0,
+      "recall": 0.8889,
+      "accuracy": 0.9608
+    },
+    {
+      "threshold": 0.1,
+      "f1": 0.9091,
+      "precision": 1.0,
+      "recall": 0.8333,
+      "accuracy": 0.9412
+    },
+    {
+      "threshold": 0.15,
+      "f1": 0.9091,
+      "precision": 1.0,
+      "recall": 0.8333,
+      "accuracy": 0.9412
+    },
+    {
+      "threshold": 0.2,
+      "f1": 0.9091,
+      "precision": 1.0,
+      "recall": 0.8333,
+      "accuracy": 0.9412
+    },
+    {
+      "threshold": 0.25,
+      "f1": 0.9091,
+      "precision": 1.0,
+      "recall": 0.8333,
+      "accuracy": 0.9412
+    },
+    {
+      "threshold": 0.3,
+      "f1": 0.9091,
+      "precision": 1.0,
+      "recall": 0.8333,
+      "accuracy": 0.9412
+    },
+    {
+      "threshold": 0.35,
+      "f1": 0.9091,
+      "precision": 1.0,
+      "recall": 0.8333,
+      "accuracy": 0.9412
+    },
+    {
+      "threshold": 0.4,
+      "f1": 0.9091,
+      "precision": 1.0,
+      "recall": 0.8333,
+      "accuracy": 0.9412
+    },
+    {
+      "threshold": 0.45,
+      "f1": 0.9091,
+      "precision": 1.0,
+      "recall": 0.8333,
+      "accuracy": 0.9412
+    },
+    {
+      "threshold": 0.5,
+      "f1": 0.9091,
+      "precision": 1.0,
+      "recall": 0.8333,
+      "accuracy": 0.9412
+    },
+    {
+      "threshold": 0.55,
+      "f1": 0.9091,
+      "precision": 1.0,
+      "recall": 0.8333,
+      "accuracy": 0.9412
+    },
+    {
+      "threshold": 0.6,
+      "f1": 0.9091,
+      "precision": 1.0,
+      "recall": 0.8333,
+      "accuracy": 0.9412
+    },
+    {
+      "threshold": 0.65,
+      "f1": 0.9091,
+      "precision": 1.0,
+      "recall": 0.8333,
+      "accuracy": 0.9412
+    },
+    {
+      "threshold": 0.7,
+      "f1": 0.9091,
+      "precision": 1.0,
+      "recall": 0.8333,
+      "accuracy": 0.9412
+    },
+    {
+      "threshold": 0.75,
+      "f1": 0.9091,
+      "precision": 1.0,
+      "recall": 0.8333,
+      "accuracy": 0.9412
+    },
+    {
+      "threshold": 0.8,
+      "f1": 0.875,
+      "precision": 1.0,
+      "recall": 0.7778,
+      "accuracy": 0.9216
+    },
+    {
+      "threshold": 0.85,
+      "f1": 0.8387,
+      "precision": 1.0,
+      "recall": 0.7222,
+      "accuracy": 0.902
+    },
+    {
+      "threshold": 0.9,
+      "f1": 0.8387,
+      "precision": 1.0,
+      "recall": 0.7222,
+      "accuracy": 0.902
+    },
+    {
+      "threshold": 0.95,
+      "f1": 0.8387,
+      "precision": 1.0,
+      "recall": 0.7222,
+      "accuracy": 0.902
+    },
+    {
+      "threshold": 1.0,
+      "f1": 0.0,
+      "precision": 0.0,
+      "recall": 0.0,
+      "accuracy": 0.6471
+    }
+  ]
+}

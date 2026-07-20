@@ -1,0 +1,78 @@
+{
+  "version": "nhanh3_v1",
+  "branch": "nhanh3_session",
+  "data_source": "C\u00e1ch A",
+  "feature_names": [
+    "length_mean",
+    "length_std",
+    "length_max",
+    "length_min",
+    "special_char_ratio_mean",
+    "special_char_ratio_std",
+    "special_char_ratio_max",
+    "special_char_ratio_min",
+    "sql_keyword_count_mean",
+    "sql_keyword_count_std",
+    "sql_keyword_count_max",
+    "sql_keyword_count_min",
+    "entropy_mean",
+    "entropy_std",
+    "entropy_max",
+    "entropy_min",
+    "n_queries",
+    "attack_ratio"
+  ],
+  "model": "RandomForest(n_estimators=200, max_depth=12)",
+  "trained_at": "2026-07-20T04:03:43Z",
+  "n_train": 15981,
+  "n_test": 4019,
+  "class_distribution_train": {
+    "0": 4041,
+    "1": 11940
+  },
+  "class_distribution_test": {
+    "0": 959,
+    "1": 3060
+  },
+  "test_metrics": {
+    "weighted_f1": 0.9897,
+    "classification_report": {
+      "benign": {
+        "precision": 0.9924892703862661,
+        "recall": 0.9645464025026069,
+        "f1-score": 0.9783183500793231,
+        "support": 959.0
+      },
+      "attack": {
+        "precision": 0.9889860706187237,
+        "recall": 0.9977124183006536,
+        "f1-score": 0.9933300797136815,
+        "support": 3060.0
+      },
+      "accuracy": 0.9897984573276934,
+      "macro avg": {
+        "precision": 0.9907376705024948,
+        "recall": 0.9811294104016303,
+        "f1-score": 0.9858242148965023,
+        "support": 4019.0
+      },
+      "weighted avg": {
+        "precision": 0.989821992135786,
+        "recall": 0.9897984573276934,
+        "f1-score": 0.9897480322592526,
+        "support": 4019.0
+      }
+    },
+    "confusion_matrix": [
+      [
+        925,
+        34
+      ],
+      [
+        7,
+        3053
+      ]
+    ],
+    "roc_auc": 0.9989
+  }
+}

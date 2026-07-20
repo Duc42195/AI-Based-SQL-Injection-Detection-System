@@ -1,0 +1,32 @@
+services:
+  postgres:
+    build:
+      context: docker
+      dockerfile: postgres/Dockerfile
+    environment:
+      POSTGRES_DB: testdb
+      POSTGRES_USER: testuser
+      POSTGRES_PASSWORD: testpass
+    ports:
+      - "5432:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U testuser -d testdb"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+
+  vuln_app:
+    build:
+      context: docker
+      dockerfile: vuln_app/Dockerfile
+    ports:
+      - "42801:42801"
+    environment:
+      DB_HOST: postgres
+      DB_PORT: "5432"
+      DB_NAME: testdb
+      DB_USER: testuser
+      DB_PASSWORD: testpass
+    depends_on:
+      postgres:
+        condition: service_healthy
