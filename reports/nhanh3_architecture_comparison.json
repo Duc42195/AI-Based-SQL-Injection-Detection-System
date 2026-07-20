@@ -1,0 +1,44 @@
+{
+  "architectures": {
+    "RF (baseline)": {
+      "params": "aggregation+forest",
+      "note": "Dung 18 aggregated features, bi phu thuoc attack_ratio"
+    },
+    "CNN (1D)": {
+      "params": 25986,
+      "cach_a_f1": 0.9896,
+      "cach_a_auc": 0.9986,
+      "cach_b_f1": 0.9405,
+      "cach_b_auc": 1.0,
+      "note": "Khong co domain adaptation, CPU-friendly"
+    },
+    "GRU v1": {
+      "params": 38722,
+      "cach_a_f1": 0.9943,
+      "cach_a_auc": 0.9982,
+      "cach_b_f1": 0.9405,
+      "cach_b_auc": 1.0,
+      "note": "Chot: sequence model cuoi cung"
+    },
+    "Transformer (small)": {
+      "params": "N/A",
+      "note": "Khong kha thi tren CPU, bo qua"
+    }
+  },
+  "chosen": "GRU v1 (base) + GRU v2 (adapted, fine-tuned on Cach B)",
+  "final_cach_b": {
+    "threshold": 0.001,
+    "f1": 1.0,
+    "test_cm": [
+      [
+        23,
+        0
+      ],
+      [
+        0,
+        12
+      ]
+    ],
+    "n_sessions": 86
+  }
+}

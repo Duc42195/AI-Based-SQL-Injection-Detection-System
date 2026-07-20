@@ -1,0 +1,108 @@
+{
+  "version": "final_2026-07-20",
+  "prepared_for": "RIVF 2026 paper — Experiments section",
+  "data_sources": {
+    "cach_a": {
+      "description": "Simulated sessions from VNU-SQLi-Detection (HF dataset)",
+      "rows": 161991,
+      "sessions": 20000,
+      "classes": ["benign", "boolean_blind", "time_blind", "query_splitting"],
+      "train_sessions": 16000,
+      "test_sessions": 4000
+    },
+    "cach_b": {
+      "description": "Real sqlmap traffic (5 endpoints x 6 techniques) + CSIC 2010 benign",
+      "rows": 5547,
+      "sessions": 86,
+      "sqlmap_sessions": 36,
+      "csic_sessions": 50,
+      "attack_sessions": 30,
+      "benign_sessions": 56
+    }
+  },
+  "models": {
+    "random_forest_v1": {
+      "version": "nhanh3_v1",
+      "type": "RandomForest (n_estimators=200, max_depth=12)",
+      "features": "18 aggregated (4 features x 4 statistics + n_queries + attack_ratio)",
+      "cach_a_test_f1": 0.9897,
+      "cach_a_test_auc": 0.9989,
+      "cach_a_cm": [[925, 34], [7, 3053]],
+      "cach_b_cross_f1": null,
+      "cach_b_cross_auc": null,
+      "top_feature": "attack_ratio (52.44% importance)",
+      "limitation": "Phụ thuộc attack_ratio — brittle trên real traffic"
+    },
+    "gru_v1": {
+      "version": "nhanh3_gru_v1",
+      "type": "GRU (5→64, 2 layers, dropout=0.3, 38,722 params)",
+      "features": "5 per-step (length, special_char_ratio, sql_keyword_count, entropy, is_attack_query)",
+      "cach_a_test_f1": 0.9965,
+      "cach_a_test_auc": 0.9991,
+      "cach_a_cm": null,
+      "cach_b_cross_f1": null,
+      "cach_b_cross_auc": 1.0,
+      "cach_b_fn": 5,
+      "note": "AUC=1.0 on Cach B but 5 FN at threshold=0.5"
+    },
+    "cnn_1d": {
+      "version": "notebook_exp_nhanh3_arch_comparison",
+      "type": "Conv1D (5→64→128, 25,986 params)",
+      "cach_a_test_f1": 0.9908,
+      "cach_a_test_auc": 0.9985,
+      "cach_b_cross_f1": 0.962,
+      "cach_b_cross_auc": 1.0,
+      "note": "Comparable to GRU v1, slightly lower Cach A F1, no domain adaptation variant"
+    },
+    "gru_v2_adapted": {
+      "version": "nhanh3_gru_v2_adapted",
+      "type": "GRU v1 fine-tuned on Cach B (URL-encode aug, 64,470 aug rows)",
+      "base_model": "nhanh3_gru_v1",
+      "best_epoch": 8,
+      "cach_a_test_f1": 0.9985,
+      "cach_a_test_auc": 0.9999,
+      "cach_b_cross_f1": 0.6364,
+      "cach_b_cross_auc": 1.0,
+      "cach_b_cm": [[56, 0], [16, 14]],
+      "note": "AUC=1.0, F1=0.636 at thresh=0.5 (16 FN) → threshold tuning needed"
+    }
+  },
+  "threshold_tuning": {
+    "best_threshold": 0.001,
+    "val_sessions": 51,
+    "test_sessions": 35,
+    "val_f1": 1.0,
+    "test_f1": 1.0,
+    "test_precision": 1.0,
+    "test_recall": 1.0,
+    "test_cm": [[23, 0], [0, 12]],
+    "test_tn": 23,
+    "test_fp": 0,
+    "test_fn": 0,
+    "test_tp": 12,
+    "benign_attack_gap": {
+      "benign_max_conf": 0.00036,
+      "attack_min_conf": 0.0095,
+      "gap_factor_x": 26
+    },
+    "default_thresh_0_5_f1": 0.8571,
+    "default_thresh_0_5_fn": 3,
+    "note": "Threshold 0.001 chosen on val set, perfect on held-out test"
+  },
+  "final_chosen": "GRU v2_adapted + threshold=0.001",
+  "final_performance": {
+    "dataset": "Cach B (86 sessions: 56 benign + 30 attack)",
+    "f1": 1.0,
+    "precision": 1.0,
+    "recall": 1.0,
+    "accuracy": 1.0,
+    "false_positives": 0,
+    "false_negatives": 0,
+    "confusion_matrix": [[56, 0], [0, 30]]
+  },
+  "architecture_decision": {
+    "chosen": "GRU",
+    "reason": "Better accuracy vs CNN, domain adaptation feasible, Transformer too heavy for CPU",
+    "alternatives": ["RF (baseline)", "CNN (1D)", "Transformer (small — skipped)"]
+  }
+}

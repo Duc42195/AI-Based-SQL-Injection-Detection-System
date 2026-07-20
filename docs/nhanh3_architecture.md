@@ -191,7 +191,7 @@ branch3_session:
 | `data/processed/nhanh3_session_data.csv` | 20.000 simulated sessions | `uv run python scripts/build_nhanh3_session_data.py` |
 | `data/raw/nhanh3_sqlmap_sessions/nhanh3_raw_traffic.csv` | HTTP traffic từ sqlmap | `uv run python scripts/collect_nhanh3_traffic.py` |
 | `data/processed/nhanh3_session_data_cachb.csv` | 36 parsed sessions từ sqlmap | `uv run python scripts/parse_nhanh3_traffic.py` |
-| `data/processed/nhanh3_session_data_cachb_with_csic.csv` | 36 real + 50 CSIC | `uv run python scripts/integrate_csic2010_cachb.py` |
+| `data/processed/nhanh3_session_data_cachb.csv` | 36 real + 50 CSIC | `uv run python scripts/integrate_csic2010_cachb.py` |
 
 ---
 
@@ -295,7 +295,7 @@ Cách A sinh session có cấu trúc cứng nhắc: attack session luôn có `is
 
 ### 6.3. Real-world data vẫn limited
 
-Cách B hiện có **4.547 step-rows, 86 sessions** (36 real sqlmap + 50 CSIC 2010). Cải thiện nhiều so với 165 rows / 50 sessions trước đây, nhưng:
+Cách B hiện có **5.547 step-rows, 86 sessions** (36 real sqlmap + 50 CSIC 2010). Cải thiện nhiều so với 165 rows / 50 sessions trước đây, nhưng:
 - 36 attack sessions chưa đủ diversity (5 endpoints × 6 techniques, risk=2, time-sec=2)
 - CSIC 2010 là traffic phòng lab cũ (2009), không đại diện cho benign browsing hiện đại
 - Chưa test với query-splitting thật
@@ -380,34 +380,42 @@ flowchart LR
     end
 
     subgraph "Processed Data"
-        CSV_A["nhanh3_session_data.csv\n227.642 step-rows"]
-        CSV_B["nhanh3_session_data_cachb.csv\n165 step-rows"]
+        CSV_A["nhanh3_session_data.csv\n161.991 step-rows"]
+        CSV_B["nhanh3_session_data_cachb.csv\n5.547 step-rows, 86 sessions"]
     end
 
     subgraph "Training"
-        T["train_nhanh3.py"]
+        T["train_nhanh3.py\n(RF baseline)"]
+        TG["train_nhanh3_gru.py\n(GRU v1)"]
+        DA["domain_adapt_gru.py\n(GRU v2 adapted)"]
     end
 
     subgraph "Models"
         M["session_rf.joblib\n+ feature_names.joblib\n(RF baseline)"]
-        M2["nhanh3_gru_v1/\nsession_gru.pt\n(GRU Cach A)"]
-        M3["nhanh3_gru_v2_adapted/\nsession_gru.pt\n(GRU adapted)"]
+        M2["nhanh3_gru_v1/\nsession_gru.pt\n(GRU Cach A, 38.722 params)"]
+        M3["nhanh3_gru_v2_adapted/\nsession_gru.pt\n(GRU adapted, F1=1.000)"]
     end
 
     subgraph "Reports"
-        R1["nhanh3_eval_cachA.json\nF1=0.990, AUC=0.999"]
-        R2["nhanh3_gru_adapted_eval.json\nF1=0.636 (thresh=0.5)"]
+        R1["nhanh3_eval_cachA.json\nF1=0.990, AUC=0.999 (RF)"]
+        RG["nhanh3_eval_gru.json\nF1=0.997, AUC=0.999 (GRU v1)"]
+        R2["nhanh3_gru_adapted_eval.json\nF1=0.636 (thresh=0.5, Cach B)"]
         R3["nhanh3_gru_threshold_tune.json\nF1=1.000 (thresh=0.001)"]
     end
 
     subgraph "Inference"
-        SC["SessionClassifier\n(src/models/nhanh3_session.py)"]
+        SC["SessionClassifier\n(src/models/nhanh3_session.py)\n(chỉ RF online)"]
     end
 
     HF --> S1 --> CSV_A --> T --> M
+    HF --> S1 --> CSV_A --> TG --> M2
+    M2 --> DA --> M3
     DOCKER --> S2 --> S3 --> CSV_B --> T
+    DOCKER --> S2 --> S3 --> CSV_B --> DA
     T --> R1
-    T --> R2
+    TG --> RG
+    DA --> R2
+    T --> R3
     M --> SC
 ```
 
@@ -446,7 +454,7 @@ classDiagram
 
 ## 8. Notebook
 
-File: `notebooks/nhanh3_eval.ipynb` (đã tồn tại, 422 cells)
+File: `notebooks/nhanh3_eval.ipynb` (evaluation + visualization)
 
 Chạy:
 ```bash
@@ -454,18 +462,43 @@ uv run jupyter notebook notebooks/nhanh3_eval.ipynb
 ```
 
 Nội dung:
-1. Data Generation overview
-2. Per-Query Feature Distributions (fig1)
-3. Session-Level Feature Analysis (fig2, fig3)
-4. Evaluation Results (Cách A + Cách B)
-5. Confusion Matrix Visualization (fig4)
-6. Discussion & Architecture Insight
+1. Data Overview (Cách A + Cách B)
+2. Random Forest baseline eval
+3. GRU v1 eval
+4. RF vs GRU Comparison
+5. Adapted GRU + Threshold Tuning
+6. Discussion
 
 ### 8.1. Notebook demo data flow
 
-File: `notebooks/nhanh3_data_flow_demo.ipynb` (đã tạo kèm)
+File: `notebooks/exp_nhanh3_arch_comparison.ipynb` (architecture selection)
 
-File này đi từ query raw → statistical features → aggregate session features → predict, giải thích từng bước.
+Chạy:
+```bash
+uv run jupyter notebook notebooks/exp_nhanh3_arch_comparison.ipynb
+```
+
+Nội dung:
+1. Load Cach A, build sequences
+2. Define + train 1D-CNN
+3. Compare CNN vs GRU on Cach A + Cach B
+4. Architecture decision → GRU chosen
+
+### 8.2. Notebook data report
+
+File: `notebooks/nhanh3_data_report.ipynb` (data analysis + figures)
+
+Chạy:
+```bash
+uv run jupyter notebook notebooks/nhanh3_data_report.ipynb
+```
+
+Nội dung:
+1. Per-query feature distributions (fig1)
+2. Session-level feature analysis (fig2, fig3)
+3. Confusion matrix visualization (fig4)
+4. Attack ratio analysis (fig5)
+5. Session length distribution (fig6)
 
 ---
 
@@ -474,5 +507,5 @@ File này đi từ query raw → statistical features → aggregate session feat
 - **Branch 3** có 2 kiến trúc: RF baseline (18 chiều aggregated) + GRU sequence model (5 features × sequence)
 - **RF** phụ thuộc nặng vào `attack_ratio` (52.44%) — data leak từ Branch 1
 - **GRU adapted + threshold tuning**: F1=1.000 trên Cach B (86 sessions), AUC=1.000
-- **2 nguồn dữ liệu**: Cách A (simulated, 20.000 sessions) + Cách B (real sqlmap + CSIC, 4.547 step-rows, 86 sessions)
+- **2 nguồn dữ liệu**: Cách A (simulated, 161.991 step-rows, 20.000 sessions) + Cách B (real sqlmap + CSIC, 5.547 step-rows, 86 sessions)
 - **Hạn chế chính**: (1) RF dependency vào Branch 1, (2) Cach B ít diversity, (3) threshold 0.001 chưa validated rộng

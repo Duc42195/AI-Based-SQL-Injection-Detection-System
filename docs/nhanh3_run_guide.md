@@ -59,18 +59,17 @@ Thời gian: ~2 tiếng.
 ```bash
 uv run python scripts/parse_nhanh3_traffic.py
 ```
-Output: `data/processed/nhanh3_session_data_cachb.csv` (~4.5K step-rows, 36 sessions)
+Output: `data/processed/nhanh3_session_data_cachb.csv` (36 sessions)
 
-### 2d. (Optional) Thêm CSIC 2010 benign sessions
+### 2d. (Optional) Thêm CSIC 2010 benign sessions → 86 sessions
+
+File `nhanh3_session_data_cachb.csv` trong repo đã có sẵn 86 sessions (CSIC 2010 integrated). Từ đầu:
 
 ```bash
-# Đầu tiên tải CSIC 2010 raw data
 uv run python scripts/fetch_and_wrap_d3_csic2010.py
-
-# Sau đó integrate
 uv run python scripts/integrate_csic2010_cachb.py
+# Output: nhanh3_session_data_cachb.csv (86 sessions)
 ```
-Output: `data/processed/nhanh3_session_data_cachb_with_csic.csv` (86 sessions)
 
 ---
 
@@ -176,7 +175,7 @@ cmd /c "set PYTHONPATH=%CD% && cd /d %CD% && python -m jupyter nbconvert --to no
 | `build_nhanh3_session_data.py` | Sinh Cach A | HF dataset | `nhanh3_session_data.csv` |
 | `collect_nhanh3_traffic.py` | Capture sqlmap | Docker lab | `nhanh3_raw_traffic.csv` |
 | `parse_nhanh3_traffic.py` | Parse → sessions | `nhanh3_raw_traffic.csv` | `nhanh3_session_data_cachb.csv` |
-| `integrate_csic2010_cachb.py` | Thêm CSIC 2010 | `d3_csic2010_raw.csv` | `nhanh3_session_data_cachb_with_csic.csv` |
+| `integrate_csic2010_cachb.py` | Thêm CSIC 2010 | `d3_csic2010_raw.csv` | `nhanh3_session_data_cachb.csv` |
 | `train_nhanh3.py` | Train RF | CSV session data | `session_rf.joblib` |
 | `train_nhanh3_gru.py` | Train GRU v1 | CSV session data | `nhanh3_gru_v1/*` |
 | `domain_adapt_gru.py` | Domain adaptation | GRU v1 + Cach B | `nhanh3_gru_v2_adapted/*` |
