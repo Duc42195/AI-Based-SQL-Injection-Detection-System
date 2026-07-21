@@ -1,7 +1,7 @@
 {
   "version": "nhanh2_v1",
   "branch": "nhanh2_anomaly",
-  "trained_at": "2026-07-16T06:01:21Z",
+  "trained_at": "2026-07-21T02:55:11Z",
   "feature_names": [
     "length",
     "special_char_ratio",
@@ -23,36 +23,36 @@
     "isolation_forest": {
       "algorithm": "isolation_forest",
       "contamination": 0.01,
-      "fpr": 0.005,
+      "fpr": 0.006333,
       "n_benign": 3000,
-      "n_false_positives": 15,
-      "detection_rate": 0.035947,
+      "n_false_positives": 19,
+      "detection_rate": 0.031917,
       "n_anomalous": 25065,
-      "n_true_positives": 901,
-      "auc": 0.677482
+      "n_true_positives": 800,
+      "auc": 0.669631
     },
     "one_class_svm": {
       "algorithm": "one_class_svm",
       "contamination": 0.005,
-      "fpr": 0.004,
+      "fpr": 0.003,
       "n_benign": 3000,
-      "n_false_positives": 12,
-      "detection_rate": 0.199761,
+      "n_false_positives": 9,
+      "detection_rate": 0.207301,
       "n_anomalous": 25065,
-      "n_true_positives": 5007,
-      "auc": 0.886823
+      "n_true_positives": 5196,
+      "auc": 0.901626
     }
   },
   "chosen_algorithm": "one_class_svm",
   "chosen": {
     "algorithm": "one_class_svm",
     "contamination": 0.005,
-    "fpr": 0.004,
+    "fpr": 0.003,
     "n_benign": 3000,
-    "n_false_positives": 12,
-    "detection_rate": 0.199761,
+    "n_false_positives": 9,
+    "detection_rate": 0.207301,
     "n_anomalous": 25065,
-    "n_true_positives": 5007,
-    "auc": 0.886823
+    "n_true_positives": 5196,
+    "auc": 0.901626
   }
 }
