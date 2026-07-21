@@ -31,23 +31,23 @@
 8,20/7,Th2,Bach,Train Nhanh 2,"[Da qua] Tiep tuc tuning Nhanh 2 (OCSVM vs Isolation Forest, feature scaling/log-transform)",Ngay 7 - Bach,src/models/nhanh2_anomaly.py; scripts/train_nhanh2.py,Hoan thanh
 8,20/7,Th2,Minh,Streamlit,[Da qua] Xay them cac trang demo/admin,Ngay 7 - Minh,Khong co,Dang thuc hien
 8,20/7,Th2,Diep,Support - Bao cao,[Da qua] Tam dung bai RIVF - uu tien bao cao han 25/7 (xem ghi chu Ngay 9),Khong co,Khong co,Chua bat dau
-9,21/7,Th3,Toi,Lam muot Nhanh 1 + tich hop,"HOM NAY (21/7): Lam muot Nhanh 1 (kiem tra edge case canonicalize, loi API, do on dinh); fix Nhanh 2 model.joblib bi thieu (da xong - retrain 2.8s, OCSVM AUC=0.90); dam bao API Nhanh 1+2 chay dung voi model that (khong con stub)",Ngay 8 - Toi,"models/nhanh1_v1/; models/nhanh2_v1/model.joblib; api/routers/nhanh1.py, nhanh2.py",Dang thuc hien
-9,21/7,Th3,Bach,Kiem tra Nhanh 2,"Verify lai ket qua Nhanh 2 vua retrain (FPR=0.3%, detection rate=20.7%, AUC=0.90 voi OCSVM); danh gia co du de dua vao bao cao khong",Ngay 8 - Bach,reports/nhanh2_eval.json,Dang thuc hien
-9,21/7,Th3,Minh,Streamlit,Ket noi demo voi API that Nhanh 1 + Nhanh 2 (khong cho Nhanh 3 nua - da drop khoi scope),Ngay 9 - Toi,api/routers/demo.py (hoac app tuong duong),Chua bat dau
-9,21/7,Th3,Diep,Support - Bao cao,"Viet lai dan y bao cao theo scope moi: CHI 2 nhanh (Nhanh 1 + Nhanh 2) da trien khai thuc te; Nhanh 3 chuyen thanh 'thiet ke de xuat, chua trien khai' trong Future Work",Ngay 9 - Toi,De_xuat_SQLi_Detection_AI.md (dan y moi),Chua bat dau
-10,22/7,Th4,Toi,Bo xu ly trung tam (2 nhanh),"Decision logic CHI Nhanh 1 + Nhanh 2 (bo Nhanh 3 khoi luong that dung, giu thiet ke ly thuyet trong bao cao); test end-to-end 2 nhanh",Ngay 9 - Toi,src/decision/central_processor.py,Chua bat dau
-10,22/7,Th4,Bach,Ho tro test,"Test them voi payload SQLi that + vai truong hop edge case cho Nhanh 2 (VD do dai bat thuong, ky tu dac biet)",Ngay 9 - Bach,tests/e2e_test_results.md (nhap),Chua bat dau
-10,22/7,Th4,Minh,Streamlit,Hoan thien demo end-to-end (nhap query -> hien ket qua that tu Nhanh 1+2 -> verdict),Ngay 9 - Minh,Khong co,Chua bat dau
-10,22/7,Th4,Diep,Support - Bao cao,"Viet Method + Ket qua thuc nghiem voi so lieu that (F1=0.982 Nhanh 1, AUC=0.90 Nhanh 2)",Ngay 9 - Diep,report/method_ketqua.md,Chua bat dau
-11,23/7,Th5,Toi,Test end-to-end,Test end-to-end toan bo he thong (2 nhanh + decision logic + API + demo); sua loi phat sinh,Ngay 10 - Toi; Ngay 10 - Minh,tests/e2e_test_results.md,Chua bat dau
-11,23/7,Th5,Bach,Ho tro test,"Ho tro Toi test end-to-end, sanity-check them ket qua Nhanh 2",Ngay 10 - Bach,Khong co,Chua bat dau
-11,23/7,Th5,Minh,Streamlit,"Polish UI demo, sua loi giao dien phat sinh tu test end-to-end",Ngay 10 - Minh,Khong co,Chua bat dau
-11,23/7,Th5,Diep,Support - Bao cao,"Viet Thao luan/Han che (neu ro: Nhanh 3 la thiet ke de xuat/Future Work, chua trien khai thuc nghiem trong ban nop nay)",Ngay 10 - Diep,report/thao_luan_han_che.md,Chua bat dau
-12,24/7,Th6,Toi,Polish cuoi,"Buffer: sua loi con lai, on dinh he thong, chuan bi demo truc tiep",Ngay 11 - Toi,Khong co,Chua bat dau
-12,24/7,Th6,Bach,Ho tro,"Buffer: ho tro sua loi Nhanh 2 neu can, chuan bi so lieu cho bao cao",Ngay 11 - Bach,Khong co,Chua bat dau
-12,24/7,Th6,Minh,Streamlit,"Hoan thien demo, dam bao chay muot cho buoi nop/trinh bay",Ngay 11 - Minh,Khong co,Chua bat dau
-12,24/7,Th6,Diep,Support - Bao cao,"Hoan thien toan bo bao cao (Ket luan, tong hop), chuan bi slide",Ngay 11 - Diep,report/bao_cao_final.md; slide/,Chua bat dau
-13,25/7,Th7,Toi,MOC: NOP,"HAN NOP (Thu 7 25/7): chot demo + he thong, ho tro nop/trinh bay",Ngay 12 - Toi,Khong co,Chua bat dau
-13,25/7,Th7,Bach,MOC: NOP,Ho tro nop/trinh bay,Ngay 12 - Bach,Khong co,Chua bat dau
-13,25/7,Th7,Minh,MOC: NOP,Demo truc tiep on dinh cho buoi nop,Ngay 12 - Minh,Khong co,Chua bat dau
-13,25/7,Th7,Diep,MOC: NOP,NOP BAO CAO FINAL,Ngay 12 - Diep,report/bao_cao_final.md,Chua bat dau
+9,21/7,Th3,Toi,Metric + Notebook demo,"Da xong: them ROC curve day du cho Nhanh 2 (scripts/train_nhanh2.py); viet + chay thu notebooks/demo_detect.ipynb (load 2 model, nhap query, tra verdict) - test 19/20 dung tren mau ngau nhien",Ngay 8 - Toi,notebooks/demo_detect.ipynb; reports/nhanh2_eval.json (co roc_curve),Hoan thanh
+9,21/7,Th3,Bach,Metric Nhanh 2,"Verify ket qua Nhanh 2 (FPR=0.3%, detection rate=20.7%, AUC=0.90 OCSVM); xem xet co du thuyet phuc cho bao cao khong, de xuat threshold khac neu can",Ngay 8 - Bach,reports/nhanh2_eval.json,Dang thuc hien
+9,21/7,Th3,Minh,Ho tro metric/bao cao,"He thong (API/Streamlit) hoan lai sau - tam thoi ho tro ve bieu do/truc quan hoa metric cho bao cao (ROC curve, confusion matrix)",Ngay 9 - Toi,Khong co (cho xac nhan),Chua bat dau
+9,21/7,Th3,Diep,Bao cao,Viet lai dan y 2 ban bao cao (Ban 1: scope hien tai 2 nhanh + notebook; Ban 2: hoan chinh 3 nhanh + he thong day du) - da duyet dan y voi Toi,Ngay 9 - Toi,De_xuat_SQLi_Detection_AI.md,Hoan thanh
+10,22/7,Th4,Toi,Ho tro bao cao,Ho tro Diep so lieu/hinh minh hoa cho Ban 1; polish notebook demo neu can,Ngay 9 - Toi,Khong co,Chua bat dau
+10,22/7,Th4,Bach,Ho tro bao cao,Cung cap so lieu/giai thich chi tiet Nhanh 2 cho Diep viet bao cao,Ngay 9 - Bach,Khong co,Chua bat dau
+10,22/7,Th4,Minh,Ho tro bao cao,"Ve bieu do/so do minh hoa cho bao cao (kien truc, ROC curve, confusion matrix)",Ngay 9 - Minh,Khong co,Chua bat dau
+10,22/7,Th4,Diep,Bao cao Ban 1,"Viet Ban 1 (scope hien tai): Dat van de, Cong trinh lien quan, Kien truc 2 nhanh, Du lieu, Phuong phap, Ket qua thuc nghiem",Ngay 9 - Diep,report/ban1_scope_hien_tai.md,Chua bat dau
+11,23/7,Th5,Toi,Ho tro bao cao,Ho tro ra soat so lieu ky thuat trong ca 2 ban bao cao,Ngay 10 - Toi,Khong co,Chua bat dau
+11,23/7,Th5,Bach,Ho tro bao cao,Ra soat phan Nhanh 2 trong ca 2 ban bao cao,Ngay 10 - Bach,Khong co,Chua bat dau
+11,23/7,Th5,Minh,Ho tro bao cao,Hoan thien hinh minh hoa con lai,Ngay 10 - Minh,Khong co,Chua bat dau
+11,23/7,Th5,Diep,Bao cao Ban 1 + Ban 2,Hoan thien Ban 1 (Thao luan/Han che/Ket luan); bat dau Ban 2 (kien truc 3 nhanh + he thong day du + Nhanh 3 thiet ke),Ngay 10 - Diep,report/ban1_scope_hien_tai.md (hoan thien); report/ban2_hoan_chinh.md (bat dau),Chua bat dau
+12,24/7,Th6,Toi,Buffer,Buffer: sua loi notebook/metric neu phat sinh khi Diep viet bao cao,Ngay 11 - Toi,Khong co,Chua bat dau
+12,24/7,Th6,Bach,Buffer,Buffer: ho tro neu can,Ngay 11 - Bach,Khong co,Chua bat dau
+12,24/7,Th6,Minh,Buffer,Buffer: ho tro hinh anh neu can,Ngay 11 - Minh,Khong co,Chua bat dau
+12,24/7,Th6,Diep,Bao cao Ban 2,"Hoan thien Ban 2 (Threat model, Thao luan, Ket luan, Huong phat trien); ra soat ca 2 ban",Ngay 11 - Diep,report/ban2_hoan_chinh.md (hoan thien),Chua bat dau
+13,25/7,Th7,Toi,MOC: NOP,HAN NOP (Thu 7 25/7): ho tro nop notebook + ca 2 ban bao cao,Ngay 12 - Toi,Khong co,Chua bat dau
+13,25/7,Th7,Bach,MOC: NOP,Ho tro nop,Ngay 12 - Bach,Khong co,Chua bat dau
+13,25/7,Th7,Minh,MOC: NOP,Ho tro nop,Ngay 12 - Minh,Khong co,Chua bat dau
+13,25/7,Th7,Diep,MOC: NOP,NOP: notebooks/demo_detect.ipynb + report/ban1_scope_hien_tai.md + report/ban2_hoan_chinh.md,Ngay 12 - Diep,Khong co,Chua bat dau
