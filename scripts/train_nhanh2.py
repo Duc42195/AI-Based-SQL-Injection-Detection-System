@@ -158,6 +158,16 @@ def _eval_detector(
         try:
             auc = float(roc_auc_score(y_true, y_scores))
             results["auc"] = round(auc, 6)
+            # Full ROC curve (subsampled to <=50 points) so the notebook/report
+            # can plot FPR-vs-TPR across thresholds, not just the single
+            # operating point implied by the algorithm's own contamination.
+            roc_fpr, roc_tpr, roc_thresh = roc_curve(y_true, y_scores)
+            step = max(1, len(roc_fpr) // 50)
+            results["roc_curve"] = {
+                "fpr": [round(float(v), 6) for v in roc_fpr[::step]],
+                "tpr": [round(float(v), 6) for v in roc_tpr[::step]],
+                "thresholds": [round(float(v), 6) for v in roc_thresh[::step]],
+            }
         except ValueError:
             auc = None
 
