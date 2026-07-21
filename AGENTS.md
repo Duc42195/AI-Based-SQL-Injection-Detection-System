@@ -104,6 +104,11 @@ data/  models/           # KHÔNG commit nội dung (chỉ .gitkeep)
 - Dataset là **public** (xem bảng D1–D6 trong [README.md](README.md)); **không commit** file dữ liệu vào repo.
 - Chưa có dữ liệu thật cho phần nào → dùng public tạm, **ghi rõ nguồn** và đánh dấu `TODO` để thay sau.
 
+## Model đã train
+
+- **Không tự retrain nếu không cần** — model thật (`nhanh1_v1`, `nhanh2_v1`) đã có sẵn trên HF: `hf download Jason-42195/VNU-SQLi-Detection-Models --local-dir models/`. Xem README.md mục "Model đã train — tải ở đâu".
+- Nếu retrain (vd. sửa code training), **nhớ push bản mới lên HF** (`hf upload Jason-42195/VNU-SQLi-Detection-Models models/nhanh1_v1 nhanh1_v1 --repo-type model`) để cả nhóm dùng chung 1 bản, tránh mỗi người có model khác nhau.
+
 ---
 
 ## "Definition of done" cho một thay đổi
