@@ -151,22 +151,47 @@ branch2_anomaly:
       contamination: [0.001, 0.005, 0.01, 0.05]
 
 branch3_session:
-  # Session-level sequence model (main contribution). Per-step input =
-  # [content embedding (Branch 1 encoder) ⊕ anomaly score (Branch 2)].
-  # Session = session-id, or (client IP + idle-gap window).
   enabled: true
-  # Model folder under models_dir (created once Branch 3 is trained). Until then
-  # the API reports this branch as "not_ready" instead of crashing.
   active_version: "nhanh3_v1"
-  session_idle_gap_seconds: 1800   # 30-min inactivity ends a session
-  sequence_model: "gru"            # "gru" | "transformer"
+  gru_active_version: "nhanh3_gru_v1"
+  session_idle_gap_seconds: 1800
+  sequence_model: "gru"
   max_session_len: 64
-  # Session label schema (0=benign; attack types that only appear across queries).
   session_classes:
     benign: 0
     boolean_blind: 1
     time_blind: 2
     query_splitting: 3
+  step_features:
+    - "length"
+    - "special_char_ratio"
+    - "sql_keyword_count"
+    - "entropy"
+    - "is_attack_query"
+  simulation:
+    num_sessions_per_class: 5000
+    seed: 42
+    benign:
+      min_len: 3
+      max_len: 15
+      noise_fraction: 0.02
+    blind:
+      leading_normals: [1, 2]
+      attack_queries: [2, 8]
+      trailing_normals: [0, 1]
+      normal_between_prob: 0.3
+    test_fraction: 0.2
+  gru:
+    hidden_dim: 64
+    num_layers: 2
+    dropout: 0.3
+    bidirectional: false
+  training:
+    batch_size: 32
+    epochs: 30
+    learning_rate: 1.0e-3
+    weight_decay: 1.0e-5
+    early_stop_patience: 5
 
 decision:
   # Overkill policy: SQLi=0 & Anomaly=1 -> hold for Admin review.
