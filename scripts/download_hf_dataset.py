@@ -1,28 +1,27 @@
+"""Download all CSV files from HF dataset individually.
+
+The repo has 3 CSVs with different schemas, so load each file explicitly.
+"""
+from pathlib import Path
 from datasets import load_dataset
-import pandas as pd
 
-ds = load_dataset("Jason-42195/VNU-SQLi-Detection", split="train")
-df = ds.to_pandas()
+OUT = Path("data/processed")
+OUT.mkdir(parents=True, exist_ok=True)
 
-print("Shape:", df.shape)
-print("Columns:", list(df.columns))
-print()
-print("=== Label distribution ===")
-print(df["label_name"].value_counts())
-print()
-print("=== Split distribution ===")
-print(df["split"].value_counts())
-print()
-print("=== Normal rows (Branch 2) ===")
-normal = df[df["label"] == 0]
-print(f"Total normal: {len(normal)}")
-print(f"  Train: {(normal['split']=='train').sum()}")
-print(f"  Test: {(normal['split']=='test').sum()}")
-print()
-print("=== Sample normal rows ===")
-cols = ["id", "query_raw", "source", "split"]
-print(normal[cols].head(5).to_string(index=False))
+FILES = {
+    "nhanh1_train.csv": "Branch 1 — 68K rows, 6 classes (for supervised training)",
+    "nhanh2_normal.csv": "Branch 2 — normal traffic (for unsupervised training)",
+    "nhanh2_anomalous_eval.csv": "Branch 2 — anomalous eval set (all attack types)",
+}
 
-df.to_csv("data/processed/nhanh1_train.csv", index=False)
-print()
-print("Saved to data/processed/nhanh1_train.csv OK")
+for fname, desc in FILES.items():
+    print(f"\n=== Loading {fname} ({desc}) ===")
+    ds = load_dataset("Jason-42195/VNU-SQLi-Detection", data_files=fname, split="train")
+    df = ds.to_pandas()
+    print(f"Shape: {df.shape}")
+    print(f"Columns: {list(df.columns)}")
+    out_path = OUT / fname
+    df.to_csv(out_path, index=False)
+    print(f"Saved to {out_path} OK")
+
+print("\n=== All files downloaded ===")
