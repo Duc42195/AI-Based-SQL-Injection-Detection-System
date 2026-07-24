@@ -3,16 +3,16 @@
 | File / Folder | Vai trò | Ai cần |
 |---------------|---------|--------|
 | **Metric files** | | |
-| `reports/nhanh1_eval.json` | Eval Nhánh 1 + ROC per class mới | Diệp (báo cáo), Minh (notebook) |
-| `reports/nhanh2_eval.json` | Eval Nhánh 2 + PR/CM/per-class DR mới | Diệp, Minh |
-| `reports/nhanh2_threshold_sweep.csv` | 21 ngưỡng FPR vs DR vs Precision | Diệp (bảng số), Đức (decision threshold) |
-| `reports/nhanh1_architecture_comparison.json` | So sánh 4 kiến trúc (đã có trước) | Diệp (Mục 5.1) |
-| `reports/nhanh2_training_audit.md` | Nhật ký tuning (đã có trước) | Đức (review) |
+| `report/metrics/nhanh1_eval.json` | Eval Nhánh 1 + ROC per class mới | Diệp (báo cáo), Minh (notebook) |
+| `report/metrics/nhanh2_eval.json` | Eval Nhánh 2 + PR/CM/per-class DR mới | Diệp, Minh |
+| `report/metrics/nhanh2_threshold_sweep.csv` | 21 ngưỡng FPR vs DR vs Precision | Diệp (bảng số), Đức (decision threshold) |
+| `report/metrics/nhanh1_architecture_comparison.json` | So sánh 4 kiến trúc (đã có trước) | Diệp (Mục 5.1) |
+| `report/journal/nhanh2_training_audit.md` | Nhật ký tuning (đã có trước) | Đức (review) |
 | **Figures** | | |
-| `reports/figures/nhanh1_roc_per_class.png` | ROC per class (file mới) | Minh (notebook), Diệp (báo cáo) |
-| `reports/figures/nhanh2_pr_curve.png` | PR curve (file mới) | Minh, Diệp |
-| `reports/figures/nhanh2_score_dist.png` | Score distribution (file mới) | Minh, Diệp |
-| `reports/figures/nhanh2_threshold_tradeoff.png` | Threshold trade-off (file mới) | Minh, Diệp |
+| `report/metrics/figures/nhanh1_roc_per_class.png` | ROC per class (file mới) | Minh (notebook), Diệp (báo cáo) |
+| `report/metrics/figures/nhanh2_pr_curve.png` | PR curve (file mới) | Minh, Diệp |
+| `report/metrics/figures/nhanh2_score_dist.png` | Score distribution (file mới) | Minh, Diệp |
+| `report/metrics/figures/nhanh2_threshold_tradeoff.png` | Threshold trade-off (file mới) | Minh, Diệp |
 | **Script** | | |
 | `scripts/generate_metrics.py` | Tái tạo metric tự động | Đức (review code) |
 | **Notebook** | | |

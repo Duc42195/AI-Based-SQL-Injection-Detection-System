@@ -16,7 +16,7 @@ paths:
   data_adversarial: "data/adversarial"
   models_dir: "models"
   # Directory holding evaluation/report JSON artifacts (served by the metrics API).
-  reports_dir: "reports"
+  reports_dir: "report/metrics"
   # DEPRECATED generic active version — kept for backward-compat but unused; the
   # real model folders are versioned per-branch (see each branch's
   # `active_version` below, e.g. branch1_supervised.active_version,
@@ -42,7 +42,7 @@ labels:
 
 branch1_supervised:
   # CHOSEN (16/7) after comparing 4 candidates on F1-macro vs latency vs size
-  # (see reports/nhanh1_architecture_comparison.json + notebook). All 4 scored
+  # (see report/metrics/nhanh1_architecture_comparison.json + notebook). All 4 scored
   # F1-macro 0.985-0.993 (differences negligible); tfidf_logreg picked for the
   # best latency/size/simplicity trade-off. LightGBM had the top F1 but ~60ms
   # p50 latency (too slow for a real-time proxy); DistilBERT gave no F1 gain

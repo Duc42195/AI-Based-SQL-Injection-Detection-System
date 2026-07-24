@@ -47,7 +47,11 @@
 12,24/7,Th6,Bach,Buffer,Buffer: ho tro neu can,Ngay 11 - Bach,Khong co,Chua bat dau
 12,24/7,Th6,Minh,Buffer,Buffer: ho tro hinh anh neu can,Ngay 11 - Minh,Khong co,Chua bat dau
 12,24/7,Th6,Diep,Bao cao Ban 2,"Hoan thien Ban 2 (Threat model, Thao luan, Ket luan, Huong phat trien); ra soat ca 2 ban",Ngay 11 - Diep,report/ban2_hoan_chinh.md (hoan thien),Chua bat dau
-13,25/7,Th7,Toi,MOC: NOP,HAN NOP (Thu 7 25/7): ho tro nop notebook + ca 2 ban bao cao,Ngay 12 - Toi,Khong co,Chua bat dau
+13,25/7,Th7,Toi,MOC: NOP,HAN CUNG 23H59 THU 7 25/7: ho tro nop notebook + ca 2 ban bao cao,Ngay 12 - Toi,Khong co,Chua bat dau
 13,25/7,Th7,Bach,MOC: NOP,Ho tro nop,Ngay 12 - Bach,Khong co,Chua bat dau
 13,25/7,Th7,Minh,MOC: NOP,Ho tro nop,Ngay 12 - Minh,Khong co,Chua bat dau
-13,25/7,Th7,Diep,MOC: NOP,NOP: notebooks/demo_detect.ipynb + report/ban1_scope_hien_tai.md + report/ban2_hoan_chinh.md,Ngay 12 - Diep,Khong co,Chua bat dau
+13,25/7,Th7,Diep,MOC: NOP,HAN CUNG 23H59 THU 7 25/7: train/notebooks/demo_detect.ipynb + report/plan/ban1_scope_hien_tai.md + report/final/ban2_hoan_chinh.md,Ngay 12 - Diep,Khong co,Chua bat dau
+14,26/7,CN,Toi,Metric hoi nghi,"Hoan thien metric rieng cho bao cao hoi nghi RIVF (Ban 2): kiem tra lai so lieu, bo sung bieu do/bang neu thieu",Ngay 13 - Toi,report/metrics/,Chua bat dau
+14,26/7,CN,Bach,Metric hoi nghi,"Ra soat lai so lieu Nhanh 2 (FPR/AUC/detection rate) cho ban hoi nghi, dam bao nhat quan voi report/final/",Ngay 13 - Bach,report/metrics/nhanh2_eval.json,Chua bat dau
+14,26/7,CN,Minh,Metric hoi nghi,"Hoan thien hinh/bieu do con thieu cho ban hoi nghi (ROC, confusion matrix, so do kien truc)",Ngay 13 - Minh,report/metrics/figures/,Chua bat dau
+14,26/7,CN,Diep,Metric hoi nghi,MOC: chot metric cho bao cao hoi nghi (report/final/ban2_hoan_chinh.md) - xong truoc het Chu Nhat 26/7,Ngay 14 - Toi; Ngay 14 - Bach; Ngay 14 - Minh,report/final/ban2_hoan_chinh.md,Chua bat dau

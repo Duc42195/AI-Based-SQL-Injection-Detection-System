@@ -8,7 +8,7 @@
 
 1. **KHÔNG commit thẳng lên `main`.** Mỗi thay đổi làm trên nhánh riêng (`feature/...`), merge qua PR. `main` luôn phải chạy được (tests pass).
 2. **KHÔNG hardcode** đường dẫn / ngưỡng / timeout. Mọi thứ nằm ở [`configs/config.yaml`](configs/config.yaml), đọc qua `src.utils.load_config`.
-3. **KHÔNG dùng `print`** trong code `src/`, `api/`, `scripts/`. Dùng logging: `from src.utils import get_logger`.
+3. **KHÔNG dùng `print`** trong code `src/`, `deploy/`, `train/`. Dùng logging: `from src.utils import get_logger`.
 4. **KHÔNG commit dữ liệu / model lớn.** `data/` và `models/*.pkl|*.pt|...` đã bị `.gitignore`. Chỉ commit code + config + `.gitkeep`.
 5. **KHÔNG tự cài thư viện nặng** (torch, transformers, ctranslate2...) hay đổi phiên bản trong `pyproject.toml` mà chưa hỏi chủ repo. Xem mục [Dependencies](#dependencies).
 6. **KHÔNG sửa schema** trong `config.yaml` (đổi tên/xoá key) mà không cập nhật nơi dùng nó — sẽ vỡ chỗ khác.
@@ -44,7 +44,15 @@ uv sync --extra gbm --extra transformer --extra dev   # thêm XGBoost/LightGBM +
 uv run python main.py    # health check: load config + log banner
 uv run pytest            # chạy toàn bộ test (phải xanh trước khi commit)
 uv run pytest tests/test_config.py -q   # chạy 1 file
+uv run uvicorn deploy.main:app --reload    # chạy API backend (docs: /docs)
 ```
+
+**API backend** (`deploy/`) đã có app thật: `deploy/main.py` (app + CORS), `deploy/registry.py`
+(load model theo `<branch>.active_version` trong config), `deploy/schemas.py` (hợp đồng
+Pydantic), `deploy/routers/` (mỗi nhánh 1 file — chủ nhánh sửa file của mình). Nhánh chưa
+train trả `status:"not_ready"` thay vì sập. Hợp đồng + hướng dẫn cho Streamlit:
+[`deploy/README.md`](deploy/README.md). **Đừng đổi tên/kiểu field response đã có** — frontend phụ thuộc.
+Prefix URL vẫn là `/api/v1/...` (theo `config.yaml`), không đổi theo tên thư mục.
 
 ---
 
@@ -52,16 +60,23 @@ uv run pytest tests/test_config.py -q   # chạy 1 file
 
 ```
 configs/config.yaml      # TẤT CẢ tham số cấu hình
-src/preprocessing/       # canonicalization + tokenization
-src/models/              # Nhánh 1 / 2 / 3
-src/decision/            # decision logic + hàng đợi Overkill
-src/continual_learning/  # gán nhãn, retrain, validation gate
-src/monitoring/          # drift, versioning, rollback
-src/utils/               # config loader + logging (DÙNG LẠI, đừng viết mới)
-api/                     # FastAPI service
+src/                     # THƯ VIỆN LÕI dùng chung (train/ + deploy/ đều import)
+  src/preprocessing/     #   canonicalization + tokenization
+  src/models/            #   Nhánh 1 / 2 / 3
+  src/decision/          #   decision logic + hàng đợi Overkill
+  src/continual_learning/#   gán nhãn, retrain, validation gate
+  src/monitoring/        #   drift, versioning, rollback
+  src/utils/             #   config loader + logging (DÙNG LẠI, đừng viết mới)
+train/                   # pipeline offline: build dataset, train, so sánh, sinh metric
+  train/notebooks/       #   thực nghiệm (prefix nhánh: exp/...)
+deploy/                  # FastAPI service (trước đây là api/) — main.py, registry.py, routers/
+report/                  # tài liệu & số liệu
+  report/plan/           #   đề xuất, kế hoạch, data_contract, scope
+  report/final/          #   báo cáo hoàn chỉnh + manifest + template
+  report/journal/        #   nhật ký train/tuning
+  report/metrics/        #   eval JSON/CSV + figures (paths.reports_dir; sinh bởi train/)
+  report/docs/           #   spec (Streamlit UI...)
 tests/                   # pytest — mỗi module 1 file test_*.py
-scripts/                 # CLI: retrain, benchmark, check_drift
-notebooks/               # thực nghiệm (prefix nhánh: exp/...)
 data/  models/           # KHÔNG commit nội dung (chỉ .gitkeep)
 ```
 

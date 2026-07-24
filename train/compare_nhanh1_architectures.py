@@ -453,7 +453,7 @@ def main() -> None:
     models_dir = Path(cfg.get_path("paths.models_dir", "models")) / "nhanh1_comparison"
     models_dir.mkdir(parents=True, exist_ok=True)
 
-    reports_dir = Path("reports")
+    reports_dir = Path("report/metrics")
     reports_dir.mkdir(parents=True, exist_ok=True)
     out_path = reports_dir / "nhanh1_architecture_comparison.json"
 
