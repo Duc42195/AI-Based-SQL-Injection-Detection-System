@@ -1,0 +1,71 @@
+{
+  "experiment": "zero-day-detection-leave-one-out",
+  "description": "For each SQLi label, train Branch 1 without it and test Branch 2 detection rate on the unseen label",
+  "baseline": {
+    "branch2_algorithm": "one_class_svm",
+    "branch2_contamination": 0.005,
+    "fpr": 0.005,
+    "dr_all_anomalous": 0.2321
+  },
+  "results": {
+    "union_based": {
+      "excluded_label_id": 1,
+      "excluded_label_name": "union_based",
+      "n_test_samples": 3000,
+      "branch1_f1_macro": 0.9803,
+      "branch1_miss_rate": 0.0247,
+      "branch1_prediction_distribution": {
+        "boolean_blind": 2923,
+        "normal": 74,
+        "error_based": 3
+      },
+      "branch2_detection_rate": 0.0053,
+      "branch2_n_detected": 16,
+      "combined_coverage": 0.0297
+    },
+    "error_based": {
+      "excluded_label_id": 2,
+      "excluded_label_name": "error_based",
+      "n_test_samples": 1560,
+      "branch1_f1_macro": 0.9784,
+      "branch1_miss_rate": 0.0,
+      "branch1_prediction_distribution": {
+        "boolean_blind": 1165,
+        "union_based": 395
+      },
+      "branch2_detection_rate": 0.8968,
+      "branch2_n_detected": 1399,
+      "combined_coverage": 0.8968
+    },
+    "boolean_blind": {
+      "excluded_label_id": 3,
+      "excluded_label_name": "boolean_blind",
+      "n_test_samples": 3000,
+      "branch1_f1_macro": 0.9973,
+      "branch1_miss_rate": 0.902,
+      "branch1_prediction_distribution": {
+        "normal": 2706,
+        "time_blind": 277,
+        "error_based": 10,
+        "union_based": 7
+      },
+      "branch2_detection_rate": 0.054,
+      "branch2_n_detected": 162,
+      "combined_coverage": 0.94
+    },
+    "time_blind": {
+      "excluded_label_id": 4,
+      "excluded_label_name": "time_blind",
+      "n_test_samples": 3000,
+      "branch1_f1_macro": 0.9773,
+      "branch1_miss_rate": 0.0027,
+      "branch1_prediction_distribution": {
+        "boolean_blind": 2992,
+        "normal": 8
+      },
+      "branch2_detection_rate": 0.1273,
+      "branch2_n_detected": 382,
+      "combined_coverage": 0.1297
+    }
+  }
+}
