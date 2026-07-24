@@ -43,15 +43,15 @@
 11,23/7,Th5,Bach,Ho tro bao cao,Ra soat phan Nhanh 2 trong ca 2 ban bao cao,Ngay 10 - Bach,Khong co,Chua bat dau
 11,23/7,Th5,Minh,Ho tro bao cao,Hoan thien hinh minh hoa con lai,Ngay 10 - Minh,Khong co,Chua bat dau
 11,23/7,Th5,Diep,Bao cao Ban 1 + Ban 2,Hoan thien Ban 1 (Thao luan/Han che/Ket luan); bat dau Ban 2 (kien truc 3 nhanh + he thong day du + Nhanh 3 thiet ke),Ngay 10 - Diep,report/ban1_scope_hien_tai.md (hoan thien); report/ban2_hoan_chinh.md (bat dau),Chua bat dau
-12,24/7,Th6,Toi,Buffer,Buffer: sua loi notebook/metric neu phat sinh khi Diep viet bao cao,Ngay 11 - Toi,Khong co,Chua bat dau
-12,24/7,Th6,Bach,Buffer,Buffer: ho tro neu can,Ngay 11 - Bach,Khong co,Chua bat dau
-12,24/7,Th6,Minh,Buffer,Buffer: ho tro hinh anh neu can,Ngay 11 - Minh,Khong co,Chua bat dau
-12,24/7,Th6,Diep,Bao cao Ban 2,"Hoan thien Ban 2 (Threat model, Thao luan, Ket luan, Huong phat trien); ra soat ca 2 ban",Ngay 11 - Diep,report/ban2_hoan_chinh.md (hoan thien),Chua bat dau
-13,25/7,Th7,Toi,MOC: NOP,HAN CUNG 23H59 THU 7 25/7: ho tro nop notebook + ca 2 ban bao cao,Ngay 12 - Toi,Khong co,Chua bat dau
-13,25/7,Th7,Bach,MOC: NOP,Ho tro nop,Ngay 12 - Bach,Khong co,Chua bat dau
-13,25/7,Th7,Minh,MOC: NOP,Ho tro nop,Ngay 12 - Minh,Khong co,Chua bat dau
-13,25/7,Th7,Diep,MOC: NOP,HAN CUNG 23H59 THU 7 25/7: train/notebooks/demo_detect.ipynb + report/plan/ban1_scope_hien_tai.md + report/final/ban2_hoan_chinh.md,Ngay 12 - Diep,Khong co,Chua bat dau
-14,26/7,CN,Toi,Metric hoi nghi,"Hoan thien metric rieng cho bao cao hoi nghi RIVF (Ban 2): kiem tra lai so lieu, bo sung bieu do/bang neu thieu",Ngay 13 - Toi,report/metrics/,Chua bat dau
-14,26/7,CN,Bach,Metric hoi nghi,"Ra soat lai so lieu Nhanh 2 (FPR/AUC/detection rate) cho ban hoi nghi, dam bao nhat quan voi report/final/",Ngay 13 - Bach,report/metrics/nhanh2_eval.json,Chua bat dau
-14,26/7,CN,Minh,Metric hoi nghi,"Hoan thien hinh/bieu do con thieu cho ban hoi nghi (ROC, confusion matrix, so do kien truc)",Ngay 13 - Minh,report/metrics/figures/,Chua bat dau
-14,26/7,CN,Diep,Metric hoi nghi,MOC: chot metric cho bao cao hoi nghi (report/final/ban2_hoan_chinh.md) - xong truoc het Chu Nhat 26/7,Ngay 14 - Toi; Ngay 14 - Bach; Ngay 14 - Minh,report/final/ban2_hoan_chinh.md,Chua bat dau
+12,24/7,Th6,Toi,Ho tro,Ho tro Bach verify ket qua rerun (combined_coverage bug da sua trong code); ho tro Diep/Minh so lieu cho bao cao giua ky,Ngay 11 - Toi,Khong co,Dang thuc hien
+12,24/7,Th6,Bach,Train - fix zero-day bug,"Bug combined_coverage trong train/run_zeroday_experiment.py da duoc sua (dao nguoc dieu kien B1 catch/miss). RERUN script de: (1) sinh lai 5 model weight bi mat (nhanh1_no_*, nhanh2_zeroday), (2) ra so lieu combined_coverage dung. Sau do push toan bo 7 model (2 production + 5 zero-day) len HF (Jason-42195/VNU-SQLi-Detection-Models)",Ngay 11 - Bach,models/nhanh1_no_*/model.joblib; models/nhanh2_zeroday/model.joblib; report/metrics/zeroday_experiment/summary.json (cap nhat),Chua bat dau
+12,24/7,Th6,Minh,Bao cao giua ky,Ho tro Diep viet bao cao giua ky (report/midterm/),Ngay 11 - Minh,report/midterm/AI-Based_SQLi_Detection_Midterm_Report.docx,Dang thuc hien
+12,24/7,Th6,Diep,Bao cao giua ky,"Viet/hoan thien bao cao giua ky (report/midterm/) - UU TIEN CAO NHAT, han 25/7",Ngay 11 - Diep,report/midterm/AI-Based_SQLi_Detection_Midterm_Report.docx,Dang thuc hien
+13,25/7,Th7,Toi,MOC: NOP bao cao giua ky,HAN NOP bao cao giua ky 25/7 23:59. Ho tro ra soat cuoi,Ngay 12 - Toi,Khong co,Chua bat dau
+13,25/7,Th7,Bach,Train,Tiep tuc rerun/verify zero-day neu Ngay 12 chua xong; bat dau don dep de chuan bi demo cho buoi thuyet trinh 28/7,Ngay 12 - Bach,Khong co,Chua bat dau
+13,25/7,Th7,Minh,MOC: NOP bao cao giua ky,Ho tro Diep hoan thien + nop bao cao giua ky,Ngay 12 - Minh,Khong co,Chua bat dau
+13,25/7,Th7,Diep,MOC: NOP bao cao giua ky,HAN NOP 23h59 Thu 7 25/7: report/midterm/AI-Based_SQLi_Detection_Midterm_Report.docx,Ngay 12 - Diep,report/midterm/AI-Based_SQLi_Detection_Midterm_Report.docx,Chua bat dau
+14,26/7,CN,Toi,Chuan bi thuyet trinh,"Ho tro chuan bi demo cho buoi thuyet trinh 28/7 (dung model tu HF, khong phu thuoc file local)",Ngay 13 - Toi,Khong co,Chua bat dau
+14,26/7,CN,Bach,Train,Xac nhan 7 model da co tren HF; ho tro demo/code cho slide,Ngay 13 - Bach,Khong co,Chua bat dau
+14,26/7,CN,Minh,Lam slide,"BAT DAU lam slide thuyet trinh (kien truc, ket qua Nhanh 1+2, zero-day study) song song voi Diep",Ngay 13 - Minh,slide/thuyet_trinh.pptx (bat dau),Chua bat dau
+14,26/7,CN,Diep,Lam slide,BAT DAU lam slide thuyet trinh song song voi Minh (khong cho lam xong bao cao giua ky moi bat dau),Ngay 13 - Diep,slide/thuyet_trinh.pptx (bat dau),Chua bat dau
