@@ -29,8 +29,8 @@ models/**/*.json
 models/**/*.txt
 # Exception: keep the small metadata.json describing each versioned model
 !models/**/metadata.json
-# Throwaway architecture-comparison artifacts (incl. 256MB DistilBERT) - never commit
-models/nhanh1_comparison/
+# Architecture-comparison candidates: track the folder + metadata/vocab/config,
+# heavy weights (*.bin/*.pt/*.joblib) stay ignored above and live on HF.
 
 # Notebook checkpoints
 .ipynb_checkpoints/

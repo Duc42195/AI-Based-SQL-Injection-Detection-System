@@ -333,7 +333,7 @@ def main() -> None:
         "chosen": best_results,
     }
 
-    report_path = Path(__file__).resolve().parents[1] / "reports" / "nhanh2_eval.json"
+    report_path = Path(__file__).resolve().parents[1] / "report" / "metrics" / "nhanh2_eval.json"
     report_path.parent.mkdir(parents=True, exist_ok=True)
     with report_path.open("w", encoding="utf-8") as f:
         json.dump(eval_report, f, indent=2)

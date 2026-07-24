@@ -158,7 +158,7 @@ def main() -> None:
                 baseline_dr, int(anom_flags.sum()), len(anom_flags))
 
     # ── 3. Leave-one-out experiment ──
-    experiment_dir = Path(__file__).resolve().parents[1] / "reports" / "zeroday_experiment"
+    experiment_dir = Path(cfg.get_path("paths.reports_dir", "report/metrics")) / "zeroday_experiment"
     experiment_dir.mkdir(parents=True, exist_ok=True)
 
     all_results: dict[str, dict] = {}

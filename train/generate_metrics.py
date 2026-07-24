@@ -51,7 +51,7 @@ rcParams.update({
 })
 
 PROJECT = Path(__file__).resolve().parent.parent
-FIGURES_DIR = PROJECT / "reports" / "figures"
+FIGURES_DIR = PROJECT / "report" / "metrics" / "figures"
 FIGURES_DIR.mkdir(parents=True, exist_ok=True)
 
 
@@ -128,7 +128,7 @@ def compute_nhanh1_roc_per_class(clf, vectorizer, test_df):
 
 
 def update_nhanh1_eval(roc_data):
-    eval_path = PROJECT / "reports" / "nhanh1_eval.json"
+    eval_path = PROJECT / "report" / "metrics" / "nhanh1_eval.json"
     with eval_path.open("r", encoding="utf-8") as f:
         report = json.load(f)
     report["roc_curves_per_class"] = roc_data
@@ -260,7 +260,7 @@ def compute_nhanh2_metrics(detector, test_benign, anom_df):
     logger.info("[Nhánh 2] Current approx threshold: %.6f (FPR=%.4f)", current_thresh_approx, fpr_val)
 
     # Save sweep CSV
-    sweep_path = PROJECT / "reports" / "nhanh2_threshold_sweep.csv"
+    sweep_path = PROJECT / "report" / "metrics" / "nhanh2_threshold_sweep.csv"
     with sweep_path.open("w", newline="", encoding="utf-8") as f:
         writer = csv.DictWriter(f, fieldnames=sweep_rows[0].keys())
         writer.writeheader()
@@ -314,7 +314,7 @@ def compute_nhanh2_metrics(detector, test_benign, anom_df):
 
 
 def update_nhanh2_eval(new_metrics):
-    eval_path = PROJECT / "reports" / "nhanh2_eval.json"
+    eval_path = PROJECT / "report" / "metrics" / "nhanh2_eval.json"
     with eval_path.open("r", encoding="utf-8") as f:
         report = json.load(f)
     report["precision_recall"] = new_metrics["pr_curve"]
