@@ -47,11 +47,31 @@
 12,24/7,Th6,Bach,Train - fix zero-day bug,"Bug combined_coverage trong train/run_zeroday_experiment.py da duoc sua (dao nguoc dieu kien B1 catch/miss). RERUN script de: (1) sinh lai 5 model weight bi mat (nhanh1_no_*, nhanh2_zeroday), (2) ra so lieu combined_coverage dung. Sau do push toan bo 7 model (2 production + 5 zero-day) len HF (Jason-42195/VNU-SQLi-Detection-Models)",Ngay 11 - Bach,models/nhanh1_no_*/model.joblib; models/nhanh2_zeroday/model.joblib; report/metrics/zeroday_experiment/summary.json (cap nhat),Chua bat dau
 12,24/7,Th6,Minh,Bao cao giua ky,Ho tro Diep viet bao cao giua ky (report/midterm/),Ngay 11 - Minh,report/midterm/AI-Based_SQLi_Detection_Midterm_Report.docx,Dang thuc hien
 12,24/7,Th6,Diep,Bao cao giua ky,"Viet/hoan thien bao cao giua ky (report/midterm/) - UU TIEN CAO NHAT, han 25/7",Ngay 11 - Diep,report/midterm/AI-Based_SQLi_Detection_Midterm_Report.docx,Dang thuc hien
-13,25/7,Th7,Toi,MOC: NOP bao cao giua ky,HAN NOP bao cao giua ky 25/7 23:59. Ho tro ra soat cuoi,Ngay 12 - Toi,Khong co,Chua bat dau
+13,25/7,Th7,Toi,MOC: NOP bao cao giua ky,HAN NOP bao cao giua ky 25/7 23:59. Sau khi xong: bat dau THIET KE Nhanh 3 (class model GRU/small-Transformer tren [B1 emb + B2 score] moi buoc) + thiet ke script sinh session dataset Cach A,Ngay 12 - Toi,src/models/nhanh3_*.py (thiet ke),Chua bat dau
 13,25/7,Th7,Bach,Train,Tiep tuc rerun/verify zero-day neu Ngay 12 chua xong; bat dau don dep de chuan bi demo cho buoi thuyet trinh 28/7,Ngay 12 - Bach,Khong co,Chua bat dau
 13,25/7,Th7,Minh,MOC: NOP bao cao giua ky,Ho tro Diep hoan thien + nop bao cao giua ky,Ngay 12 - Minh,Khong co,Chua bat dau
 13,25/7,Th7,Diep,MOC: NOP bao cao giua ky,HAN NOP 23h59 Thu 7 25/7: report/midterm/AI-Based_SQLi_Detection_Midterm_Report.docx,Ngay 12 - Diep,report/midterm/AI-Based_SQLi_Detection_Midterm_Report.docx,Chua bat dau
-14,26/7,CN,Toi,Chuan bi thuyet trinh,"Ho tro chuan bi demo cho buoi thuyet trinh 28/7 (dung model tu HF, khong phu thuoc file local)",Ngay 13 - Toi,Khong co,Chua bat dau
-14,26/7,CN,Bach,Train,Xac nhan 7 model da co tren HF; ho tro demo/code cho slide,Ngay 13 - Bach,Khong co,Chua bat dau
-14,26/7,CN,Minh,Lam slide,"BAT DAU lam slide thuyet trinh (kien truc, ket qua Nhanh 1+2, zero-day study) song song voi Diep",Ngay 13 - Minh,slide/thuyet_trinh.pptx (bat dau),Chua bat dau
-14,26/7,CN,Diep,Lam slide,BAT DAU lam slide thuyet trinh song song voi Minh (khong cho lam xong bao cao giua ky moi bat dau),Ngay 13 - Diep,slide/thuyet_trinh.pptx (bat dau),Chua bat dau
+14,26/7,CN,Toi,Nhanh 3 - dataset + model,"Xay dung session dataset Cach A (script ghep query tu D1 thanh session gia lap, co nhan) + code class model Nhanh 3",Ngay 13 - Toi,train/build_session_dataset.py; src/models/nhanh3_session.py,Chua bat dau
+14,26/7,CN,Bach,Train,"Xac nhan ket qua rerun zero-day hop ly (so sanh voi cot miss-rate/DR cu, khong doi); ho tro Toi gan nhan session dataset; BAT DAU do latency tung nhanh (thay so uoc luong bang so do that)",Ngay 13 - Bach,report/metrics/latency_benchmark.json (bat dau),Chua bat dau
+14,26/7,CN,Minh,Tai lieu tham khao,"BAT DAU lam danh sach tham khao that cho bai RIVF: thay toan bo \bibitem placeholder, xac minh tung citation (doi chieu voi 11 ref tu bao cao giua ky)",Ngay 13 - Minh,report/conf/rivf2026_paper.tex (references),Chua bat dau
+14,26/7,CN,Diep,So do + author info,Ve so do kien truc (3 nhanh -> decision engine) cho bai bao; bat dau dien thong tin tac gia con thieu (khoa/email/thanh pho),Ngay 13 - Diep,report/conf/figures/architecture_diagram.png (bat dau),Chua bat dau
+15,27/7,Th2,Toi,Nhanh 3 - train + eval,Viet train script + eval script cho Nhanh 3; train tren session dataset Cach A -> ra detection rate tren session blind/query-splitting + FPR tren session benign,Ngay 14 - Toi,report/metrics/nhanh3_eval.json,Chua bat dau
+15,27/7,Th2,Bach,Latency + ho tro train,Hoan thien bang do latency end-to-end/decision-engine; ho tro Toi chay train Nhanh 3 (GPU),Ngay 14 - Bach,report/metrics/latency_benchmark.json (hoan thien),Chua bat dau
+15,27/7,Th2,Minh,Tai lieu tham khao + figures,"Hoan thien danh sach tham khao; xuat lai figure Nhanh 1/2 dung kho cot IEEE, font de doc",Ngay 14 - Minh,report/conf/rivf2026_paper.tex (references xong); figures/*.png (re-export),Chua bat dau
+15,27/7,Th2,Diep,Slide + so do + author info,Hoan thien slide thuyet trinh; hoan thien so do kien truc + thong tin tac gia,Ngay 14 - Diep,slide/thuyet_trinh.pptx (hoan thien); report/conf/figures/architecture_diagram.png (hoan thien),Chua bat dau
+16,28/7,Th3,Toi,MOC: THUYET TRINH,"Thu 3 28/7: THUYET TRINH - slide + code + demo model (uu tien, khong lam viec bai bao hom nay)",Ngay 15 - Toi,Khong co,Chua bat dau
+16,28/7,Th3,Bach,MOC: THUYET TRINH,Ho tro thuyet trinh (phan Nhanh 2/zero-day),Ngay 15 - Bach,Khong co,Chua bat dau
+16,28/7,Th3,Minh,MOC: THUYET TRINH,Trinh bay slide,Ngay 15 - Minh,Khong co,Chua bat dau
+16,28/7,Th3,Diep,MOC: THUYET TRINH,Trinh bay slide,Ngay 15 - Diep,Khong co,Chua bat dau
+17,29/7,Th4,Toi,MOC: GO/NO-GO Nhanh 3,"Quyet dinh: Nhanh 3 co so lieu session-level hop ly khong? Neu CO -> viet muc V-D + cap nhat Abstract/Intro theo huong (B). Neu KHONG -> giu framing (A), Nhanh 3 la future work (nhu ban draft cu)",Ngay 16 - Toi,"report/conf/rivf2026_paper.tex (V-D, quyet dinh framing)",Chua bat dau
+17,29/7,Th4,Bach,Bai RIVF,Theo quyet dinh GO/NO-GO; hoan thien bang latency du 2 truong hop,Ngay 16 - Bach,Khong co,Chua bat dau
+17,29/7,Th4,Minh,Bai RIVF,Tiep thu feedback advisor; cap nhat cau contributions theo ket qua GO/NO-GO,Ngay 16 - Minh,Khong co,Chua bat dau
+17,29/7,Th4,Diep,Bai RIVF,"Gui ban thao cho advisor (Linh Dinh-Van, Thai Kim-Dinh) review; cap nhat contributions theo ket qua GO/NO-GO",Ngay 16 - Diep,Khong co,Chua bat dau
+18,30/7,Th5,Toi,Bai RIVF,"Buffer: ra soat cuoi, kiem tra khong con [TODO:], kiem tra so trang dung gioi han RIVF",Ngay 17 - Toi,Khong co,Chua bat dau
+18,30/7,Th5,Bach,Bai RIVF,Buffer: ho tro ra soat,Ngay 17 - Bach,Khong co,Chua bat dau
+18,30/7,Th5,Minh,Bai RIVF,Buffer: ho tro ra soat,Ngay 17 - Minh,Khong co,Chua bat dau
+18,30/7,Th5,Diep,Bai RIVF,Test-compile ban PDF nop cuoi cung (kiem tra dung package file yeu cau),Ngay 17 - Diep,report/conf/rivf2026_paper.tex (final),Chua bat dau
+19,31/7,Th6,Toi,MOC: NOP RIVF,"HAN NOP RIVF 31/7 (kiem tra timezone/AoE truoc, khong gia dinh)",Ngay 18 - Toi,Khong co,Chua bat dau
+19,31/7,Th6,Bach,MOC: NOP RIVF,Ho tro nop,Ngay 18 - Bach,Khong co,Chua bat dau
+19,31/7,Th6,Minh,MOC: NOP RIVF,Ho tro nop,Ngay 18 - Minh,Khong co,Chua bat dau
+19,31/7,Th6,Diep,MOC: NOP RIVF,NOP qua EDAS (https://edas.info/N35414) truoc 23:59 31/7,Ngay 18 - Diep,report/conf/rivf2026_paper.tex,Chua bat dau
