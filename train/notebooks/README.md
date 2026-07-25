@@ -1,12 +1,12 @@
-# Notebooks — Thực nghiệm so sánh kiến trúc
+# Notebooks — Architecture Comparison Experiments
 
-Nơi chứa notebook thực nghiệm (bước 1 trong kế hoạch 14 ngày).
+Home for experimental notebooks (step 1 of the 14-day plan).
 
-- `01_arch_comparison.ipynb` — **(Day 1, sẽ tạo)** So sánh nhanh 2 hướng cho Nhánh 1:
-  - (a) **DistilBERT** fine-tune.
+- `01_arch_comparison.ipynb` — **(Day 1, to be created)** Quick comparison of 2 directions for Branch 1:
+  - (a) **DistilBERT** fine-tuning.
   - (b) **TF-IDF char n-gram (2–4) + Logistic Regression / GBM** (XGBoost/LightGBM).
 
-  Chốt kiến trúc dựa trên **F1-score đối chiếu latency đo được** — KHÔNG mặc định chọn DistilBERT.
-  Ghi lại: F1, Precision, Recall, latency/query (p50/p95), kích thước model.
+  Lock in the architecture based on **F1-score weighed against measured latency** — do NOT default to DistilBERT.
+  Record: F1, Precision, Recall, latency/query (p50/p95), model size.
 
-> Dataset: xem `data/raw/`. Nếu chưa có dữ liệu thật → dùng dataset public (ghi rõ nguồn) + đánh dấu `TODO`.
+> Dataset: see `data/raw/`. If real data isn't available yet → use a public dataset (cite the source clearly) + mark it `TODO`.

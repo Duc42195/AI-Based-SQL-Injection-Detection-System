@@ -1,5 +1,5 @@
 # CLAUDE.md
 
-**Đọc [`AGENTS.md`](AGENTS.md) ở gốc repo — đó là nguồn hướng dẫn đầy đủ cho dự án này.** File này chỉ trỏ về đó để tránh trùng lặp (chỉ maintain một chỗ: `AGENTS.md`).
+**Read [`AGENTS.md`](AGENTS.md) at the repo root — that's the full guidance source for this project.** This file only points there to avoid duplication (maintain a single source: `AGENTS.md`).
 
-Nhắc nhanh các guardrail: không commit thẳng `main`; không hardcode config (dùng `src.utils.load_config`); không `print` (dùng `get_logger`); không commit `data/`·`models/` lớn; không tự cài lib nặng; `uv run pytest` phải xanh trước khi commit.
+Quick guardrail reminders: don't commit directly to `main`; don't hardcode config (use `src.utils.load_config`); no `print` (use `get_logger`); don't commit large `data/`·`models/`; don't install heavy libs on your own; `uv run pytest` must be green before committing.

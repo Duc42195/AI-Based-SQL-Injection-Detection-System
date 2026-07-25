@@ -1,9 +1,9 @@
-# Scripts — vận hành & đánh giá
+# Scripts — operations & evaluation
 
-CLI scripts (sẽ bổ sung dần theo kế hoạch):
+CLI scripts (added incrementally per the plan):
 
-- `benchmark_latency.py` — đo latency/throughput suy luận (bước 8).
-- `retrain.py` — retrain có rehearsal + validation gate (bước 10).
-- `check_drift.py` — log chỉ số concept drift (PSI/KL), FPR/Recall theo thời gian (bước 11).
+- `benchmark_latency.py` — measures inference latency/throughput (step 8).
+- `retrain.py` — retrain with rehearsal + validation gate (step 10).
+- `check_drift.py` — logs concept-drift metrics (PSI/KL), FPR/Recall over time (step 11).
 
-Mọi tham số (đường dẫn, ngưỡng) đọc từ `configs/config.yaml`; các bước tốn thời gian log tiến trình rõ ràng.
+All parameters (paths, thresholds) are read from `configs/config.yaml`; time-consuming steps log progress clearly.

@@ -1,85 +1,85 @@
-# API Backend — Hướng dẫn cho Streamlit (Minh)
+# API Backend — Guide for Streamlit (Minh)
 
-> 📄 **Spec giao diện 4 trang (Test / Monitor / Data / Train) + hợp đồng API đầy đủ:**
-> [`report/docs/streamlit_ui_spec.md`](../report/docs/streamlit_ui_spec.md). File dưới đây là phần
-> lõi (health / detect / nhánh 1-3 / metrics / admin).
+> 📄 **4-page UI spec (Test / Monitor / Data / Train) + full API contract:**
+> [`report/docs/streamlit_ui_spec.md`](../report/docs/streamlit_ui_spec.md). The doc below covers
+> the core surface (health / detect / branch 1-3 / metrics / admin).
 
-> Backend FastAPI cho hệ thống phát hiện SQLi. **Nhánh 1 chạy THẬT** ngay bây giờ;
-> Nhánh 2/3 trả `status:"not_ready"` (HTTP 200, **không phải lỗi**) cho tới khi
-> Bach/Toi train xong. **Hình dạng response giữ nguyên** → Minh dựng UI 1 lần,
-> sau này model thật xong là tự có dữ liệu, **không phải sửa code**.
+> FastAPI backend for the SQLi detection system. **Branch 1 runs FOR REAL** right now;
+> Branch 2/3 return `status:"not_ready"` (HTTP 200, **not an error**) until
+> Bach/Duc finish training them. **The response shape stays stable** → Minh builds the
+> UI once, and once the real model lands the data just shows up — **no code changes needed**.
 
-## 1. Chạy backend
+## 1. Running the backend
 
 ```bash
-# từ gốc repo
+# from repo root
 uv run uvicorn deploy.main:app --reload --port 8000
 ```
 
-- Swagger UI (thử tay, xem schema): <http://localhost:8000/docs>
-- Health check nhanh: `curl localhost:8000/health`
+- Swagger UI (try it out, view the schema): <http://localhost:8000/docs>
+- Quick health check: `curl localhost:8000/health`
 
-CORS đã mở (`api.cors_origins: ["*"]` trong `configs/config.yaml`) nên Streamlit
-gọi từ port khác (mặc định 8501) không bị chặn.
+CORS is already open (`api.cors_origins: ["*"]` in `configs/config.yaml`), so Streamlit
+calling from a different port (default 8501) isn't blocked.
 
-## 2. Endpoint
+## 2. Endpoints
 
-| Method | Path | Body | Dùng cho trang Streamlit |
+| Method | Path | Body | Used by Streamlit page |
 |---|---|---|---|
-| GET  | `/health` | – | badge trạng thái 3 nhánh |
-| POST | `/api/v1/detect` | `{"query": "..."}` | **trang test query + trang kết quả 3 nhánh** (gọi 1 lần, có verdict) |
-| POST | `/api/v1/nhanh1/predict` | `{"query": "..."}` | debug riêng Nhánh 1 |
-| POST | `/api/v1/nhanh2/score` | `{"query": "..."}` | (stub) Nhánh 2 |
-| POST | `/api/v1/nhanh3/session` | `{"queries": ["...","..."]}` | (stub) Nhánh 3 |
-| GET  | `/api/v1/metrics/nhanh1` | – | **trang Metrics** (P/R/F1) |
-| GET  | `/api/v1/admin/overkill-queue` | – | **trang Admin** (hàng đợi — hiện rỗng) |
-| POST | `/api/v1/admin/overkill/{id}/confirm` | – | nút Duyệt (stub) |
-| POST | `/api/v1/admin/overkill/{id}/reject` | – | nút Từ chối (stub) |
+| GET  | `/health` | – | 3-branch status badge |
+| POST | `/api/v1/detect` | `{"query": "..."}` | **query test page + 3-branch results page** (one call, returns a verdict) |
+| POST | `/api/v1/branch1/predict` | `{"query": "..."}` | Branch 1 debug only |
+| POST | `/api/v1/branch2/score` | `{"query": "..."}` | (stub) Branch 2 |
+| POST | `/api/v1/branch3/session` | `{"queries": ["...","..."]}` | (stub) Branch 3 |
+| GET  | `/api/v1/metrics/branch1` | – | **Metrics page** (P/R/F1) |
+| GET  | `/api/v1/admin/overkill-queue` | – | **Admin page** (queue — currently empty) |
+| POST | `/api/v1/admin/overkill/{id}/confirm` | – | Approve button (stub) |
+| POST | `/api/v1/admin/overkill/{id}/reject` | – | Reject button (stub) |
 
-> **Khuyến nghị:** dùng `POST /api/v1/detect` làm endpoint chính. Nó chạy cả 3 nhánh
-> + áp ma trận quyết định và trả **1 verdict** (`BLOCK` / `OVERKILL` / `ALLOW` / `UNKNOWN`).
+> **Recommendation:** use `POST /api/v1/detect` as the main endpoint. It runs all 3 branches
+> + applies the decision matrix and returns **one verdict** (`BLOCK` / `OVERKILL` / `ALLOW` / `UNKNOWN`).
 
-## 3. Hình dạng response
+## 3. Response shape
 
 ### `POST /api/v1/detect`
 
 ```json
 {
   "query_canonical": "admin' or 1=1 union select password from users --",
-  "nhanh1": {
+  "branch1": {
     "status": "ready",
     "label_name": "boolean_blind",
     "is_sqli": true,
-    "confidence": 0.48,           // xác suất lớp cao nhất
-    "attack_probability": 0.97,   // = 1 - P(normal); is_sqli so với threshold cái này
+    "confidence": 0.48,           // top-class probability
+    "attack_probability": 0.97,   // = 1 - P(normal); is_sqli is thresholded on this
     "threshold": 0.5,
     "probabilities": {"normal": 0.03, "union_based": 0.46, "boolean_blind": 0.48, ...}
   },
-  "nhanh2": {"status": "not_ready", "anomaly_score": null, "is_anomaly": null},
-  "nhanh3": {"status": "not_ready", "session_label": null, "is_attack": null},
+  "branch2": {"status": "not_ready", "anomaly_score": null, "is_anomaly": null},
+  "branch3": {"status": "not_ready", "session_label": null, "is_attack": null},
   "decision": {"action": "BLOCK", "reason": "Branch-1 detected attack class 'boolean_blind' ..."}
 }
 ```
 
-**Lưu ý hiển thị:** cờ `is_sqli` dựa trên `attack_probability` (tổng xác suất các lớp
-tấn công = `1 - P(normal)`), **không phải** `confidence`. Nên `confidence` có thể < `threshold`
-mà `is_sqli` vẫn `true` (khi xác suất bị chia đều cho nhiều lớp tấn công). Hiển thị
-`attack_probability` cạnh `threshold` cho rõ ràng.
+**Display note:** the `is_sqli` flag is based on `attack_probability` (the combined
+probability of all attack classes = `1 - P(normal)`), **not** `confidence`. So `confidence`
+can be < `threshold` while `is_sqli` is still `true` (when probability is split across
+multiple attack classes). Display `attack_probability` next to `threshold` for clarity.
 
 `decision.action`:
-- `BLOCK` — Nhánh 1 phát hiện lớp tấn công (hoặc Nhánh 3 báo session tấn công).
-- `OVERKILL` — Nhánh 1 = Normal nhưng Nhánh 2 báo bất thường → chờ Admin (chỉ có khi Nhánh 2 sẵn sàng).
-- `ALLOW` — bình thường.
-- `UNKNOWN` — Nhánh 1 chưa load được.
+- `BLOCK` — Branch 1 detected an attack class (or Branch 3 flagged the session as an attack).
+- `OVERKILL` — Branch 1 = Normal but Branch 2 flagged an anomaly → waits for Admin (only possible once Branch 2 is ready).
+- `ALLOW` — normal.
+- `UNKNOWN` — Branch 1 failed to load.
 
-### `GET /api/v1/metrics/nhanh1`
+### `GET /api/v1/metrics/branch1`
 
 ```json
-{"status": "ready", "source": "report/metrics/nhanh1_eval.json", "metrics": { ...F1/precision/recall... }}
+{"status": "ready", "source": "report/metrics/branch1_eval.json", "metrics": { ...F1/precision/recall... }}
 ```
-Nếu chưa có report → `{"status": "not_ready", "detail": "..."}`. UI nên check `status` trước.
+If no report exists yet → `{"status": "not_ready", "detail": "..."}`. The UI should check `status` first.
 
-## 4. Gọi từ Streamlit (mẫu)
+## 4. Calling from Streamlit (example)
 
 ```python
 import requests
@@ -92,28 +92,28 @@ def detect(query: str) -> dict:
     return r.json()
 
 res = detect("admin' OR 1=1 --")
-st.write("Hành động:", res["decision"]["action"])
-st.write("Lý do:", res["decision"]["reason"])
+st.write("Action:", res["decision"]["action"])
+st.write("Reason:", res["decision"]["reason"])
 
-n1 = res["nhanh1"]
+n1 = res["branch1"]
 if n1["status"] == "ready":
-    st.metric("Loại", n1["label_name"])
+    st.metric("Type", n1["label_name"])
     st.progress(n1["attack_probability"])
 else:
-    st.info("Nhánh 1 chưa sẵn sàng")
+    st.info("Branch 1 not ready yet")
 
-# Nhánh 2/3 — render placeholder khi not_ready, không cần sửa lại khi có model
-for name in ("nhanh2", "nhanh3"):
+# Branch 2/3 — render a placeholder when not_ready, no changes needed once a model lands
+for name in ("branch2", "branch3"):
     b = res[name]
     if b["status"] == "not_ready":
-        st.caption(f"{name}: chưa train")
+        st.caption(f"{name}: not trained yet")
 ```
 
-## 5. Quy ước cho backend dev (Toi/Bach)
+## 5. Conventions for backend devs (Duc/Bach)
 
-- Mỗi nhánh 1 file router trong `deploy/routers/` (`nhanh2.py` → Bach, `nhanh3.py` → Toi).
-- Khi model thật xong: load qua `deploy/registry.py` (thêm hàm giống `nhanh1`) và điền
-  các field trong response — **đừng đổi tên/kiểu field** đã có (Minh phụ thuộc vào chúng).
-- Chọn/rollback model bằng cách đổi `<branch>.active_version` trong `configs/config.yaml`
-  (không hardcode đường dẫn model).
-- `uv run pytest tests/test_api.py` phải xanh trước khi commit.
+- One router file per branch in `deploy/routers/` (`branch2.py` → Bach, `branch3.py` → Duc).
+- Once a real model is ready: load it via `deploy/registry.py` (add a function like `branch1`'s) and
+  populate the response fields — **don't rename/retype existing fields** (Minh depends on them).
+- Select/rollback a model by changing `<branch>.active_version` in `configs/config.yaml`
+  (don't hardcode model paths).
+- `uv run pytest tests/test_api.py` must be green before committing.
