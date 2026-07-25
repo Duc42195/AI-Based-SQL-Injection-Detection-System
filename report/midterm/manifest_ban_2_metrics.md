@@ -7,7 +7,7 @@
 | `report/metrics/nhanh2_eval.json` | Eval Nhánh 2 + PR/CM/per-class DR mới | Diệp, Minh |
 | `report/metrics/nhanh2_threshold_sweep.csv` | 21 ngưỡng FPR vs DR vs Precision | Diệp (bảng số), Đức (decision threshold) |
 | `report/metrics/nhanh1_architecture_comparison.json` | So sánh 4 kiến trúc (đã có trước) | Diệp (Mục 5.1) |
-| `report/journal/nhanh2_training_audit.md` | Nhật ký tuning (đã có trước) | Đức (review) |
+| `report/conf/nhanh2_training_audit.md` | Nhật ký tuning (đã có trước) | Đức (review) |
 | **Figures** | | |
 | `report/metrics/figures/nhanh1_roc_per_class.png` | ROC per class (file mới) | Minh (notebook), Diệp (báo cáo) |
 | `report/metrics/figures/nhanh2_pr_curve.png` | PR curve (file mới) | Minh, Diệp |

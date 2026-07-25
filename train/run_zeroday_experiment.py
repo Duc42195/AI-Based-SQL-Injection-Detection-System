@@ -199,10 +199,15 @@ def main() -> None:
         logger.info("Branch 2 DR on excluded '%s': %.4f (%d/%d)",
                     label_name, dr_nhanh2, int(flags_nhanh2.sum()), len(flags_nhanh2))
 
-        # 3e. Combined coverage
-        either_flag = (preds_nhanh1 == 0) | (flags_nhanh2 == 1)
+        # 3e. Combined coverage: fraction of excluded-label (attack) samples
+        # caught by EITHER branch. BUG FIX (2026-07-24): this used to OR
+        # "B1 MISSED it" (preds==0) with "B2 caught it", which is inverted -
+        # it should be "B1 CAUGHT it" (preds!=0) OR "B2 caught it". The old
+        # formula made combined_coverage internally inconsistent with the
+        # miss-rate/detection-rate columns (see report/conf/outline.md).
+        either_flag = (preds_nhanh1 != 0) | (flags_nhanh2 == 1)
         combined_coverage = float(either_flag.mean())
-        logger.info("Combined coverage (B1 miss OR B2 anomaly): %.4f", combined_coverage)
+        logger.info("Combined coverage (B1 caught OR B2 anomaly): %.4f", combined_coverage)
 
         save_dir = models_dir / f"nhanh1_no_{label_name}"
         save_dir.mkdir(parents=True, exist_ok=True)

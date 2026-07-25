@@ -1,7 +1,7 @@
 # API Backend — Hướng dẫn cho Streamlit (Minh)
 
 > 📄 **Spec giao diện 4 trang (Test / Monitor / Data / Train) + hợp đồng API đầy đủ:**
-> [`docs/streamlit_ui_spec.md`](../docs/streamlit_ui_spec.md). File dưới đây là phần
+> [`report/docs/streamlit_ui_spec.md`](../report/docs/streamlit_ui_spec.md). File dưới đây là phần
 > lõi (health / detect / nhánh 1-3 / metrics / admin).
 
 > Backend FastAPI cho hệ thống phát hiện SQLi. **Nhánh 1 chạy THẬT** ngay bây giờ;

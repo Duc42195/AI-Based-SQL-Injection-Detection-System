@@ -1,0 +1,281 @@
+\documentclass[conference]{IEEEtran}
+\IEEEoverridecommandlockouts
+\usepackage{cite}
+\usepackage{amsmath,amssymb,amsfonts}
+\usepackage{algorithmic}
+\usepackage{graphicx}
+\usepackage{textcomp}
+\usepackage{xcolor}
+\usepackage{booktabs}
+% Figures live in ../metrics/figures/ ; compile this file from report/conf/.
+\graphicspath{{../metrics/figures/}}
+\def\BibTeX{{\rm B\kern-.05em{\sc i\kern-.025em b}\kern-.08em
+    T\kern-.1667em\lower.7ex\hbox{E}\kern-.125emX}}
+\begin{document}
+
+\title{A Multi-Branch AI System for SQL Injection Detection at the Database Proxy with a Zero-Day Generalization Study}
+
+% ==== TODO before submission: fill in [dept/major], [email or ORCID], and Bach's campus city. ====
+\author{
+\IEEEauthorblockN{1\textsuperscript{st} Bach Luong-Chi}
+\IEEEauthorblockA{\textit{[TODO: dept/major]} \\
+\textit{RMIT University Vietnam}\\
+{[TODO: city]}, Vietnam \\
+{[TODO: email or ORCID]}}
+\and
+\IEEEauthorblockN{2\textsuperscript{nd} Minh-Duc Do-Xuan}
+\IEEEauthorblockA{\textit{[TODO: dept/major]} \\
+\textit{International School, Vietnam National University, Hanoi}\\
+Hanoi, Vietnam \\
+{[TODO: email or ORCID]}}
+\and
+\IEEEauthorblockN{3\textsuperscript{rd} Diep Dinh-Ngoc}
+\IEEEauthorblockA{\textit{[TODO: dept/major]} \\
+\textit{International School, Vietnam National University, Hanoi}\\
+Hanoi, Vietnam \\
+{[TODO: email or ORCID]}}
+\and
+\IEEEauthorblockN{4\textsuperscript{th} Minh Nguyen-Quang}
+\IEEEauthorblockA{\textit{[TODO: dept/major]} \\
+\textit{International School, Vietnam National University, Hanoi}\\
+Hanoi, Vietnam \\
+{[TODO: email or ORCID]}}
+\and
+\IEEEauthorblockN{5\textsuperscript{th} Linh Dinh-Van}
+\IEEEauthorblockA{\textit{[TODO: dept]} \\
+\textit{International School, Vietnam National University, Hanoi}\\
+Hanoi, Vietnam \\
+{[TODO: email or ORCID]}}
+\and
+\IEEEauthorblockN{6\textsuperscript{th} Thai Kim-Dinh}
+\IEEEauthorblockA{\textit{[TODO: dept]} \\
+\textit{International School, Vietnam National University, Hanoi}\\
+Hanoi, Vietnam \\
+{[TODO: email or ORCID]}}
+}
+
+\maketitle
+
+\begin{abstract}
+SQL Injection (SQLi) remains one of the most damaging web application vulnerabilities, and signature-based Web Application Firewalls struggle with obfuscated payloads and previously unseen attacks. This paper presents a multi-branch, AI-based SQLi detection system positioned at the database proxy, where the final SQL statement is inspected after the application builds it but before it reaches the database. The system combines a supervised multi-class classifier (Branch~1) with a query-level anomaly detector trained only on benign traffic (Branch~2), and proposes a session-level sequence branch (Branch~3) for blind and multi-step attacks. On a combined, carefully cleaned public dataset, Branch~1 reaches an F1-macro of 0.982 across five SQLi categories, and Branch~2 (One-Class SVM) attains an AUC of 0.90 at a 0.3\% false-positive rate. We further report a leave-one-out zero-day study that isolates how detection degrades when an attack category is unseen at training time: supervised classification remains robust for structurally distinctive attacks but bypasses at a 90\% rate for boolean-blind payloads, which resemble benign queries, while the benign-only anomaly branch supplies partial, independent coverage. These results quantify the limits of query-level detection and motivate the proposed session-level extension.
+\end{abstract}
+
+\begin{IEEEkeywords}
+SQL injection, intrusion detection, anomaly detection, machine learning, web security, zero-day detection
+\end{IEEEkeywords}
+
+\section{Introduction}
+Web applications store increasingly sensitive data, making their back-end databases a persistent target. SQL Injection (SQLi), in which unsanitized user input is concatenated into a SQL statement, is among the oldest and most severe such threats: successful exploitation can disclose, alter, or destroy data and escalate privileges. Although Web Application Firewalls (WAFs) are widely deployed, rule-based defenses depend on predefined signatures; obfuscated payloads and zero-day techniques bypass them, while overly strict rules raise the false-positive rate (FPR) on legitimate traffic.
+
+Machine learning (ML) and deep learning have emerged as promising alternatives because they learn attack patterns from data rather than from hand-written rules \cite{b1,b2,b3}. However, most published AI-based SQLi detectors classify a \emph{single} query in isolation. This is a structural limitation: Boolean-blind and time-blind SQLi, and query-splitting attacks, distribute their malicious intent across many individually innocuous-looking queries within one session. Their signal only becomes visible when a sequence of related queries is analyzed together.
+
+This paper describes a multi-branch AI system that performs SQLi detection at the \emph{database proxy}, inspecting the fully-built SQL statement before it reaches the database server. The contributions of this paper are:
+
+\begin{itemize}
+\item A multi-branch detector architecture placed at the database proxy, combining a supervised multi-class classifier (Branch~1) and a benign-only query-level anomaly detector (Branch~2) under a single decision policy, with a session-level sequence branch (Branch~3) proposed as an extension for blind and multi-step SQLi.
+\item An empirical evaluation on a combined public dataset with a documented, measured account of the label-noise problems encountered during data construction, rather than assumed clean labels.
+\item A leave-one-out \emph{zero-day} study that quantifies, per attack category, how far each branch generalizes to an attack type it never saw during training, and what this implies for the value of the anomaly branch.
+\end{itemize}
+
+The remainder of the paper reviews related work (Section~\ref{sec:related}), describes the proposed system (Section~\ref{sec:system}) and the experimental setup (Section~\ref{sec:setup}), reports results (Section~\ref{sec:results}), discusses limitations (Section~\ref{sec:discussion}), and concludes (Section~\ref{sec:conclusion}).
+
+\section{Related Work}\label{sec:related}
+Traditional SQLi defenses rely on input validation, parameterized queries, and rule-based WAFs such as ModSecurity with the OWASP Core Rule Set. These are fast and interpretable for known attacks but require constant manual updates and are evaded by payload obfuscation \cite{b1}.
+
+ML-based detectors extract features from queries---bag-of-words, TF-IDF, or character/word $n$-grams---and train classifiers such as SVM, Random Forest, or gradient-boosted trees \cite{b2}. Deep models remove the need for handcrafted features: CNNs capture local token patterns \cite{b3}, while recurrent models (LSTM/GRU) and Transformer-based encoders such as DistilBERT model longer-range structure \cite{b5,b6,b7,b8}. For unseen attacks, anomaly and ensemble approaches have been proposed, including autoencoder/LSTM/GRU ensembles for zero-day web attacks \cite{b4}. Classic one-class methods---Isolation Forest \cite{b9} and One-Class SVM \cite{b10}---model the support of the benign distribution and flag deviations, and adversarial tools such as WAF-A-MoLE \cite{b11} expose the fragility of detectors under deliberate evasion.
+
+Across this literature, detection is predominantly \emph{query-level}: a verdict is issued per query. Session-level modeling, which is required to expose blind SQLi spread over many requests, is comparatively underexplored. Our work targets that gap while grounding the design in a measured evaluation of the two query-level branches it builds on.
+
+\section{Proposed System}\label{sec:system}
+
+\subsection{System Placement: The Database Proxy}
+The detector is placed at ``Position~B'': it receives the SQL statement after the application has finished constructing it but before the statement reaches the database. Inspecting the final statement (rather than raw HTTP input) removes ambiguity introduced by application-layer transformations and yields a canonical view of what will actually execute. Fig.~\ref{fig:arch} shows the overall flow.
+
+% TODO: replace this placeholder box with the real architecture diagram.
+\begin{figure}[t]
+\centering
+\fbox{\parbox[c][3.2cm][c]{0.9\columnwidth}{\centering \textbf{[Architecture diagram --- TODO]}\\[2pt]
+\footnotesize Query $\rightarrow$ Canonicalize $\rightarrow$ \{Branch~1, Branch~2\} $\rightarrow$ (Branch~3, proposed) $\rightarrow$ Decision Engine $\rightarrow$ ALLOW / BLOCK / OVERKILL}}
+\caption{Multi-branch detector at the database proxy. Each query is canonicalized, scored by Branch~1 and Branch~2, and (as proposed) fed into the Branch~3 session model; the decision engine emits ALLOW/BLOCK/OVERKILL.}
+\label{fig:arch}
+\end{figure}
+
+\subsection{Canonicalization}
+To reduce syntactic evasion, each statement is normalized before feature extraction: common encodings (URL, hex, \texttt{CHAR()}/\texttt{ASCII()}) are decoded, SQL keyword casing is normalized, and comment sequences (\texttt{/* */}, \texttt{--}) are \emph{marked as a feature} rather than deleted. The goal is to collapse equivalent syntactic variants so that trivial obfuscation does not change the model's input.
+
+\subsection{Branch 1 --- Supervised Multi-Class Classification}
+Branch~1 assigns each query to one of five classes: \texttt{normal}, \texttt{union\_based}, \texttt{error\_based}, \texttt{boolean\_blind}, and \texttt{time\_blind}. We compared four candidate architectures (Section~\ref{sec:results}) and selected TF-IDF features with a Logistic Regression classifier for its accuracy/latency/size trade-off. Multi-class (rather than binary) output lets the decision engine and human administrators reason about \emph{which} attack technique was detected.
+
+\subsection{Branch 2 --- Query-Level Anomaly Detection}
+Branch~2 is trained on benign traffic only, learning the ``normal region'' of query behavior and emitting a continuous anomaly score for each query. Four lightweight statistical features are used: query length, special-character ratio, SQL-keyword count, and Shannon entropy. Training without any attack labels makes the branch, in principle, sensitive to attack shapes never seen by Branch~1---the property we probe in the zero-day study. The score also serves as an input feature to the proposed Branch~3.
+
+\subsection{Branch 3 --- Session-Level Sequence Model (Proposed)}
+Query-level branches cannot, by construction, detect attacks whose signal is spread across a session. Branch~3 is a sequence model (a GRU or a small Transformer) operating over a whole session; each step's input is the concatenation of the Branch~1 content embedding and the Branch~2 anomaly score. This branch is designed to catch Boolean/time-blind SQLi and query-splitting, and can escalate an otherwise-benign query if the surrounding session is judged malicious. Branch~3 is presented here as a design; its implementation and session-level evaluation are ongoing work (Section~\ref{sec:conclusion}).
+
+\subsection{Decision Engine and Overkill Policy}
+A central decision engine combines the branch outputs into one verdict (Table~\ref{tab:decision}). Any query classified by Branch~1 as an attack class is \textsc{block}ed. A query classified \texttt{normal} but flagged anomalous by Branch~2 is held as an \emph{Overkill} case: it is not executed and is queued for administrator confirmation, defaulting to \emph{deny} on timeout. Confirmed decisions feed a continual-learning loop (proposed). This policy trades a small amount of friction on rare suspicious-but-benign queries for defense-in-depth against zero-days.
+
+\begin{table}[t]
+\caption{Decision policy combining the two query-level branches.}
+\label{tab:decision}
+\begin{center}
+\begin{tabular}{@{}lll@{}}
+\toprule
+\textbf{Branch 1} & \textbf{Branch 2} & \textbf{Action} \\
+\midrule
+attack class & any & \textsc{block} + log \\
+\texttt{normal} & anomalous & \textsc{overkill} (hold, deny on timeout) \\
+\texttt{normal} & normal & \textsc{allow} \\
+\bottomrule
+\end{tabular}
+\end{center}
+\end{table}
+
+\section{Dataset and Experimental Setup}\label{sec:setup}
+
+\subsection{Data Sources}
+Four public datasets were combined: \emph{SQLiV3} (D1, a Kaggle SQLi query collection; license provenance unclear, see Section~\ref{sec:discussion}); \emph{CSIC 2010} (D3, HTTP traffic, used both for benign enrichment and, held out, as a labeled anomalous evaluation set); \emph{payload-box} (D4, MIT-licensed SQLi payload strings); and \emph{SR-BH 2020} (D7, a CC0 honeypot dataset of 527{,}813 rows, 250{,}285 originally tagged \texttt{SQL Injection}). Because D7's labels are coarse and multi-attack (CAPEC-tagged), rows were re-tagged into SQLi sub-types by rule-based matching rather than trusted as-is.
+
+\subsection{Branch 1 Dataset}
+Sub-type re-labeling of D7 supplied most per-class volume. The \texttt{stacked} class had \emph{zero} naturally-occurring samples across D1/D4/D7; 363 synthetic samples were templated to represent it, but all four candidate models achieved 100\% recall on them---evidence of trivial separability rather than a solved sub-problem---so \texttt{stacked} was excluded from the reported training set. Content-based signature filtering (independent of source labels) removed mislabeled attacks from the \texttt{normal} pool over three iterative rounds. The final dataset used for training is 67{,}796 rows over five classes, split 54{,}236 train / 13{,}560 test (stratified, seed~$=42$); the three largest classes were undersampled to $\approx$15{,}000 rows each. F1-macro is the headline metric because accuracy would be distorted by the underlying class imbalance.
+
+\subsection{Branch 2 Dataset}
+Branch~2 pools clean benign rows from D1, D3, and D7, using a broader content filter that rejects \emph{any} attack-like traffic (not only SQLi). After filtering and de-duplication, the benign pool contains 91{,}935 rows (73{,}548 train / 18{,}387 test). A held-out set of 25{,}065 anomalous rows from D3 is used only for evaluation. This set mixes several CSIC~2010 attack categories (buffer overflow, XSS, path traversal, and SQLi), so its detection-rate figures should be read as \emph{general} anomaly detection, not a SQLi-only rate. The reported One-Class SVM was fit on a 12{,}000-row benign subsample due to hardware scaling limits (Section~\ref{sec:discussion}).
+
+\subsection{Evaluation Protocol}
+Branch~1 is evaluated with per-class precision/recall/F1, F1-macro, a confusion matrix, and per-class ROC. Branch~2 is evaluated with FPR and detection rate at a fixed threshold, AUC, average precision, and a 21-point threshold sweep. All experiments are deterministic (seed~$=42$); latency was measured on a single RTX~3050 (6~GB) workstation.
+
+\section{Experimental Results}\label{sec:results}
+
+\subsection{Branch 1 --- Supervised Multi-Class}
+Table~\ref{tab:b1arch} compares the four candidate architectures. The F1-macro spread is small (0.985--0.993), but LightGBM is $\approx$120$\times$ slower per query and DistilBERT needs a GPU and 256~MB on disk for no F1 gain; TF-IDF~+~Logistic Regression was selected as the best overall trade-off, with a CNN tokenizer as the strongest fallback.
+
+\begin{table}[t]
+\caption{Branch~1 architecture comparison (6-class data at comparison time).}
+\label{tab:b1arch}
+\begin{center}
+\begin{tabular}{@{}lcccc@{}}
+\toprule
+\textbf{Model} & \textbf{F1-macro} & \textbf{p50 lat.} & \textbf{Size} & \textbf{Train} \\
+\midrule
+TF-IDF + LogReg (chosen) & 0.985 & 0.5~ms & 3.9~MB & 10~s \\
+TF-IDF + LightGBM & 0.993 & 60~ms & 6.0~MB & 264~s \\
+DistilBERT & 0.992 & 2.8~ms$^{\ast}$ & 256~MB & 1{,}443~s \\
+CNN + SQL-tokenizer & 0.987 & 0.3~ms & 116~KB & 10~s \\
+\bottomrule
+\multicolumn{5}{l}{\footnotesize $^{\ast}$GPU.}
+\end{tabular}
+\end{center}
+\end{table}
+
+After excluding \texttt{stacked} and retraining on the five real classes, the chosen model reaches \textbf{F1-macro~=~0.982}. Table~\ref{tab:b1perclass} gives the per-class breakdown; the only material confusion is between \texttt{normal} and \texttt{boolean\_blind}, consistent with the $\approx$13\% label noise measured in the \texttt{boolean\_blind} catch-all class (Section~\ref{sec:discussion}). Per-class ROC curves are shown in Fig.~\ref{fig:b1roc}. This F1 is measured on a clean test split, not on adversarially perturbed input, and should be read accordingly.
+
+\begin{table}[t]
+\caption{Branch~1 per-class results (test set, $n=13{,}560$).}
+\label{tab:b1perclass}
+\begin{center}
+\begin{tabular}{@{}lcccc@{}}
+\toprule
+\textbf{Class} & \textbf{Prec.} & \textbf{Recall} & \textbf{F1} & \textbf{Support} \\
+\midrule
+\texttt{normal}        & 0.966 & 0.947 & 0.956 & 3{,}000 \\
+\texttt{union\_based}  & 0.999 & 0.990 & 0.995 & 3{,}000 \\
+\texttt{error\_based}  & 0.998 & 1.000 & 0.999 & 1{,}560 \\
+\texttt{boolean\_blind}& 0.948 & 0.974 & 0.961 & 3{,}000 \\
+\texttt{time\_blind}   & 1.000 & 1.000 & 1.000 & 3{,}000 \\
+\bottomrule
+\end{tabular}
+\end{center}
+\end{table}
+
+\begin{figure}[t]
+\centerline{\includegraphics[width=\columnwidth]{nhanh1_roc_per_class.png}}
+\caption{Branch~1 per-class ROC curves.}
+\label{fig:b1roc}
+\end{figure}
+
+\subsection{Branch 2 --- Query-Level Anomaly Detection}
+Table~\ref{tab:b2} compares the two anomaly algorithms. One-Class SVM was selected for its substantially higher AUC and detection rate at a lower FPR. On the held-out evaluation (3{,}000 benign, 25{,}065 anomalous), it produces 9 false positives (FPR~=~0.3\%) and flags 20.7\% of anomalous queries, with average precision~=~0.982. A 21-point threshold sweep (Fig.~\ref{fig:b2}) provides the basis for choosing a deployment operating point. As noted in Section~\ref{sec:setup}, the 20.7\% figure is a general anomaly rate over a mixed-attack evaluation set.
+
+\begin{table}[t]
+\caption{Branch~2 algorithm comparison.}
+\label{tab:b2}
+\begin{center}
+\begin{tabular}{@{}lcccc@{}}
+\toprule
+\textbf{Algorithm} & \textbf{Contam.} & \textbf{FPR} & \textbf{Detection} & \textbf{AUC} \\
+\midrule
+Isolation Forest & 0.01 & 0.63\% & 3.19\% & 0.670 \\
+One-Class SVM (chosen) & 0.005 & 0.30\% & 20.73\% & 0.902 \\
+\bottomrule
+\end{tabular}
+\end{center}
+\end{table}
+
+\begin{figure}[t]
+\centerline{\includegraphics[width=\columnwidth]{nhanh2_threshold_tradeoff.png}}
+\caption{Branch~2 threshold trade-off: false-positive rate vs.\ detection rate across 21 operating points.}
+\label{fig:b2}
+\end{figure}
+
+\subsection{Zero-Day Generalization Study}
+To probe robustness to \emph{unseen} attack categories, we run a leave-one-out protocol: for each SQLi class, that class is removed from Branch~1's training set, both branches are retrained, and every query of the held-out class is fed to both branches. We report two well-defined quantities per class: the Branch~1 \emph{miss rate} (fraction predicted \texttt{normal}, i.e.\ bypassing the supervised branch), and the Branch~2 detection rate on the same held-out queries (Table~\ref{tab:zeroday}).
+
+\begin{table}[t]
+\caption{Leave-one-out zero-day results. B1 miss = fraction of the unseen class predicted \texttt{normal} (bypass); B2 detection = fraction independently flagged anomalous.}
+\label{tab:zeroday}
+\begin{center}
+\begin{tabular}{@{}lcc@{}}
+\toprule
+\textbf{Unseen class} & \textbf{B1 miss rate} & \textbf{B2 detection} \\
+\midrule
+\texttt{union\_based}   & 2.5\%  & 0.5\% \\
+\texttt{error\_based}   & 0.0\%  & 89.7\% \\
+\texttt{boolean\_blind} & 90.2\% & 5.4\% \\
+\texttt{time\_blind}    & 0.3\%  & 12.7\% \\
+\bottomrule
+\end{tabular}
+\end{center}
+\end{table}
+
+Two findings stand out. First, supervised classification generalizes well to unseen classes that are \emph{structurally distinctive}: when \texttt{union\_based}, \texttt{error\_based}, or \texttt{time\_blind} is withheld, Branch~1 still flags almost all of its queries as \emph{some} attack (miss rate $\leq$2.5\%), because their tokens differ sharply from benign traffic. Second, and critically, \texttt{boolean\_blind} is the failure mode: with that class unseen, Branch~1 misclassifies \textbf{90.2\%} of its queries as \texttt{normal}, because Boolean-blind payloads are lexically close to legitimate queries. Here the benign-only anomaly branch is the only independent line of defense, yet it recovers only 5.4\% of them---confirming that neither query-level branch reliably catches blind SQLi it has never seen. The anomaly branch is most useful on \texttt{error\_based} (89.7\%), whose malformed structure is intrinsically anomalous. This asymmetry is the core empirical motivation for the proposed session-level Branch~3: the hardest zero-day case for query-level detection (blind SQLi) is precisely the case whose signal lives at the session level.
+
+\subsection{Latency Budget}
+End-to-end per-query latency is estimated from the measured per-branch costs rather than benchmarked under load. Branch~1 inference is 0.5~ms (Table~\ref{tab:b1arch}); Branch~2 is four scalar feature computations plus a linear One-Class SVM decision, sub-millisecond in practice; decision-engine logic is negligible. The combined query-level budget is therefore on the order of 1--2~ms per query, well within real-time proxy requirements. Sustained-throughput benchmarking is left to future work (Section~\ref{sec:conclusion}).
+
+\subsection{Illustrative Demonstration}
+A demonstration loading the trained Branch~1 and Branch~2 models and returning a combined verdict classified 19 of 20 randomly sampled queries correctly; the single error is the known \texttt{normal}$\leftrightarrow$\texttt{boolean\_blind} confusion. This is a minimal integration, not an evaluation of the full decision engine.
+
+\section{Discussion and Limitations}\label{sec:discussion}
+\textbf{Label noise.} Two measured noise sources were found during data construction: mislabeled attacks in the D7 \texttt{normal} pool (requiring three rounds of content filtering) and $\approx$13\% mislabels in the \texttt{boolean\_blind} catch-all class (30-sample manual audit). Both plausibly explain the dominant confusion in Table~\ref{tab:b1perclass}; the clean-label ceiling for this task is unknown.
+
+\textbf{Dataset licensing.} D4 (MIT) and D7 (CC0) have confirmed licenses, but D1 (SQLiV3) has no explicit license; the combined dataset should be treated as provenance-unclear pending resolution.
+
+\textbf{Synthetic \texttt{stacked} class.} No public source contained natural stacked-query samples; the templated substitutes were trivially separable and were excluded from the reported results.
+
+\textbf{Threat-model boundaries.} Second-order and out-of-band SQLi, and non-SQL web attacks (XSS, CSRF), are out of scope by the proxy placement.
+
+\textbf{Adversarial robustness gap.} All results are on clean test splits; no adversarial evaluation (e.g.\ WAF-A-MoLE \cite{b11}) was run, so the reported figures are an upper bound on robustness to deliberate evasion.
+
+\textbf{Methodological open points.} Branch~2 was trained on a 12{,}000-row benign subsample; the effect of the full pool is unmeasured. Manual audits so far cover small per-class samples.
+
+\section{Conclusion and Future Work}\label{sec:conclusion}
+We presented a multi-branch AI system for SQLi detection at the database proxy. Two query-level branches are implemented and evaluated on combined public data: a supervised multi-class classifier (F1-macro~=~0.982) and a benign-only anomaly detector (AUC~=~0.90 at 0.3\% FPR). A leave-one-out zero-day study shows that supervised detection stays robust for structurally distinctive unseen attacks but bypasses at a 90\% rate for boolean-blind SQLi, where the anomaly branch provides only limited independent coverage. This asymmetry quantifies the ceiling of purely query-level detection.
+
+Future work centers on the proposed session-level Branch~3: standing up a network-isolated vulnerable lab (DVWA/WebGoat) driven by \texttt{sqlmap} to collect labeled Boolean/time-blind and query-splitting sessions, training the sequence model over per-step Branch-1$\oplus$Branch-2 features, and measuring whether it recovers the blind-SQLi cases that both query-level branches miss. Further items include the integrated decision engine and administrator interface, a continual-learning loop with a validation gate, concept-drift monitoring, adversarial hardening, and throughput benchmarking under realistic load.
+
+\begin{thebibliography}{00}
+\bibitem{b1} A. Paul, V. Sharma, and O. Olukoya, ``SQL injection attack: Detection, prioritization \& prevention,'' \emph{J. Inf. Secur. Appl.}, vol. 85, art. 103871, 2024.
+\bibitem{b2} A. E. Widodo and F. F. D. Imaniawan, ``Detection of SQL injection, XSS, and command injection attacks in web payloads using SVM, Random Forest, and XGBoost,'' \emph{J. Inf. Syst. Informatics}, vol. 8, no. 3, 2026.
+\bibitem{b3} A. Luo, W. Huang, and W. Fan, ``A CNN-based approach to the detection of SQL injection attacks,'' in \emph{Proc. IEEE/ACIS ICIS}, 2019.
+\bibitem{b4} V. Babaey and H. R. Faragardi, ``Detecting zero-day web attacks with an ensemble of LSTM, GRU, and stacked autoencoders,'' \emph{Computers}, vol. 14, no. 6, art. 205, 2025.
+\bibitem{b5} A. Vaswani et al., ``Attention is all you need,'' in \emph{Adv. Neural Inf. Process. Syst. (NeurIPS)}, 2017. arXiv:1706.03762.
+\bibitem{b6} V. Sanh, L. Debut, J. Chaumond, and T. Wolf, ``DistilBERT, a distilled version of BERT,'' 2019. arXiv:1910.01108.
+\bibitem{b7} Y. Liu and Y. Dai, ``Deep learning in cybersecurity: A hybrid BERT--LSTM network for SQL injection attack detection,'' \emph{IET Inf. Secur.}, vol. 2024, art. 5565950, 2024.
+\bibitem{b8} D. Lu, J. Fei, and L. Liu, ``A semantic learning-based SQL injection attack detection technology,'' \emph{Electronics}, vol. 12, no. 6, art. 1344, 2023.
+\bibitem{b9} F. T. Liu, K. M. Ting, and Z.-H. Zhou, ``Isolation forest,'' in \emph{Proc. IEEE ICDM}, 2008, pp. 413--422.
+\bibitem{b10} B. Sch\"olkopf, J. C. Platt, J. Shawe-Taylor, A. J. Smola, and R. C. Williamson, ``Estimating the support of a high-dimensional distribution,'' \emph{Neural Comput.}, vol. 13, no. 7, pp. 1443--1471, 2001.
+\bibitem{b11} L. Demetrio, A. Valenza, G. Costa, and G. Lagorio, ``WAF-A-MoLE: Evading web application firewalls through adversarial machine learning,'' in \emph{Proc. ACM SAC}, 2020. arXiv:2001.01952.
+\end{thebibliography}
+
+\end{document}

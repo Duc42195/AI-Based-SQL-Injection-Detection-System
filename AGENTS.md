@@ -72,8 +72,8 @@ train/                   # pipeline offline: build dataset, train, so sánh, sin
 deploy/                  # FastAPI service (trước đây là api/) — main.py, registry.py, routers/
 report/                  # tài liệu & số liệu
   report/plan/           #   đề xuất, kế hoạch, data_contract, scope
-  report/final/          #   báo cáo hoàn chỉnh + manifest + template
-  report/journal/        #   nhật ký train/tuning
+  report/midterm/        #   báo cáo giữa kỳ (25/7, chỉ Nhánh 1+2) + manifest + template
+  report/conf/           #   nộp hội nghị (RIVF...) — bài .tex + outline + nhật ký liên quan
   report/metrics/        #   eval JSON/CSV + figures (paths.reports_dir; sinh bởi train/)
   report/docs/           #   spec (Streamlit UI...)
 tests/                   # pytest — mỗi module 1 file test_*.py

@@ -4,7 +4,7 @@
 
 > Nộp: Thứ 7, 25/7/2026. Phạm vi: 2 nhánh đã có kết quả thực nghiệm thật (Nhánh 1 supervised
 > đa lớp, Nhánh 2 anomaly detection) + notebook demo. Không đề cập chi tiết Nhánh 3/hệ thống
-> đầy đủ — xem [ban2_hoan_chinh.md](../final/ban2_hoan_chinh.md) cho tầm nhìn đầy đủ.
+> đầy đủ — xem [ban2_hoan_chinh.md](../midterm/ban2_hoan_chinh.md) cho tầm nhìn đầy đủ.
 
 ---
 

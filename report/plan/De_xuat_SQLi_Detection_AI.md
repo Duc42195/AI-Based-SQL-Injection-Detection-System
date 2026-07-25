@@ -22,7 +22,7 @@
 
 **Đổi lần 2 (cùng ngày 21/7) — bỏ luôn hệ thống, viết 2 bản báo cáo:** sau khi xác nhận Nhánh 1+2 đã ổn, quyết định **không xây API/Bộ xử lý trung tâm/Streamlit** cho bản nộp 25/7 nữa — thay bằng `train/notebooks/demo_detect.ipynb` (đã viết + chạy thử, load model thật, nhập query trả verdict, sanity-check 19/20 đúng trên mẫu ngẫu nhiên). Đồng thời viết **2 bản báo cáo song song**:
 - **[`report/plan/ban1_scope_hien_tai.md`](ban1_scope_hien_tai.md)** — đúng những gì đã làm thật (2 nhánh + notebook), nộp 25/7. *(24/7: di chuyển vào `report/plan/` khi tái cấu trúc repo)*
-- **[`report/final/ban2_hoan_chinh.md`](../final/ban2_hoan_chinh.md)** — tầm nhìn đầy đủ (3 nhánh + hệ thống tích hợp), Nhánh 3/API đánh dấu rõ là thiết kế/Future Work; dùng làm báo cáo hội nghị (Chủ Nhật 26/7). *(24/7: di chuyển vào `report/final/`)*
+- **[`report/midterm/ban2_hoan_chinh.md`](../midterm/ban2_hoan_chinh.md)** — tầm nhìn đầy đủ (3 nhánh + hệ thống tích hợp), Nhánh 3/API đánh dấu rõ là thiết kế/Future Work; dùng làm nguồn tham khảo cho báo cáo hội nghị (Chủ Nhật 26/7), bài hội nghị thật nằm ở `report/conf/`. *(24/7: di chuyển vào `report/final/`; đổi tên thành `report/midterm/` vì đây là báo cáo giữa kỳ — Nhánh 3 + hệ thống đầy đủ dời hạn cứng 31/12/2026, không phải "final".)*
 
 ---
 
@@ -229,7 +229,7 @@ Như V2 (FastAPI + CTranslate2 nếu dùng transformer). Bổ sung: cần chọn
 | **Tôi** | **Metric sâu hơn** (thêm ROC curve đầy đủ cho Nhánh 2) + viết & chạy thử **`train/notebooks/demo_detect.ipynb`** (load model thật, nhập query, trả verdict — đã xong, 19/20 đúng trên mẫu) + hỗ trợ Diệp số liệu/hình cho 2 bản báo cáo |
 | **Bách** | Verify kỹ kết quả Nhánh 2 (OCSVM: FPR=0,3%, detection rate=20,7%, AUC=0,90) — đủ thuyết phục cho báo cáo chưa; cung cấp số liệu/giải thích chi tiết cho Diệp |
 | **Minh** | Hệ thống/Streamlit **hoãn lại** — chuyển sang hỗ trợ vẽ biểu đồ/trực quan hoá (ROC curve, confusion matrix, sơ đồ kiến trúc) cho báo cáo |
-| **Diệp** | Viết **2 bản báo cáo song song**: [`ban1_scope_hien_tai.md`](ban1_scope_hien_tai.md) (đúng 2 nhánh đã làm) + [`ban2_hoan_chinh.md`](../final/ban2_hoan_chinh.md) (tầm nhìn đầy đủ 3 nhánh, Nhánh 3 đánh dấu Future Work) |
+| **Diệp** | Viết **2 bản báo cáo song song**: [`ban1_scope_hien_tai.md`](ban1_scope_hien_tai.md) (đúng 2 nhánh đã làm) + [`ban2_hoan_chinh.md`](../midterm/ban2_hoan_chinh.md) (tầm nhìn đầy đủ 3 nhánh, Nhánh 3 đánh dấu Future Work) |
 
 **Ngày 14 (Chủ Nhật 26/7) — thêm mới (24/7):** cả nhóm dành 1 ngày đệm hoàn thiện riêng **metric cho báo cáo hội nghị** (Bản 2) — rà soát số liệu, bổ sung hình/bảng còn thiếu, không code mới.
 

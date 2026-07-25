@@ -1,7 +1,7 @@
 # Streamlit UI Spec + API Contract (cho Minh)
 
 > Nguồn sự thật cho giao diện Streamlit + hợp đồng API. Backend đã có app FastAPI
-> (`api/`, xem [`api/README.md`](../api/README.md)). Nhánh chưa train trả
+> (`deploy/`, xem [`deploy/README.md`](../deploy/README.md)). Nhánh chưa train trả
 > `status:"not_ready"` (HTTP 200) — UI render placeholder, **không đổi code** khi
 > model thật xong. Endpoint đánh dấu 🟢 = có thật, 🟡 = mock (shape ổn định, dữ
 > liệu giả tới khi nối thật).

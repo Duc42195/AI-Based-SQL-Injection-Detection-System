@@ -42,8 +42,8 @@ Ma trận cơ sở per-query (Nhánh 3 có thể **leo thang** một query benig
 ├── deploy/                    # FastAPI service (app + registry + routers + endpoint Admin)
 ├── report/                    # Tài liệu & số liệu
 │   ├── plan/                  #   Đề xuất, kế hoạch, data_contract, scope hiện tại
-│   ├── final/                 #   Báo cáo hoàn chỉnh + manifest + template
-│   ├── journal/               #   Nhật ký train/tuning
+│   ├── midterm/               #   Báo cáo giữa kỳ (25/7) + manifest + template
+│   ├── conf/                  #   Nộp hội nghị (RIVF...) — bài .tex + outline + nhật ký liên quan
 │   ├── metrics/               #   Eval JSON/CSV + figures (sinh bởi train/)
 │   └── docs/                  #   Spec (Streamlit UI...)
 ├── tests/                     # pytest: canonicalization, decision, validation gate
