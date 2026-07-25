@@ -5,25 +5,25 @@ from __future__ import annotations
 from fastapi import APIRouter
 
 from deploy.registry import get_registry
-from deploy.schemas import Nhanh1Response, QueryRequest
+from deploy.schemas import Branch1Response, QueryRequest
 
-router = APIRouter(prefix="/nhanh1", tags=["nhanh1"])
+router = APIRouter(prefix="/branch1", tags=["branch1"])
 
 
-def run_nhanh1(query: str) -> Nhanh1Response:
+def run_branch1(query: str) -> Branch1Response:
     """Run Branch-1 inference, or a structured not_ready response if unloaded.
 
     Shared by this router and the unified ``/detect`` endpoint so both return
     the exact same shape.
     """
-    model = get_registry().nhanh1()
+    model = get_registry().branch1()
     if model is None:
-        return Nhanh1Response(
+        return Branch1Response(
             status="not_ready",
             detail="Branch-1 model not loaded (missing weights under models/).",
         )
     pred = model.predict(query)
-    return Nhanh1Response(
+    return Branch1Response(
         status="ready",
         query_canonical=pred.query_canonical,
         label=pred.label,
@@ -36,7 +36,7 @@ def run_nhanh1(query: str) -> Nhanh1Response:
     )
 
 
-@router.post("/predict", response_model=Nhanh1Response)
-def predict(request: QueryRequest) -> Nhanh1Response:
+@router.post("/predict", response_model=Branch1Response)
+def predict(request: QueryRequest) -> Branch1Response:
     """Classify a single query into Normal or a specific SQLi attack class."""
-    return run_nhanh1(request.query)
+    return run_branch1(request.query)

@@ -6,7 +6,7 @@ is a throwaway in-memory SQLite seeded with FAKE data — never wire real data o
 a real DB to this module.
 
 The vulnerability is deliberate: the query is built by *string concatenation*
-(``... WHERE username = '<input>'``) exactly like a naive backend at "Vị trí B",
+(``... WHERE username = '<input>'``) exactly like a naive backend at "Position B",
 so classic payloads like ``' OR '1'='1`` change the query's meaning.
 """
 

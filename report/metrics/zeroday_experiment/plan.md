@@ -1,11 +1,11 @@
-# Plan: Test Nhánh 2 — Zero-day Detection via Leave-One-Out
+# Plan: Testing Branch 2 — Zero-day Detection via Leave-One-Out
 
-## Mục tiêu
-Kiểm tra Nhánh 2 có phát hiện được **zero-day SQLi** (dạng chưa từng thấy) không.
+## Objective
+Check whether Branch 2 can detect **zero-day SQLi** (a form never seen before).
 
-Cách làm: loại bỏ 1 label khỏi Nhánh 1, xem Nhánh 2 có bắt được label đó không.
+Method: exclude 1 label from Branch 1, see whether Branch 2 catches that label.
 
-## Kết quả (23/07/2026)
+## Results (23 Jul 2026)
 
 | Excluded label | B1 F1-macro | B1 miss rate | B2 DR | Combined coverage |
 |---|---|---|---|---|
@@ -16,25 +16,25 @@ Cách làm: loại bỏ 1 label khỏi Nhánh 1, xem Nhánh 2 có bắt được
 
 **Baseline:** FPR=0.50%, DR (all anomalous)=23.21%
 
-> ⚠️ **Upload HF:** SKIPPED — token không có quyền ghi vào repo `Jason-42195/VNU-SQLi-Detection` (403 Forbidden). Cần token Write trên repo đó hoặc tạo repo riêng. Data đã có local.
+> ⚠️ **HF upload:** SKIPPED — the token doesn't have write access to the `Jason-42195/VNU-SQLi-Detection` repo (403 Forbidden). Needs a Write token on that repo or a separate repo. Data exists locally.
 
-### Phát hiện chính
+### Key findings
 
-1. **error_based → B2 bắt rất tốt (DR 89.68%)** — vượt xa baseline 23%. Error-based attacks có cấu trúc đặc trưng (nhiều ký tự đặc biệt như `'`, `(`, error functions) → OCSVM phân biệt được rõ với benign.
-2. **boolean_blind → B1 fails (90.2% predict normal), B2 yếu (5.4%)** — boolean-blind queries rất giống normal traffic về mặt thống kê.
-3. **union_based → B1 + B2 đều miss (combined 2.97%)** — UNION queries không có đặc điểm cấu trúc nổi bật.
-4. **time_blind → B2 catch một phần (12.73%)** — nhưng vẫn thấp hơn baseline.
+1. **error_based → B2 catches it very well (DR 89.68%)** — far above the 23% baseline. Error-based attacks have a distinctive structure (many special characters like `'`, `(`, error functions) → OCSVM clearly separates it from benign.
+2. **boolean_blind → B1 fails (90.2% predicted normal), B2 is weak (5.4%)** — boolean-blind queries look statistically very similar to normal traffic.
+3. **union_based → both B1 and B2 miss it (combined 2.97%)** — UNION queries don't have a standout structural signature.
+4. **time_blind → B2 catches a partial amount (12.73%)** — still below the baseline.
 
-### Kết luận
-- **Zero-day detection CÓ HIỆU QUẢ** cho error_based attacks (DR ~90%).
-- **Chưa đủ** cho union_based, boolean_blind, time_blind — cần thêm features hoặc threshold tuning.
-- Điểm yếu nhất: **boolean_blind** — cả 2 nhánh đều yếu, cần feature engineering riêng.
+### Conclusion
+- **Zero-day detection IS EFFECTIVE** for error_based attacks (DR ~90%).
+- **Not yet sufficient** for union_based, boolean_blind, time_blind — needs more features or threshold tuning.
+- Weakest point: **boolean_blind** — both branches are weak, needs dedicated feature engineering.
 
-## Files đã tạo
+## Files created
 
-| File | Nội dung |
+| File | Content |
 |------|----------|
-| `scripts/run_zeroday_experiment.py` | Script chạy toàn bộ experiment |
-| `models/nhanh2_zeroday/` | OCSVM model (trained fresh cho experiment) |
-| `models/nhanh1_no_{label}/` | 4 B1 models, mỗi model bỏ 1 SQLi label |
-| `reports/zeroday_experiment/summary.json` | Kết quả chi tiết (JSON) |
+| `train/run_zeroday_experiment.py` | Script running the full experiment |
+| `models/branch2_zeroday/` | OCSVM model (trained fresh for the experiment) |
+| `models/branch1_no_{label}/` | 4 B1 models, each excluding 1 SQLi label |
+| `report/metrics/zeroday_experiment/summary.json` | Detailed results (JSON) |

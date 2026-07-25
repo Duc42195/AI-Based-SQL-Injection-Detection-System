@@ -16,7 +16,7 @@ session-level — is designed but not yet implemented; see the project repo for 
 
 Data used to train these models: [Jason-42195/VNU-SQLi-Detection](https://huggingface.co/datasets/Jason-42195/VNU-SQLi-Detection).
 
-## `nhanh1_v1/` — Branch 1 (supervised multiclass)
+## `branch1_v1/` — Branch 1 (supervised multiclass)
 
 TF-IDF (char_wb, 2-4gram) + Logistic Regression. Classifies a query into one of 5 classes:
 `normal`, `union_based`, `error_based`, `boolean_blind`, `time_blind`.
@@ -27,28 +27,28 @@ TF-IDF (char_wb, 2-4gram) + Logistic Regression. Classifies a query into one of 
 
 ```python
 import joblib
-vectorizer = joblib.load("nhanh1_v1/vectorizer.joblib")
-clf = joblib.load("nhanh1_v1/model.joblib")
+vectorizer = joblib.load("branch1_v1/vectorizer.joblib")
+clf = joblib.load("branch1_v1/model.joblib")
 
 X = vectorizer.transform(["1' OR '1'='1"])
 clf.predict(X)  # -> array([3])  (3 = boolean_blind)
 ```
 
-## `nhanh2_v1/` — Branch 2 (anomaly detection)
+## `branch2_v1/` — Branch 2 (anomaly detection)
 
 One-Class SVM trained on 100% benign traffic, using 4 structural features (length,
 special_char_ratio, sql_keyword_count, entropy) — not TF-IDF, so it can generalize to
 unseen attack syntax.
 
 - **AUC: 0.90**, FPR: 0.3% (9/3000 benign), detection rate: 20.7% (5196/25065 anomalous)
-- Files: `model.joblib` (wraps `src.models.nhanh2_anomaly.AnomalyDetector`), `metadata.json`
+- Files: `model.joblib` (wraps `src.models.branch2_anomaly.AnomalyDetector`), `metadata.json`
 
 ```python
-# From within the project repo (needs src.models.nhanh2_anomaly.AnomalyDetector):
-from src.models.nhanh2_anomaly import AnomalyDetector
+# From within the project repo (needs src.models.branch2_anomaly.AnomalyDetector):
+from src.models.branch2_anomaly import AnomalyDetector
 import numpy as np
 
-detector = AnomalyDetector.load("nhanh2_v1")
+detector = AnomalyDetector.load("branch2_v1")
 X = np.array([[40, 0.05, 1, 3.6]])  # [length, special_char_ratio, sql_keyword_count, entropy]
 detector.score(X)          # continuous anomaly score
 detector.anomaly_flags(X)  # boolean flag

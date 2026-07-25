@@ -16,17 +16,17 @@ logger = get_logger(__name__)
 router = APIRouter(prefix="/metrics", tags=["metrics"])
 
 
-@router.get("/nhanh1", response_model=MetricsResponse)
-def nhanh1_metrics() -> MetricsResponse:
+@router.get("/branch1", response_model=MetricsResponse)
+def branch1_metrics() -> MetricsResponse:
     """Return Branch-1 evaluation metrics.
 
-    Prefers ``reports/nhanh1_eval.json``; falls back to the model's
+    Prefers ``reports/branch1_eval.json``; falls back to the model's
     ``metadata.json`` (which carries F1-macro and training stats). Returns a
     structured ``not_ready`` if neither exists yet.
     """
     cfg = load_config()
     reports_dir = Path(cfg.get_path("paths.reports_dir", "report/metrics"))
-    eval_path = reports_dir / "nhanh1_eval.json"
+    eval_path = reports_dir / "branch1_eval.json"
 
     if eval_path.exists():
         try:
@@ -36,7 +36,7 @@ def nhanh1_metrics() -> MetricsResponse:
             logger.warning("Could not parse %s", eval_path)
 
     # Fall back to the model metadata (always small, gitignored-except-metadata).
-    model = get_registry().nhanh1()
+    model = get_registry().branch1()
     if model is not None and model.metadata:
         return MetricsResponse(source="model metadata.json", metrics=model.metadata)
 

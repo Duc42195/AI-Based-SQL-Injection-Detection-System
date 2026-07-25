@@ -28,7 +28,7 @@ logger = get_logger(__name__)
 
 
 @dataclass
-class Nhanh1Prediction:
+class Branch1Prediction:
     """Structured output of a single Branch-1 (supervised multiclass) inference."""
 
     query_canonical: str
@@ -41,11 +41,11 @@ class Nhanh1Prediction:
     threshold: float = 0.5
 
 
-class Nhanh1Model:
+class Branch1Model:
     """Loaded Branch-1 model: TF-IDF vectorizer + classifier + label map.
 
     Replicates the exact inference path used at training time
-    (``scripts/train_nhanh1.py``): ``canonicalize(text).query_canonical`` ->
+    (``train/train_branch1.py``): ``canonicalize(text).query_canonical`` ->
     ``vectorizer.transform`` -> ``clf.predict_proba``.
     """
 
@@ -66,7 +66,7 @@ class Nhanh1Model:
         # synthetic `stacked` class was excluded), so map from clf.classes_.
         self._classes: list[int] = [int(c) for c in clf.classes_]
 
-    def predict(self, query: str) -> Nhanh1Prediction:
+    def predict(self, query: str) -> Branch1Prediction:
         """Classify one raw query string.
 
         Args:
@@ -74,7 +74,7 @@ class Nhanh1Model:
                 as done at training time).
 
         Returns:
-            A :class:`Nhanh1Prediction` with label, confidence, per-class
+            A :class:`Branch1Prediction` with label, confidence, per-class
             probabilities and the SQLi flag.
         """
         canonical = canonicalize(query, self._max_decode_iterations).query_canonical
@@ -98,7 +98,7 @@ class Nhanh1Model:
         attack_prob = 1.0 - normal_prob
         is_sqli = attack_prob >= self._threshold
 
-        return Nhanh1Prediction(
+        return Branch1Prediction(
             query_canonical=canonical,
             label=int(best_label),
             label_name=LABEL_NAMES.get(best_label, str(best_label)),
@@ -121,8 +121,8 @@ class ModelRegistry:
     def __init__(self) -> None:
         self._cfg = load_config()
         self._lock = Lock()
-        self._nhanh1: Nhanh1Model | None = None
-        self._nhanh1_loaded = False  # True once a load has been attempted
+        self._branch1: Branch1Model | None = None
+        self._branch1_loaded = False  # True once a load has been attempted
 
     def _models_dir(self) -> Path:
         return Path(self._cfg.get_path("paths.models_dir", "models"))
@@ -131,24 +131,24 @@ class ModelRegistry:
         version = self._cfg.get_path(active_version_key, default)
         return self._models_dir() / str(version)
 
-    def nhanh1(self) -> Nhanh1Model | None:
+    def branch1(self) -> Branch1Model | None:
         """Return the loaded Branch-1 model, or ``None`` if unavailable.
 
         Loads lazily on first call and caches the result (including a failed
         load, so we don't retry disk I/O on every request).
         """
-        if self._nhanh1_loaded:
-            return self._nhanh1
+        if self._branch1_loaded:
+            return self._branch1
         with self._lock:
-            if self._nhanh1_loaded:  # re-check inside the lock
-                return self._nhanh1
-            self._nhanh1 = self._load_nhanh1()
-            self._nhanh1_loaded = True
-        return self._nhanh1
+            if self._branch1_loaded:  # re-check inside the lock
+                return self._branch1
+            self._branch1 = self._load_branch1()
+            self._branch1_loaded = True
+        return self._branch1
 
-    def _load_nhanh1(self) -> Nhanh1Model | None:
+    def _load_branch1(self) -> Branch1Model | None:
         model_dir = self._branch_version_dir(
-            "branch1_supervised.active_version", "nhanh1_v1"
+            "branch1_supervised.active_version", "branch1_v1"
         )
         vec_path = model_dir / "vectorizer.joblib"
         clf_path = model_dir / "model.joblib"
@@ -170,7 +170,7 @@ class ModelRegistry:
         )
         max_decode = int(self._cfg.get_path("preprocessing.max_decode_iterations", 3))
         logger.info("Loaded Branch-1 model from %s (threshold=%.2f)", model_dir, threshold)
-        return Nhanh1Model(vectorizer, clf, metadata, threshold, max_decode)
+        return Branch1Model(vectorizer, clf, metadata, threshold, max_decode)
 
     @staticmethod
     def _read_metadata(model_dir: Path) -> dict[str, Any]:
@@ -196,18 +196,18 @@ class ModelRegistry:
 
         Values are ``"ready"`` or ``"not_trained"``.
         """
-        nhanh1_ready = self.nhanh1() is not None
-        nhanh2_ready = self._branch_ready(
-            "branch2_anomaly.active_version", "nhanh2_v1", "model.joblib"
+        branch1_ready = self.branch1() is not None
+        branch2_ready = self._branch_ready(
+            "branch2_anomaly.active_version", "branch2_v1", "model.joblib"
         )
-        nhanh3_ready = self._branch_ready(
-            "branch3_session.active_version", "nhanh3_v1", "model.pt"
+        branch3_ready = self._branch_ready(
+            "branch3_session.active_version", "branch3_v1", "model.pt"
         )
         as_status = lambda ready: "ready" if ready else "not_trained"
         return {
-            "nhanh1": as_status(nhanh1_ready),
-            "nhanh2": as_status(nhanh2_ready),
-            "nhanh3": as_status(nhanh3_ready),
+            "branch1": as_status(branch1_ready),
+            "branch2": as_status(branch2_ready),
+            "branch3": as_status(branch3_ready),
         }
 
 

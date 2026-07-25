@@ -1,7 +1,7 @@
 """Train the production Branch-1 model (chosen architecture) and version it.
 
 Trains the architecture selected in configs/config.yaml
-(branch1_supervised.architecture) on data/processed/nhanh1_train.csv and saves
+(branch1_supervised.architecture) on data/processed/branch1_train.csv and saves
 it under models/<version>/ with a metadata.json describing the run — enabling
 the simple date/version-based model versioning + rollback described in the
 proposal (MLOps-lite). Currently supports the chosen "tfidf_logreg".
@@ -31,17 +31,17 @@ def main() -> None:
     architecture = cfg.get_path("branch1_supervised.architecture")
     if architecture != "tfidf_logreg":
         raise NotImplementedError(
-            f"train_nhanh1.py currently only supports 'tfidf_logreg', got '{architecture}'. "
-            "See scripts/compare_nhanh1_architectures.py for the other candidates."
+            f"train_branch1.py currently only supports 'tfidf_logreg', got '{architecture}'. "
+            "See train/compare_branch1_architectures.py for the other candidates."
         )
 
     processed_dir = Path(cfg.get_path("paths.data_processed", "data/processed"))
     models_dir = Path(cfg.get_path("paths.models_dir", "models"))
-    version = "nhanh1_v1"
+    version = "branch1_v1"
     out_dir = models_dir / version
     out_dir.mkdir(parents=True, exist_ok=True)
 
-    df = pd.read_csv(processed_dir / "nhanh1_train.csv")
+    df = pd.read_csv(processed_dir / "branch1_train.csv")
     train_df = df[df["split"] == "train"].reset_index(drop=True)
     test_df = df[df["split"] == "test"].reset_index(drop=True)
     logger.info("Loaded train=%d test=%d", len(train_df), len(test_df))
@@ -83,7 +83,7 @@ def main() -> None:
 
     metadata = {
         "version": version,
-        "branch": "nhanh1_supervised_multiclass",
+        "branch": "branch1_supervised_multiclass",
         "architecture": architecture,
         "trained_at": time.strftime("%Y-%m-%dT%H:%M:%S"),
         "train_rows": len(train_df),
@@ -91,7 +91,7 @@ def main() -> None:
         "f1_macro": f1_macro,
         "train_time_s": train_time_s,
         "labels": {str(i): LABEL_NAMES[i] for i in labels_present},
-        "dataset": "data/processed/nhanh1_train.csv",
+        "dataset": "data/processed/branch1_train.csv",
         "tfidf": dict(tfidf_cfg),
     }
     with (out_dir / "metadata.json").open("w", encoding="utf-8") as f:

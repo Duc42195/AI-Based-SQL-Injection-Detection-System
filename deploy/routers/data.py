@@ -24,21 +24,21 @@ router = APIRouter(prefix="/data", tags=["data"])
 
 # Mock pools per task. Real impl reads from the continual-learning stores.
 _UNANNOTATED: dict[str, list[dict]] = {
-    "nhanh1": [
+    "branch1": [
         {"id": "u_n1_001", "query": "1' OR 1=1-- -", "source": "overkill_queue"},
         {"id": "u_n1_002", "query": "'; WAITFOR DELAY '0:0:5'--", "source": "overkill_queue"},
         {"id": "u_n1_003", "query": "SELECT price FROM items WHERE id = 88", "source": "low_confidence"},
     ],
-    "nhanh2": [
+    "branch2": [
         {"id": "u_n2_001", "query": "GET /admin/../../etc/passwd", "source": "high_anomaly"},
         {"id": "u_n2_002", "query": "SELECT * FROM orders JOIN users USING(uid)", "source": "high_anomaly"},
     ],
-    "nhanh3": [
+    "branch3": [
         {"id": "u_n3_001", "query": "step1: id=1 AND 1=1 | step2: id=1 AND 1=2", "source": "session_replay"},
     ],
 }
 
-_ANNOTATED_COUNT: dict[str, int] = {"nhanh1": 12480, "nhanh2": 9130, "nhanh3": 640}
+_ANNOTATED_COUNT: dict[str, int] = {"branch1": 12480, "branch2": 9130, "branch3": 640}
 
 
 @router.get("/{task}/unannotated", response_model=UnannotatedResponse)

@@ -1,9 +1,9 @@
 {
-  "branch": "nhanh1_supervised_multiclass",
+  "branch": "branch1_supervised_multiclass",
   "chosen_architecture": "tfidf_logreg",
   "decision_date": "2026-07-16",
-  "decision_rationale": "Best F1-macro vs latency vs size trade-off among 4 candidates (see nhanh1_architecture_comparison.json, run on 6-class data incl. stacked); F1 differences negligible.",
-  "update_note": "16/7: stacked class (5) removed from training (100% synthetic, 100% recall across all candidates = trivially separable, not a real quality signal). This eval reflects the 5-class retrain. A metric bug (hardcoded label list corrupting macro-avg with a phantom 0-support class) was found and fixed in scripts/train_nhanh1.py + compare_nhanh1_architectures.py - see data_contract.md Muc 3.3.",
+  "decision_rationale": "Best F1-macro vs latency vs size trade-off among 4 candidates (see branch1_architecture_comparison.json, run on 6-class data incl. stacked); F1 differences negligible.",
+  "update_note": "16/7: stacked class (5) removed from training (100% synthetic, 100% recall across all candidates = trivially separable, not a real quality signal). This eval reflects the 5-class retrain. A metric bug (hardcoded label list corrupting macro-avg with a phantom 0-support class) was found and fixed in train/train_branch1.py + compare_branch1_architectures.py - see data_contract.md Muc 3.3.",
   "f1_macro": 0.9821905121114611,
   "per_class": {
     "normal": {

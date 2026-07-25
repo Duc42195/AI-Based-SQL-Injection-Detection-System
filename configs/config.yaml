@@ -42,7 +42,7 @@ labels:
 
 branch1_supervised:
   # CHOSEN (16/7) after comparing 4 candidates on F1-macro vs latency vs size
-  # (see report/metrics/nhanh1_architecture_comparison.json + notebook). All 4 scored
+  # (see report/metrics/branch1_architecture_comparison.json + notebook). All 4 scored
   # F1-macro 0.985-0.993 (differences negligible); tfidf_logreg picked for the
   # best latency/size/simplicity trade-off. LightGBM had the top F1 but ~60ms
   # p50 latency (too slow for a real-time proxy); DistilBERT gave no F1 gain
@@ -52,7 +52,7 @@ branch1_supervised:
   multiclass: true
   # Model folder under models_dir loaded by the API at inference time
   # (models/<active_version>/{model.joblib,vectorizer.joblib,metadata.json}).
-  active_version: "nhanh1_v1"
+  active_version: "branch1_v1"
   # Probability threshold above which a query is flagged as SQLi (any attack class).
   decision_threshold: 0.5
   tfidf:
@@ -78,7 +78,7 @@ branch1_supervised:
     epochs: 5
     batch_size: 64
     learning_rate: 1.0e-3
-  # Per-class undersample target when building data/processed/nhanh1_train.csv.
+  # Per-class undersample target when building data/processed/branch1_train.csv.
   # Classes with fewer available rows than this are kept in full (see
   # data_contract.md Muc 2.1). synthetic_stacked_count = size of the
   # generated `stacked` batch (no real-world source has this class).
@@ -88,7 +88,7 @@ branch1_supervised:
     # x 11 statements x 3 terminators = 363). No real source has this class.
     synthetic_stacked_count: 363
     test_fraction: 0.2
-    # Labels EXCLUDED from data/processed/nhanh1_train.csv entirely (16/7).
+    # Labels EXCLUDED from data/processed/branch1_train.csv entirely (16/7).
     # `stacked` (5) disabled: 100% synthetic (363 templated payloads) and hit
     # 100% recall across all 4 compared architectures - a red flag that the
     # synthetic data is trivially separable, not a real signal of model
@@ -105,7 +105,7 @@ branch2_anomaly:
   algorithm: "one_class_svm"
   # Model folder under models_dir (created once Branch 2 is trained). Until then
   # the API reports this branch as "not_ready" instead of crashing.
-  active_version: "nhanh2_v1"
+  active_version: "branch2_v1"
   # Expected fraction of anomalies in the (Normal) training data.
   # NOTE: training data is 100 % benign (0 % anomaly), so this should be very
   # small — IF='auto' uses the algorithm's own estimate; OCSVM default nu=0.001.
@@ -134,7 +134,7 @@ branch2_anomaly:
     - "special_char_ratio"
     - "sql_keyword_count"
     - "entropy"
-  # Held-out split of the benign pool for evaluating FPR (build_nhanh2_dataset.py).
+  # Held-out split of the benign pool for evaluating FPR (build_branch2_dataset.py).
   test_fraction: 0.2
   # Hyperparameter tuning via grid search (disabled by default; enable for
   # production).
@@ -157,7 +157,7 @@ branch3_session:
   enabled: true
   # Model folder under models_dir (created once Branch 3 is trained). Until then
   # the API reports this branch as "not_ready" instead of crashing.
-  active_version: "nhanh3_v1"
+  active_version: "branch3_v1"
   session_idle_gap_seconds: 1800   # 30-min inactivity ends a session
   sequence_model: "gru"            # "gru" | "transformer"
   max_session_len: 64

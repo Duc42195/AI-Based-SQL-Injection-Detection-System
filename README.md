@@ -1,105 +1,105 @@
 # AI-Based SQL Injection Detection System
 
-Hệ thống phát hiện SQL Injection dựa trên AI, đặt tại **Database Proxy — Vị trí B** (sau khi backend build xong câu SQL, *trước* DB). Kiến trúc **ba nhánh** (bản kế hoạch V4):
+An AI-based SQL Injection detection system, deployed at the **Database Proxy — Position B** (after the backend builds the SQL query, *before* it hits the DB). **Three-branch** architecture (V4 plan):
 
-- **Nhánh 1 (Supervised, đa lớp):** phân loại `Normal` + các loại SQLi (`Union / Error / Boolean-blind / Time-blind / Stacked`). So sánh 3 nhóm model: **TF-IDF+GBM**, **DistilBERT**, **CNN + SQL-tokenizer** → chọn theo **F1-macro vs latency vs size**.
-- **Nhánh 2 (Anomaly Detection):** học "vùng an toàn" từ **100% traffic benign**, xuất **điểm bất thường liên tục** (cờ zero-day + feature cho Nhánh 3) bằng **Isolation Forest / One-Class SVM**.
-- **Nhánh 3 (Session-level — đóng góp chính):** mô hình chuỗi (GRU / Transformer nhẹ) trên toàn **session**; mỗi bước = `[embedding nội dung (Nhánh 1) ⊕ điểm bất thường (Nhánh 2)]`. Bắt **Blind SQLi** và **query-splitting** mà bộ phân loại đơn-query bỏ lọt.
+- **Branch 1 (Supervised, multi-class):** classifies `Normal` + SQLi variants (`Union / Error / Boolean-blind / Time-blind / Stacked`). Compares 3 model families: **TF-IDF+GBM**, **DistilBERT**, **CNN + SQL-tokenizer** → selected on **F1-macro vs latency vs size**.
+- **Branch 2 (Anomaly Detection):** learns the "safe zone" from **100% benign traffic**, outputs a **continuous anomaly score** (zero-day flag + feature for Branch 3) via **Isolation Forest / One-Class SVM**.
+- **Branch 3 (Session-level — main contribution):** a sequence model (GRU / lightweight Transformer) over the whole **session**; each step = `[content embedding (Branch 1) ⊕ anomaly score (Branch 2)]`. Catches **Blind SQLi** and **query-splitting** that a per-query classifier misses.
 
-> ⏱️ **Deadline:** hoàn thành kỹ thuật **26/7/2026**, nộp báo cáo **28/7/2026** (14 ngày).
-> Ưu tiên **MVP chạy end-to-end sớm** hơn là tối ưu hoàn hảo từng phần.
+> ⏱️ **Deadline:** technical work complete **26 Jul 2026**, report due **28 Jul 2026** (14 days).
+> Prioritize an **early end-to-end MVP** over perfecting every individual part.
 
 ---
 
-## Cơ chế kết hợp quyết định (Decision Logic)
+## Decision Logic (branch fusion)
 
-Ma trận cơ sở per-query (Nhánh 3 có thể **leo thang** một query benign lên BLOCK/OVERKILL nếu session bị phân loại là tấn công Blind/query-splitting):
+Base per-query matrix (Branch 3 can **escalate** a benign-looking query to BLOCK/OVERKILL if the session is classified as a Blind/query-splitting attack):
 
-| Nhánh 1 | Nhánh 2 (Anomaly) | Hành động |
+| Branch 1 | Branch 2 (Anomaly) | Action |
 |:---:|:---:|:---|
-| lớp tấn công | bất kỳ | **BLOCK** ngay + ghi log |
-| `Normal` | `1` | **OVERKILL** — không thực thi, đưa vào hàng đợi chờ Admin xác nhận. Quá `timeout` → **deny by default** |
-| `Normal` | `0` | **ALLOW** — cho phép thực thi |
+| attack class | any | **BLOCK** immediately + log |
+| `Normal` | `1` | **OVERKILL** — not executed, queued for Admin confirmation. Past `timeout` → **deny by default** |
+| `Normal` | `0` | **ALLOW** — execute |
 
 ---
 
-## Cấu trúc thư mục
+## Directory structure
 
 ```
 .
 ├── configs/
-│   └── config.yaml            # Thresholds, paths, timeouts — KHÔNG hardcode
-├── src/                       # Thư viện lõi dùng chung (train + deploy import)
+│   └── config.yaml            # Thresholds, paths, timeouts — DO NOT hardcode
+├── src/                       # Core shared library (imported by both train and deploy)
 │   ├── preprocessing/         # Canonicalization + tokenization / feature extraction
-│   ├── models/                # Nhánh 1 (đa lớp), Nhánh 2 (anomaly), Nhánh 3 (session), wrapper
-│   ├── decision/              # Decision logic + hàng đợi Overkill
-│   ├── continual_learning/    # Gán nhãn, retrain (rehearsal), validation gate
+│   ├── models/                # Branch 1 (multi-class), Branch 2 (anomaly), Branch 3 (session), wrapper
+│   ├── decision/               # Decision logic + Overkill queue
+│   ├── continual_learning/    # Labeling, retraining (rehearsal), validation gate
 │   ├── monitoring/            # Drift monitoring, versioning, rollback
-│   └── utils/                 # config loader + logging setup (đã có)
-├── train/                     # Pipeline offline: build dataset, train, so sánh, sinh metric
+│   └── utils/                 # config loader + logging setup (already implemented)
+├── train/                     # Offline pipeline: build dataset, train, compare, generate metrics
 │   ├── build_*.py train_*.py  #   compare_*, generate_metrics, download/fetch
-│   └── notebooks/             #   Thực nghiệm + eval + demo
-├── deploy/                    # FastAPI service (app + registry + routers + endpoint Admin)
-├── report/                    # Tài liệu & số liệu
-│   ├── plan/                  #   Đề xuất, kế hoạch, data_contract, scope hiện tại
-│   ├── final/                 #   Báo cáo hoàn chỉnh + manifest + template
-│   ├── journal/               #   Nhật ký train/tuning
-│   ├── metrics/               #   Eval JSON/CSV + figures (sinh bởi train/)
-│   └── docs/                  #   Spec (Streamlit UI...)
+│   └── notebooks/             #   Experiments + eval + demo
+├── deploy/                    # FastAPI service (app + registry + routers + Admin endpoint)
+├── report/                    # Documentation & results
+│   ├── plan/                  #   Proposal, plan, data_contract, current scope
+│   ├── midterm/               #   Mid-term report (25 Jul) + manifest + template
+│   ├── conf/                  #   Conference submission (RIVF...) — .tex paper + outline + related log
+│   ├── metrics/                #   Eval JSON/CSV + figures (generated by train/)
+│   └── docs/                  #   Specs (Streamlit UI...)
 ├── tests/                     # pytest: canonicalization, decision, validation gate
 ├── data/
-│   ├── raw/                   # Dataset gốc (SQLi + Normal)
-│   ├── processed/             # Dữ liệu đã canonicalize / feature
-│   └── adversarial/           # Tập test adversarial (obfuscation)
-├── models/                    # Model theo version: v0/, v1/, ... (rollback nhanh)
+│   ├── raw/                   # Original datasets (SQLi + Normal)
+│   ├── processed/             # Canonicalized / featurized data
+│   └── adversarial/           # Adversarial test set (obfuscation)
+├── models/                    # Models by version: v0/, v1/, ... (quick rollback)
 ├── main.py                    # Health check: load config + log banner
 └── pyproject.toml             # Dependencies (uv)
 ```
 
 ---
 
-## Cài đặt
+## Installation
 
-Dự án dùng [`uv`](https://docs.astral.sh/uv/). Stack **core (nhẹ)** đủ cho Day-1 + nhánh TF-IDF, anomaly, decision, API:
+The project uses [`uv`](https://docs.astral.sh/uv/). **Core (light)** stack is enough for Day 1 + the TF-IDF branch, anomaly detection, decision logic, and API:
 
 ```bash
 uv sync                          # core deps
 uv sync --extra gbm --extra dev  # + XGBoost/LightGBM + pytest/jupyter
 ```
 
-Stack **transformer (nặng — cài khi Day-1 chốt DistilBERT):**
+**Transformer (heavy — install once Day 1 locks in DistilBERT):**
 
 ```bash
 uv sync --extra transformer --extra inference   # torch, transformers, ctranslate2
 ```
 
-### Chạy thử scaffold
+### Smoke-test the scaffold
 ```bash
-uv run python main.py    # log banner từ config
-uv run pytest            # smoke test config loader
+uv run python main.py    # log banner from config
+uv run pytest            # smoke test for the config loader
 ```
 
 ---
 
-## API service (FastAPI) — cho Streamlit
+## API service (FastAPI) — for Streamlit
 
-Backend đã có app chạy được. Nhánh 1 chạy **thật**; Nhánh 2/3 trả `not_ready`
-(HTTP 200, không phải lỗi) cho tới khi train xong, giữ nguyên hình dạng response.
+The backend already has a running app. Branch 1 runs **for real**; Branch 2/3 return `not_ready`
+(HTTP 200, not an error) until training is done, keeping the response shape stable.
 
 ```bash
 uv run uvicorn deploy.main:app --reload --port 8000   # docs: http://localhost:8000/docs
 ```
 
-Endpoint chính: `POST /api/v1/detect` (chạy cả 3 nhánh + trả 1 verdict
-`BLOCK`/`OVERKILL`/`ALLOW`). Hợp đồng API đầy đủ + mẫu gọi từ Streamlit:
+Main endpoint: `POST /api/v1/detect` (runs all 3 branches + returns one verdict:
+`BLOCK`/`OVERKILL`/`ALLOW`). Full API contract + sample Streamlit client code:
 👉 [`deploy/README.md`](deploy/README.md).
 
 ---
 
-## Cấu hình
+## Configuration
 
-Mọi ngưỡng / đường dẫn / timeout nằm ở [`configs/config.yaml`](configs/config.yaml).
-Override khi runtime bằng biến môi trường `SQLIDS_<SECTION>_<KEY>` (xem [`.env.example`](.env.example)):
+All thresholds / paths / timeouts live in [`configs/config.yaml`](configs/config.yaml).
+Override at runtime via the `SQLIDS_<SECTION>_<KEY>` environment variable (see [`.env.example`](.env.example)):
 
 ```bash
 SQLIDS_DECISION_OVERKILL_TIMEOUT_SECONDS=120
@@ -108,98 +108,98 @@ SQLIDS_LOGGING_LEVEL=DEBUG
 
 ---
 
-## Canonicalization (chống evasion)
+## Canonicalization (evasion resistance)
 
-Trước khi tokenize, chuẩn hóa input dễ bị né tránh:
-- Decode encoding phổ biến: URL-encode, hex, `CHAR()` / `ASCII()`.
-- Chuẩn hóa hoa/thường từ khóa SQL.
-- **Đánh dấu (không xóa)** comment `/* */` và `--` như một feature riêng.
+Before tokenizing, normalize input that's prone to evasion:
+- Decode common encodings: URL-encoding, hex, `CHAR()` / `ASCII()`.
+- Normalize SQL keyword case.
+- **Flag (don't strip)** `/* */` and `--` comments as a separate feature.
 
-Mục tiêu: giảm rủi ro né tránh bằng biến đổi cú pháp tương đương.
+Goal: reduce evasion risk from syntactically-equivalent transformations.
 
 ---
 
 ## Continual Learning & Monitoring (MLOps-lite)
 
-- **Continual Learning:** Admin xác nhận truy vấn trong hàng đợi Overkill → gán nhãn, lưu kho dữ liệu mới → script retrain dùng **rehearsal** (trộn mới + cũ, tránh catastrophic forgetting) → **validation gate** (chỉ promote nếu F1/FPR ≥ model hiện tại trên tập test cố định).
-- **Concept Drift:** log định kỳ **PSI/KL-divergence** trên phân phối feature + FPR/Recall theo thời gian; lịch retrain cố định (weekly) + trigger thủ công; versioning theo thư mục `models/vN/`; **rollback** nhanh về bản trước.
+- **Continual Learning:** Admin confirms a query in the Overkill queue → label it, store in the new-data pool → a retrain script uses **rehearsal** (mixing new + old data to avoid catastrophic forgetting) → **validation gate** (only promotes if F1/FPR ≥ the current model on a fixed test set).
+- **Concept Drift:** periodically logs **PSI/KL-divergence** over the feature distribution + FPR/Recall over time; fixed retrain schedule (weekly) + manual trigger; versioned under `models/vN/`; fast **rollback** to the previous version.
 
 ---
 
-## Kế hoạch triển khai (14 ngày — V4)
+## Implementation plan (14 days — V4)
 
-> Ưu tiên cắt từ dưới lên khi thiếu thời gian: **(1)** lõi Nhánh 1 đa lớp + Nhánh 2 + Overkill + end-to-end → **(2)** Nhánh 3 trên session data Cách A → **(3)** Nhánh 3 Cách B (sqlmap thật) + so sánh A↔B → **(4)** Continual Learning đầy đủ (hạ xuống demo 1 vòng nếu cần).
+> Cut priority from the bottom up if time runs short: **(1)** Branch 1 multi-class core + Branch 2 + Overkill + end-to-end → **(2)** Branch 3 on Cách A session data → **(3)** Branch 3 Cách B (real sqlmap) + A↔B comparison → **(4)** full Continual Learning (fall back to a single demo round if needed).
 
-| Ngày | Việc chính |
+| Day | Main tasks |
 |---|---|
-| 1–2 | Setup repo; tải D1/D3/D4; làm sạch + **gán nhãn đa lớp** D1; làm giàu benign từ CSIC 2010; **test song song 3 model Nhánh 1** trên tập nhỏ để chốt hướng |
-| 3–4 | Train đầy đủ **Nhánh 1** (model thắng); F1-macro/latency/size + confusion matrix |
-| 5–6 | Trích đặc trưng thống kê; train **Nhánh 2** (chỉ benign); xuất điểm bất thường |
-| 7 | Canonicalization + sinh tập **adversarial** (WAF-A-MoLE); đưa 1 phần vào training Nhánh 1 (robust) |
-| 8–9 | **Session data Cách A** (script mô phỏng); dựng **Nhánh 3** (Tầng 1 tái dùng + GRU/Transformer nhỏ) |
-| 10 | Cơ chế kết hợp 3 nhánh + **Overkill**; kiểm thử end-to-end |
-| 11–12 | **Session data Cách B** (Docker + sqlmap + proxy capture); train/test Nhánh 3 trên B; **so sánh A↔B** |
-| 13 | **Continual Learning**: pipeline Overkill→nhãn→retrain→validation gate chạy ≥1 vòng có drift |
-| 14 | Tổng hợp bảng kết quả; viết Thảo luận/Hạn chế/Threat model; ráp báo cáo |
+| 1–2 | Set up repo; download D1/D3/D4; clean + **multi-class label** D1; enrich benign from CSIC 2010; **run 3 Branch-1 model candidates in parallel** on a small subset to lock in a direction |
+| 3–4 | Fully train **Branch 1** (winning model); F1-macro/latency/size + confusion matrix |
+| 5–6 | Extract statistical features; train **Branch 2** (benign only); output anomaly scores |
+| 7 | Canonicalization + generate an **adversarial** set (WAF-A-MoLE); fold part of it into Branch-1 training (robustness) |
+| 8–9 | **Session data Cách A** (simulation script); build **Branch 3** (reuse Layer 1 + small GRU/Transformer) |
+| 10 | 3-branch fusion logic + **Overkill**; end-to-end testing |
+| 11–12 | **Session data Cách B** (Docker + sqlmap + proxy capture); train/test Branch 3 on B; **compare A↔B** |
+| 13 | **Continual Learning**: run the Overkill→label→retrain→validation-gate pipeline for ≥1 round with drift |
+| 14 | Compile the results tables; write Discussion/Limitations/Threat model; assemble the report |
 
 ---
 
-## Quy ước kỹ thuật
+## Technical conventions
 
-- Python **type hints** + **docstring** cho mọi hàm/class public.
-- Dùng module `logging` (qua `src.utils.get_logger`) — **không `print`** trong code production.
-- **pytest** cho: canonicalization, decision logic, validation gate.
-- Config tách riêng (`.yaml` / `.env`) — **không hardcode**.
-- Bước tốn thời gian (train/retrain/benchmark): log tiến trình rõ ràng.
+- Python **type hints** + **docstrings** on every public function/class.
+- Use the `logging` module (via `src.utils.get_logger`) — **no `print`** in production code.
+- **pytest** for: canonicalization, decision logic, validation gate.
+- Config kept separate (`.yaml` / `.env`) — **no hardcoding**.
+- Time-consuming steps (train/retrain/benchmark): log progress clearly.
 
-## Nguồn dữ liệu (public — ghi rõ nguồn)
+## Data sources (public — cite clearly)
 
-| ID | Dataset | Dùng cho | Ghi chú |
+| ID | Dataset | Used for | Notes |
 |---|---|---|---|
-| D1 | SQLiV3 (~30.9K) | Nhánh 1 | ⚠️ khử trùng lặp/null; **gán nhãn lại đa lớp**; cân bằng lại (traffic thật <1% tấn công) |
-| D2 | sqliv5 | Adversarial test | có sẵn biến thể adversarial |
-| D3 | CSIC 2010 (traffic normal) | Nhánh 2, làm giàu benign | benign phức tạp (JOIN/subquery) |
-| D4 | payload-box | Gán nhãn đa lớp Nhánh 1 | phân theo DBMS/kỹ thuật |
-| D5 | WAF-A-MoLE | Sinh adversarial | adversarial training |
-| D6 | DVWA/WebGoat (Docker) | Session data Cách B | sqlmap tấn công thật + proxy capture |
-| D7 | SR-BH 2020 (honeypot thật, 2020) | Nhánh 1 (bổ sung) + Nhánh 2 (benign pool) | [Harvard Dataverse](https://dataverse.harvard.edu/dataset.xhtml?persistentId=doi:10.7910/DVN/OGOIXX), đa nhãn CAPEC |
+| D1 | SQLiV3 (~30.9K) | Branch 1 | ⚠️ dedupe/remove nulls; **re-labeled multi-class**; rebalanced (real traffic is <1% attack) |
+| D2 | sqliv5 | Adversarial test | ships with adversarial variants |
+| D3 | CSIC 2010 (normal traffic) | Branch 2, benign enrichment | complex benign traffic (JOIN/subquery) |
+| D4 | payload-box | Branch 1 multi-class labeling | split by DBMS/technique |
+| D5 | WAF-A-MoLE | Adversarial generation | adversarial training |
+| D6 | DVWA/WebGoat (Docker) | Session data Cách B | real sqlmap attacks + proxy capture |
+| D7 | SR-BH 2020 (real honeypot, 2020) | Branch 1 (supplemental) + Branch 2 (benign pool) | [Harvard Dataverse](https://dataverse.harvard.edu/dataset.xhtml?persistentId=doi:10.7910/DVN/OGOIXX), multi-label CAPEC |
 
-**Session data (Nhánh 3)** tạo bằng **2 cách để so sánh**: **Cách A** (script mô phỏng nhanh từ D1) và **Cách B** (sqlmap thật lên DVWA/WebGoat, capture qua mitmproxy/Burp). So sánh A↔B là một kết quả học thuật.
+**Session data (Branch 3)** is built **two ways for comparison**: **Cách A** (fast simulation script from D1) and **Cách B** (real sqlmap against DVWA/WebGoat, captured via mitmproxy/Burp). Comparing A↔B is itself an academic contribution.
 
-> ⚠️ **TODO:** một số nhận định trong báo cáo cần verify bằng Web Search trước khi nộp. Session data phần lớn tổng hợp — nêu rõ ở phần Hạn chế.
+> ⚠️ **TODO:** some claims in the report need Web Search verification before submission. Session data is mostly synthetic — call this out clearly in the Limitations section.
 
-## Data đã xử lý — tải ở đâu
+## Processed data — where to download
 
-`data/` trong repo **chỉ có thư mục rỗng** (raw/model lớn không commit — xem `AGENTS.md`). Toàn bộ dữ liệu đã xử lý nằm trên Hugging Face:
+The repo's `data/` directory **only has empty folders** (raw/large model files aren't committed — see `AGENTS.md`). All processed data lives on Hugging Face:
 
 👉 **https://huggingface.co/datasets/Jason-42195/VNU-SQLi-Detection**
 
-| File | Dùng cho | Số dòng |
+| File | Used for | Rows |
 |---|---|---|
-| `nhanh1_train.csv` | Nhánh 1 (train/eval) | 68.159 |
-| `nhanh2_normal.csv` | Nhánh 2 (train, 100% benign) | 91.935 |
-| `nhanh2_anomalous_eval.csv` | Nhánh 2 (đánh giá FPR/detection rate) | 25.065 |
+| `branch1_train.csv` | Branch 1 (train/eval) | 68,159 |
+| `branch2_normal.csv` | Branch 2 (train, 100% benign) | 91,935 |
+| `branch2_anomalous_eval.csv` | Branch 2 (FPR/detection-rate evaluation) | 25,065 |
 
-Tải nhanh: `huggingface-cli download Jason-42195/VNU-SQLi-Detection --repo-type dataset --local-dir data/processed/`
+Quick download: `huggingface-cli download Jason-42195/VNU-SQLi-Detection --repo-type dataset --local-dir data/processed/`
 
-Muốn tự build lại từ đầu (raw → processed): xem `train/build_nhanh1_dataset.py`, `train/build_nhanh2_dataset.py`, `report/plan/data_contract.md`.
+To rebuild from scratch (raw → processed): see `train/build_branch1_dataset.py`, `train/build_branch2_dataset.py`, `report/plan/data_contract.md`.
 
-## Model đã train — tải ở đâu
+## Trained models — where to download
 
-`models/` trong repo cũng **chỉ có `metadata.json`** (file `.joblib` bị gitignore, tránh commit binary lớn). Model thật (`nhanh1_v1`, `nhanh2_v1`) nằm trên Hugging Face:
+The repo's `models/` directory also **only has `metadata.json`** (`.joblib` files are gitignored to avoid committing large binaries). The real models (`branch1_v1`, `branch2_v1`) are on Hugging Face:
 
 👉 **https://huggingface.co/Jason-42195/VNU-SQLi-Detection-Models**
 
-| Model | Kiến trúc | Kết quả |
+| Model | Architecture | Result |
 |---|---|---|
-| `nhanh1_v1/` | TF-IDF + Logistic Regression | F1-macro = 0.9822 |
-| `nhanh2_v1/` | One-Class SVM | AUC = 0.90, FPR = 0,3%, detection rate = 20,7% |
+| `branch1_v1/` | TF-IDF + Logistic Regression | F1-macro = 0.9822 |
+| `branch2_v1/` | One-Class SVM | AUC = 0.90, FPR = 0.3%, detection rate = 20.7% |
 
-Tải nhanh:
+Quick download:
 ```bash
 hf download Jason-42195/VNU-SQLi-Detection-Models --local-dir models/
 ```
 
-Hoặc tự retrain (deterministic, seed=42): `uv run python train/train_nhanh1.py` (~15s) và
-`uv run python train/build_nhanh2_data.py && uv run python train/train_nhanh2.py` (~75s).
-**Ưu tiên tải từ HF** thay vì tự retrain để đảm bảo mọi người dùng đúng 1 bản model cho báo cáo/demo.
+Or retrain yourself (deterministic, seed=42): `uv run python train/train_branch1.py` (~15s) and
+`uv run python train/build_branch2_data.py && uv run python train/train_branch2.py` (~75s).
+**Prefer downloading from HF** over retraining, to make sure everyone uses the exact same model version for the report/demo.

@@ -1,135 +1,136 @@
-# AGENTS.md — Hướng dẫn cho AI & người mới
+# AGENTS.md — Guide for AI Assistants & New Contributors
 
-> File này là **nguồn hướng dẫn chung** cho mọi trợ lý AI (Copilot, Cursor, Claude, Codex, Aider...) và cho lập trình viên mới clone repo. **Đọc hết file này trước khi sửa code.** Mục tiêu: đóng góp đúng chuẩn và **không phá vỡ project**.
-
----
-
-## ⛔ Quy tắc TỐI QUAN TRỌNG (đọc trước)
-
-1. **KHÔNG commit thẳng lên `main`.** Mỗi thay đổi làm trên nhánh riêng (`feature/...`), merge qua PR. `main` luôn phải chạy được (tests pass).
-2. **KHÔNG hardcode** đường dẫn / ngưỡng / timeout. Mọi thứ nằm ở [`configs/config.yaml`](configs/config.yaml), đọc qua `src.utils.load_config`.
-3. **KHÔNG dùng `print`** trong code `src/`, `deploy/`, `train/`. Dùng logging: `from src.utils import get_logger`.
-4. **KHÔNG commit dữ liệu / model lớn.** `data/` và `models/*.pkl|*.pt|...` đã bị `.gitignore`. Chỉ commit code + config + `.gitkeep`.
-5. **KHÔNG tự cài thư viện nặng** (torch, transformers, ctranslate2...) hay đổi phiên bản trong `pyproject.toml` mà chưa hỏi chủ repo. Xem mục [Dependencies](#dependencies).
-6. **KHÔNG sửa schema** trong `config.yaml` (đổi tên/xoá key) mà không cập nhật nơi dùng nó — sẽ vỡ chỗ khác.
-7. **Chạy `uv run pytest` trước khi commit.** Đỏ test = không commit.
+> This file is the **shared source of guidance** for every AI assistant (Copilot, Cursor, Claude, Codex, Aider...) and for developers who just cloned the repo. **Read this whole file before touching any code.** Goal: contribute correctly and **don't break the project**.
 
 ---
 
-## Bối cảnh dự án
+## ⛔ CRITICAL rules (read first)
 
-Hệ thống phát hiện **SQL Injection** dựa trên AI, đặt tại Database Proxy. Kiến trúc **3 nhánh** (chi tiết ở [README.md](README.md)):
-- **Nhánh 1** — Supervised đa lớp (Normal + các loại SQLi).
-- **Nhánh 2** — Anomaly detection (train chỉ trên benign).
-- **Nhánh 3** — Session-level sequence model (đóng góp chính).
-
-Deadline gấp (14 ngày) → **ưu tiên MVP chạy end-to-end**, không cầu toàn từng phần.
+1. **DO NOT commit directly to `main`.** Every change goes on its own branch (`feature/...`), merged via PR. `main` must always be runnable (tests pass).
+2. **DO NOT hardcode** paths / thresholds / timeouts. Everything lives in [`configs/config.yaml`](configs/config.yaml), read via `src.utils.load_config`.
+3. **DO NOT use `print`** in `src/`, `deploy/`, `train/` code. Use logging: `from src.utils import get_logger`.
+4. **DO NOT commit data / large models.** `data/` and `models/*.pkl|*.pt|...` are already `.gitignore`d. Only commit code + config + `.gitkeep`.
+5. **DO NOT install heavy libraries** (torch, transformers, ctranslate2...) or change versions in `pyproject.toml` without asking the repo owner first. See [Dependencies](#dependencies).
+6. **DO NOT change the schema** in `config.yaml` (rename/remove keys) without updating every place that uses it — it'll break elsewhere.
+7. **Run `uv run pytest` before committing.** Red tests = no commit.
 
 ---
 
-## Setup môi trường
+## Project context
 
-Dự án dùng [`uv`](https://docs.astral.sh/uv/) (không dùng pip/venv thủ công). Python **3.12**.
+An AI-based **SQL Injection** detection system, deployed at the Database Proxy layer. **Three-branch** architecture (details in [README.md](README.md)):
+- **Branch 1** — Supervised multi-class classifier (Normal + SQLi variants).
+- **Branch 2** — Anomaly detection (trained on benign traffic only).
+- **Branch 3** — Session-level sequence model (main contribution).
+
+Tight deadline (14 days) → **prioritize an end-to-end MVP** over perfecting every individual part.
+
+---
+
+## Environment setup
+
+The project uses [`uv`](https://docs.astral.sh/uv/) (no manual pip/venv). Python **3.12**.
 
 ```bash
-uv sync --extra dev                              # stack lõi + pytest
-uv sync --extra gbm --extra transformer --extra dev   # thêm XGBoost/LightGBM + torch/transformers
+uv sync --extra dev                              # core stack + pytest
+uv sync --extra gbm --extra transformer --extra dev   # + XGBoost/LightGBM + torch/transformers
 ```
-- Có **GPU NVIDIA** → torch tự dùng CUDA. Không có GPU vẫn chạy được (chậm hơn).
-- **Không tự chạy `pip install`** ngoài `uv`.
+- **NVIDIA GPU** available → torch uses CUDA automatically. Still runs without a GPU (just slower).
+- **Don't run `pip install`** outside of `uv`.
 
-## Chạy & test
+## Run & test
 
 ```bash
 uv run python main.py    # health check: load config + log banner
-uv run pytest            # chạy toàn bộ test (phải xanh trước khi commit)
-uv run pytest tests/test_config.py -q   # chạy 1 file
-uv run uvicorn deploy.main:app --reload    # chạy API backend (docs: /docs)
+uv run pytest            # run the full test suite (must be green before committing)
+uv run pytest tests/test_config.py -q   # run a single file
+uv run uvicorn deploy.main:app --reload    # run the API backend (docs: /docs)
 ```
 
-**API backend** (`deploy/`) đã có app thật: `deploy/main.py` (app + CORS), `deploy/registry.py`
-(load model theo `<branch>.active_version` trong config), `deploy/schemas.py` (hợp đồng
-Pydantic), `deploy/routers/` (mỗi nhánh 1 file — chủ nhánh sửa file của mình). Nhánh chưa
-train trả `status:"not_ready"` thay vì sập. Hợp đồng + hướng dẫn cho Streamlit:
-[`deploy/README.md`](deploy/README.md). **Đừng đổi tên/kiểu field response đã có** — frontend phụ thuộc.
-Prefix URL vẫn là `/api/v1/...` (theo `config.yaml`), không đổi theo tên thư mục.
+**API backend** (`deploy/`) already has a real app: `deploy/main.py` (app + CORS), `deploy/registry.py`
+(loads models per `<branch>.active_version` in config), `deploy/schemas.py` (Pydantic
+contract), `deploy/routers/` (one file per branch — the branch owner edits their own file).
+A branch that hasn't been trained yet returns `status:"not_ready"` instead of crashing.
+Contract + guide for Streamlit: [`deploy/README.md`](deploy/README.md). **Don't rename or
+retype existing response fields** — the frontend depends on them. The URL prefix stays
+`/api/v1/...` (per `config.yaml`), independent of directory names.
 
 ---
 
-## Cấu trúc thư mục (đừng đặt file sai chỗ)
+## Directory structure (don't put files in the wrong place)
 
 ```
-configs/config.yaml      # TẤT CẢ tham số cấu hình
-src/                     # THƯ VIỆN LÕI dùng chung (train/ + deploy/ đều import)
+configs/config.yaml      # ALL configuration parameters
+src/                     # CORE SHARED LIBRARY (imported by both train/ and deploy/)
   src/preprocessing/     #   canonicalization + tokenization
-  src/models/            #   Nhánh 1 / 2 / 3
-  src/decision/          #   decision logic + hàng đợi Overkill
-  src/continual_learning/#   gán nhãn, retrain, validation gate
+  src/models/            #   Branch 1 / 2 / 3
+  src/decision/          #   decision logic + Overkill queue
+  src/continual_learning/#   labeling, retraining, validation gate
   src/monitoring/        #   drift, versioning, rollback
-  src/utils/             #   config loader + logging (DÙNG LẠI, đừng viết mới)
-train/                   # pipeline offline: build dataset, train, so sánh, sinh metric
-  train/notebooks/       #   thực nghiệm (prefix nhánh: exp/...)
-deploy/                  # FastAPI service (trước đây là api/) — main.py, registry.py, routers/
-report/                  # tài liệu & số liệu
-  report/plan/           #   đề xuất, kế hoạch, data_contract, scope
-  report/final/          #   báo cáo hoàn chỉnh + manifest + template
-  report/journal/        #   nhật ký train/tuning
-  report/metrics/        #   eval JSON/CSV + figures (paths.reports_dir; sinh bởi train/)
-  report/docs/           #   spec (Streamlit UI...)
-tests/                   # pytest — mỗi module 1 file test_*.py
-data/  models/           # KHÔNG commit nội dung (chỉ .gitkeep)
+  src/utils/             #   config loader + logging (REUSE THIS, don't rewrite)
+train/                   # offline pipeline: build dataset, train, compare, generate metrics
+  train/notebooks/       #   experiments (branch prefix: exp/...)
+deploy/                  # FastAPI service (formerly api/) — main.py, registry.py, routers/
+report/                  # documentation & results
+  report/plan/           #   proposal, plan, data_contract, scope
+  report/midterm/        #   mid-term report (25 Jul, Branch 1+2 only) + manifest + template
+  report/conf/           #   conference submission (RIVF...) — .tex paper + outline + related log
+  report/metrics/        #   eval JSON/CSV + figures (paths.reports_dir; generated by train/)
+  report/docs/           #   specs (Streamlit UI...)
+tests/                   # pytest — one test_*.py file per module
+data/  models/           # DO NOT commit contents (only .gitkeep)
 ```
 
 ---
 
 ## Coding conventions
 
-- **Type hints + docstring** cho mọi hàm/class public.
-- Import config: `from src.utils import load_config; cfg = load_config()`; đọc bằng `cfg.get_path("section.key")`.
+- **Type hints + docstrings** on every public function/class.
+- Import config: `from src.utils import load_config; cfg = load_config()`; read via `cfg.get_path("section.key")`.
 - Import logger: `from src.utils import get_logger; logger = get_logger(__name__)`.
-- Bước tốn thời gian (train/retrain/benchmark) → **log tiến trình rõ ràng**.
-- Viết **pytest** cho logic mới; bắt buộc cho: canonicalization, decision logic, validation gate.
-- Thêm tham số mới → **thêm vào `config.yaml`**, không hardcode. Có thể override khi chạy bằng biến môi trường `SQLIDS_<SECTION>_<KEY>`.
+- Time-consuming steps (train/retrain/benchmark) → **log progress clearly**.
+- Write **pytest** tests for new logic; required for: canonicalization, decision logic, validation gate.
+- Adding a new parameter → **add it to `config.yaml`**, don't hardcode. Can be overridden at runtime via the `SQLIDS_<SECTION>_<KEY>` environment variable.
 
 ---
 
-## Git workflow (trunk-based nhẹ)
+## Git workflow (lightweight trunk-based)
 
 1. `git switch main && git pull`
-2. `git switch -c feature/<tên-phase>` (vd. `feature/branch2-anomaly`)
-3. Code, commit nhiều lần nhỏ; commit message rõ nghĩa (tiếng Việt hoặc Anh đều được).
-4. `git push -u origin feature/<tên-phase>`
-5. Mở **PR trên GitHub** → review → **Squash and merge** → xoá nhánh.
-6. Prefix nhánh: `feature/` (tính năng), `fix/` (sửa lỗi), `exp/` (notebook thử nghiệm có thể bỏ).
+2. `git switch -c feature/<phase-name>` (e.g. `feature/branch2-anomaly`)
+3. Code, commit often in small chunks; write clear commit messages (Vietnamese or English, either is fine).
+4. `git push -u origin feature/<phase-name>`
+5. Open a **PR on GitHub** → review → **Squash and merge** → delete the branch.
+6. Branch prefixes: `feature/` (new functionality), `fix/` (bug fix), `exp/` (experimental notebook, disposable).
 
-**Không** merge khi test đỏ. **Không** force-push lên `main`.
+**Never** merge with red tests. **Never** force-push to `main`.
 
 ---
 
 ## Dependencies
 
-- Thêm lib **nhẹ** (sklearn utils, tiện ích nhỏ) → thêm vào `[project.dependencies]` trong `pyproject.toml` + `uv sync`, ghi rõ lý do trong PR.
-- Thêm lib **nặng** (torch, transformers, ctranslate2, model weights lớn) → **hỏi chủ repo trước**. Đặt vào `[project.optional-dependencies]` (nhóm `transformer`/`inference`), không nhét vào core.
-- Commit `uv.lock` cùng thay đổi dependency để tái lập được môi trường.
+- Adding a **lightweight** lib (sklearn utils, small helpers) → add to `[project.dependencies]` in `pyproject.toml` + `uv sync`, explain why in the PR.
+- Adding a **heavy** lib (torch, transformers, ctranslate2, large model weights) → **ask the repo owner first**. Put it under `[project.optional-dependencies]` (`transformer`/`inference` group), not in core.
+- Commit `uv.lock` together with any dependency change so the environment stays reproducible.
 
 ---
 
-## Dữ liệu
+## Data
 
-- Dataset là **public** (xem bảng D1–D6 trong [README.md](README.md)); **không commit** file dữ liệu vào repo.
-- Chưa có dữ liệu thật cho phần nào → dùng public tạm, **ghi rõ nguồn** và đánh dấu `TODO` để thay sau.
+- Datasets are **public** (see table D1–D6 in [README.md](README.md)); **do not commit** data files to the repo.
+- No real data yet for some part → use public data as a placeholder, **cite the source clearly** and mark it `TODO` to replace later.
 
-## Model đã train
+## Trained models
 
-- **Không tự retrain nếu không cần** — model thật (`nhanh1_v1`, `nhanh2_v1`) đã có sẵn trên HF: `hf download Jason-42195/VNU-SQLi-Detection-Models --local-dir models/`. Xem README.md mục "Model đã train — tải ở đâu".
-- Nếu retrain (vd. sửa code training), **nhớ push bản mới lên HF** (`hf upload Jason-42195/VNU-SQLi-Detection-Models models/nhanh1_v1 nhanh1_v1 --repo-type model`) để cả nhóm dùng chung 1 bản, tránh mỗi người có model khác nhau.
+- **Don't retrain unless necessary** — the real models (`branch1_v1`, `branch2_v1`) are already on HF: `hf download Jason-42195/VNU-SQLi-Detection-Models --local-dir models/`. See the README.md section "Trained models — where to download".
+- If you do retrain (e.g. after changing training code), **remember to push the new version to HF** (`hf upload Jason-42195/VNU-SQLi-Detection-Models models/branch1_v1 branch1_v1 --repo-type model`) so the whole team shares one version instead of everyone having a different local model.
 
 ---
 
-## "Definition of done" cho một thay đổi
+## "Definition of done" for a change
 
-- [ ] Code có type hints + docstring, dùng logging (không `print`).
-- [ ] Tham số mới đã đưa vào `config.yaml` (không hardcode).
-- [ ] Có/cập nhật test tương ứng; `uv run pytest` xanh.
-- [ ] Không commit file lớn (`git status` sạch phần `data/`, `models/`).
-- [ ] Làm trên nhánh riêng, mở PR về `main`.
+- [ ] Code has type hints + docstrings, uses logging (no `print`).
+- [ ] New parameters have been added to `config.yaml` (no hardcoding).
+- [ ] Corresponding test written/updated; `uv run pytest` is green.
+- [ ] No large files committed (`git status` is clean for `data/`, `models/`).
+- [ ] Done on its own branch, PR opened against `main`.

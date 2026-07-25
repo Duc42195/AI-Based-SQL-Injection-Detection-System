@@ -1,77 +1,77 @@
-﻿Ngay,NgayThang,Thu,NguoiPhuTrach,VaiTro,CongViec,PhuThuoc,SanPham,TrangThai
-1,13/7,Th2,Toi,Du lieu + Train Nhanh 1 & 3,"Chot data contract (schema CSV Nhanh1, schema session Nhanh3) cung ca nhom; tai D1 (SQLiV3) ban tho; test nhanh kien truc Nhanh 1: DistilBERT vs TF-IDF+GBM vs CNN nhe tren tap con",Khong co,data_contract.md; data/raw/d1_sqliv3_raw.csv; notebooks/model_comparison_nhanh1.ipynb,Tre han
-1,13/7,Th2,Bach,Nhanh 2 (Anomaly) - doc lap,Tai D3 (CSIC2010) ban tho; test nhanh phuong an trich dac trung cho Nhanh 2 (TF-IDF/embedding),Khong co,data/raw/d3_csic2010_raw.csv,Hoan thanh
-1,13/7,Th2,Minh,Streamlit Web App - doc lap,"Dung khung Streamlit app (trang nhap query test, hien ket qua mock)",Khong co,app/streamlit_app.py,Chua bat dau
-1,13/7,Th2,Diep,Support - Bao cao,"Viet Muc 1-2 bao cao (Mo dau, Related Work) tu file khao sat da co",Khong co,report/muc1_muc2.md,Chua bat dau
-2,14/7,Th3,Toi,Du lieu + Train Nhanh 1 & 3,Lam sach D1 day du; viet pipeline canonicalization; chot kien truc Nhanh 1,Ngay 1 - Toi,src/preprocessing/canonicalize.py; data/processed/nhanh1_train.csv,Hoan thanh
-2,14/7,Th3,Bach,Nhanh 2 (Anomaly) - doc lap,"Lam sach D3, xay baseline normal traffic",Ngay 1 - Bach,data/processed/nhanh2_normal.csv,Hoan thanh
-2,14/7,Th3,Minh,Streamlit Web App - doc lap,"Trang Dashboard giam sat (log truy van, bieu do)",Ngay 1 - Minh,app/pages/dashboard.py,Chua bat dau
-2,14/7,Th3,Diep,Support - Bao cao,Viet Muc 3 (Phuong phap) theo kien truc vua chot,Ngay 1 - Toi,report/muc3.md,Chua bat dau
-3,15/7,Th4,Toi,Du lieu + Train Nhanh 1 & 3,Train Nhanh 1 baseline,Ngay 2 - Toi,models/nhanh1_v1/,Hoan thanh
-3,15/7,Th4,Bach,Nhanh 2 (Anomaly) - doc lap,Trich dac trung/embedding cho tap normal,Ngay 2 - Bach,src/models/nhanh2_embed.py,Chua bat dau
-3,15/7,Th4,Minh,Streamlit Web App - doc lap,"Trang Admin - hang doi Overkill (duyet/tu choi, du lieu mock)",Ngay 2 - Minh,app/pages/admin_queue.py,Chua bat dau
-3,15/7,Th4,Diep,Support - Bao cao,"Theo doi tien do, chuan bi template bang ket qua",Khong co,report/template_bang_ketqua.md,Chua bat dau
-4,16/7,Th5,Toi,Du lieu + Train Nhanh 1 & 3,Danh gia Nhanh 1 (P/R/F1); bat dau setup Docker lab (DVWA/WebGoat) cho Nhanh 3,Ngay 3 - Toi,reports/nhanh1_eval.json; docker/dvwa/docker-compose.yml,Dang thuc hien
-4,16/7,Th5,Bach,Nhanh 2 (Anomaly) - doc lap,Train OC-SVM/Isolation Forest (+PCA neu can),Ngay 3 - Bach,models/nhanh2_v1/,Chua bat dau
-4,16/7,Th5,Minh,Streamlit Web App - doc lap,"Trang Metrics (P/R/F1, latency) - noi API THAT: GET /api/v1/metrics/nhanh1 (backend da san sang tu Ngay 4, xem api/README.md)",Ngay 4 - Toi (API backend),app/pages/metrics.py,Chua bat dau
-4,16/7,Th5,Diep,Support - Bao cao,Cap nhat Muc 6 khung (danh gia) voi ket qua so bo Nhanh 1,Ngay 4 - Toi,report/muc6_draft.md,Chua bat dau
-5,17/7,Th6,Toi,MLOps (rut gon),"Bo xu ly trung tam BAN (decision logic 3 nhanh, chua can Session Store phuc tap) + tiep tuc API Nhanh 1+2",Ngay 4 - Toi; Ngay 4 - Bach,src/decision/central_processor.py,Chua bat dau
-5,17/7,Th6,Bach,Train tat ca - Nhanh 3 bat dau,Nhanh 2 da xong; dung Docker lab (DVWA/WebGoat) + cai sqlmap/mitmproxy cho Nhanh 3,Ngay 4 - Bach,docker/dvwa/docker-compose.yml,Dang thuc hien
-5,17/7,Th6,Minh,Streamlit Web App - doc lap,"Noi API THAT Nhanh 1 + POST /api/v1/detect (verdict BLOCK/OVERKILL/ALLOW) - da san sang tu Ngay 4; trang test query bo mock. Nhanh 2/3 tra not_ready, render placeholder",Ngay 4 - Toi (API backend),app/streamlit_app.py (cap nhat),Chua bat dau
-5,17/7,Th6,Diep,Support - Bao cao + Bai RIVF,BAT DAU SOM viet Intro + Related Work cho bai RIVF 2026 (dung lai khao sat da co); song song bao cao do an,Khong co,paper/rivf2026/intro_related_work.tex,Chua bat dau
-6,18/7,Th7,Toi,MLOps (rut gon),Hoan thien central processor co ban + hang doi Overkill don gian (chua can TTL/eviction phuc tap),Ngay 5 - Toi,src/decision/overkill_queue.py,Chua bat dau
-6,18/7,Th7,Bach,Train tat ca,"Chay sqlmap --technique=B va --technique=T qua proxy, thu thap traffic that cho Nhanh 3",Ngay 5 - Bach,data/raw/nhanh3_sqlmap_sessions/,Chua bat dau
-6,18/7,Th7,Minh,Streamlit Web App - doc lap,"Polish UI, them bieu do so sanh kien truc (tu notebook Ngay 1)",Ngay 5 - Minh,app/streamlit_app.py (cap nhat),Chua bat dau
-6,18/7,Th7,Diep,Support - Bao cao + Bai RIVF,Viet Method section bai RIVF (kien truc 3 nhanh + decision logic da chot),Ngay 5 - Diep,paper/rivf2026/method.tex,Chua bat dau
-7,19/7,CN,Toi,MLOps (rut gon),"Hoan thien API tong (FastAPI) cho Nhanh 1+2, test qua demo",Ngay 6 - Toi,api/main.py; api/routers/,Dang thuc hien
-7,19/7,CN,Bach,Train tat ca,Parse traffic thanh session; sinh tap adversarial nho (WAF-A-MoLE) ap cho Nhanh 1,Ngay 6 - Bach,src/preprocessing/parse_sessions.py; data/adversarial/,Chua bat dau
-7,19/7,CN,Minh,Streamlit Web App - doc lap,Buffer / review tien do,Khong co,Khong co,Chua bat dau
-7,19/7,CN,Diep,Support - Bao cao + Bai RIVF,Tiep tuc Method + Related Work bai RIVF,Ngay 6 - Diep,paper/rivf2026/method.tex (cap nhat),Chua bat dau
-8,20/7,Th2,Toi,MLOps (thuc te),"[Da qua - ghi lai thuc te] Xay dung khung API (api/main.py, routers/ cho ca 6+ endpoint: admin/data/demo/detect/health/metrics/monitor/nhanh1/nhanh2/nhanh3/train)",Ngay 7 - Toi,api/main.py; api/routers/*.py,Hoan thanh
-8,20/7,Th2,Bach,Train Nhanh 2,"[Da qua] Tiep tuc tuning Nhanh 2 (OCSVM vs Isolation Forest, feature scaling/log-transform)",Ngay 7 - Bach,src/models/nhanh2_anomaly.py; scripts/train_nhanh2.py,Hoan thanh
-8,20/7,Th2,Minh,Streamlit,[Da qua] Xay them cac trang demo/admin,Ngay 7 - Minh,Khong co,Dang thuc hien
-8,20/7,Th2,Diep,Support - Bao cao,[Da qua] Tam dung bai RIVF - uu tien bao cao han 25/7 (xem ghi chu Ngay 9),Khong co,Khong co,Chua bat dau
-9,21/7,Th3,Toi,Metric + Notebook demo,"Da xong: them ROC curve day du cho Nhanh 2 (scripts/train_nhanh2.py); viet + chay thu notebooks/demo_detect.ipynb (load 2 model, nhap query, tra verdict) - test 19/20 dung tren mau ngau nhien",Ngay 8 - Toi,notebooks/demo_detect.ipynb; reports/nhanh2_eval.json (co roc_curve),Hoan thanh
-9,21/7,Th3,Bach,Metric Nhanh 2,"Verify ket qua Nhanh 2 (FPR=0.3%, detection rate=20.7%, AUC=0.90 OCSVM); xem xet co du thuyet phuc cho bao cao khong, de xuat threshold khac neu can",Ngay 8 - Bach,reports/nhanh2_eval.json,Dang thuc hien
-9,21/7,Th3,Minh,Ho tro metric/bao cao,"He thong (API/Streamlit) hoan lai sau - tam thoi ho tro ve bieu do/truc quan hoa metric cho bao cao (ROC curve, confusion matrix)",Ngay 9 - Toi,Khong co (cho xac nhan),Chua bat dau
-9,21/7,Th3,Diep,Bao cao,Viet lai dan y 2 ban bao cao (Ban 1: scope hien tai 2 nhanh + notebook; Ban 2: hoan chinh 3 nhanh + he thong day du) - da duyet dan y voi Toi,Ngay 9 - Toi,De_xuat_SQLi_Detection_AI.md,Hoan thanh
-10,22/7,Th4,Toi,Ho tro bao cao,Ho tro Diep so lieu/hinh minh hoa cho Ban 1; polish notebook demo neu can,Ngay 9 - Toi,Khong co,Chua bat dau
-10,22/7,Th4,Bach,Ho tro bao cao,Cung cap so lieu/giai thich chi tiet Nhanh 2 cho Diep viet bao cao,Ngay 9 - Bach,Khong co,Chua bat dau
-10,22/7,Th4,Minh,Ho tro bao cao,"Ve bieu do/so do minh hoa cho bao cao (kien truc, ROC curve, confusion matrix)",Ngay 9 - Minh,Khong co,Chua bat dau
-10,22/7,Th4,Diep,Bao cao Ban 1,"Viet Ban 1 (scope hien tai): Dat van de, Cong trinh lien quan, Kien truc 2 nhanh, Du lieu, Phuong phap, Ket qua thuc nghiem",Ngay 9 - Diep,report/ban1_scope_hien_tai.md,Chua bat dau
-11,23/7,Th5,Toi,Ho tro bao cao,Ho tro ra soat so lieu ky thuat trong ca 2 ban bao cao,Ngay 10 - Toi,Khong co,Chua bat dau
-11,23/7,Th5,Bach,Ho tro bao cao,Ra soat phan Nhanh 2 trong ca 2 ban bao cao,Ngay 10 - Bach,Khong co,Chua bat dau
-11,23/7,Th5,Minh,Ho tro bao cao,Hoan thien hinh minh hoa con lai,Ngay 10 - Minh,Khong co,Chua bat dau
-11,23/7,Th5,Diep,Bao cao Ban 1 + Ban 2,Hoan thien Ban 1 (Thao luan/Han che/Ket luan); bat dau Ban 2 (kien truc 3 nhanh + he thong day du + Nhanh 3 thiet ke),Ngay 10 - Diep,report/ban1_scope_hien_tai.md (hoan thien); report/ban2_hoan_chinh.md (bat dau),Chua bat dau
-12,24/7,Th6,Toi,Ho tro,Ho tro Bach verify ket qua rerun (combined_coverage bug da sua trong code); ho tro Diep/Minh so lieu cho bao cao giua ky,Ngay 11 - Toi,Khong co,Dang thuc hien
-12,24/7,Th6,Bach,Train - fix zero-day bug,"Bug combined_coverage trong train/run_zeroday_experiment.py da duoc sua (dao nguoc dieu kien B1 catch/miss). RERUN script de: (1) sinh lai 5 model weight bi mat (nhanh1_no_*, nhanh2_zeroday), (2) ra so lieu combined_coverage dung. Sau do push toan bo 7 model (2 production + 5 zero-day) len HF (Jason-42195/VNU-SQLi-Detection-Models)",Ngay 11 - Bach,models/nhanh1_no_*/model.joblib; models/nhanh2_zeroday/model.joblib; report/metrics/zeroday_experiment/summary.json (cap nhat),Chua bat dau
-12,24/7,Th6,Minh,Bao cao giua ky,Ho tro Diep viet bao cao giua ky (report/midterm/),Ngay 11 - Minh,report/midterm/AI-Based_SQLi_Detection_Midterm_Report.docx,Dang thuc hien
-12,24/7,Th6,Diep,Bao cao giua ky,"Viet/hoan thien bao cao giua ky (report/midterm/) - UU TIEN CAO NHAT, han 25/7",Ngay 11 - Diep,report/midterm/AI-Based_SQLi_Detection_Midterm_Report.docx,Dang thuc hien
-13,25/7,Th7,Toi,MOC: NOP bao cao giua ky,HAN NOP bao cao giua ky 25/7 23:59. Sau khi xong: bat dau THIET KE Nhanh 3 (class model GRU/small-Transformer tren [B1 emb + B2 score] moi buoc) + thiet ke script sinh session dataset Cach A,Ngay 12 - Toi,src/models/nhanh3_*.py (thiet ke),Chua bat dau
-13,25/7,Th7,Bach,Train,Tiep tuc rerun/verify zero-day neu Ngay 12 chua xong; bat dau don dep de chuan bi demo cho buoi thuyet trinh 28/7,Ngay 12 - Bach,Khong co,Chua bat dau
-13,25/7,Th7,Minh,MOC: NOP bao cao giua ky,Ho tro Diep hoan thien + nop bao cao giua ky,Ngay 12 - Minh,Khong co,Chua bat dau
-13,25/7,Th7,Diep,MOC: NOP bao cao giua ky,HAN NOP 23h59 Thu 7 25/7: report/midterm/AI-Based_SQLi_Detection_Midterm_Report.docx,Ngay 12 - Diep,report/midterm/AI-Based_SQLi_Detection_Midterm_Report.docx,Chua bat dau
-14,26/7,CN,Toi,Nhanh 3 - dataset + model,"Xay dung session dataset Cach A (script ghep query tu D1 thanh session gia lap, co nhan) + code class model Nhanh 3",Ngay 13 - Toi,train/build_session_dataset.py; src/models/nhanh3_session.py,Chua bat dau
-14,26/7,CN,Bach,Train,"Xac nhan ket qua rerun zero-day hop ly (so sanh voi cot miss-rate/DR cu, khong doi); ho tro Toi gan nhan session dataset; BAT DAU do latency tung nhanh (thay so uoc luong bang so do that)",Ngay 13 - Bach,report/metrics/latency_benchmark.json (bat dau),Chua bat dau
-14,26/7,CN,Minh,Tai lieu tham khao,"BAT DAU lam danh sach tham khao that cho bai RIVF: thay toan bo \bibitem placeholder, xac minh tung citation (doi chieu voi 11 ref tu bao cao giua ky)",Ngay 13 - Minh,report/conf/rivf2026_paper.tex (references),Chua bat dau
-14,26/7,CN,Diep,So do + author info,Ve so do kien truc (3 nhanh -> decision engine) cho bai bao; bat dau dien thong tin tac gia con thieu (khoa/email/thanh pho),Ngay 13 - Diep,report/conf/figures/architecture_diagram.png (bat dau),Chua bat dau
-15,27/7,Th2,Toi,Nhanh 3 - train + eval,Viet train script + eval script cho Nhanh 3; train tren session dataset Cach A -> ra detection rate tren session blind/query-splitting + FPR tren session benign,Ngay 14 - Toi,report/metrics/nhanh3_eval.json,Chua bat dau
-15,27/7,Th2,Bach,Latency + ho tro train,Hoan thien bang do latency end-to-end/decision-engine; ho tro Toi chay train Nhanh 3 (GPU),Ngay 14 - Bach,report/metrics/latency_benchmark.json (hoan thien),Chua bat dau
-15,27/7,Th2,Minh,Tai lieu tham khao + figures,"Hoan thien danh sach tham khao; xuat lai figure Nhanh 1/2 dung kho cot IEEE, font de doc",Ngay 14 - Minh,report/conf/rivf2026_paper.tex (references xong); figures/*.png (re-export),Chua bat dau
-15,27/7,Th2,Diep,Slide + so do + author info,Hoan thien slide thuyet trinh; hoan thien so do kien truc + thong tin tac gia,Ngay 14 - Diep,slide/thuyet_trinh.pptx (hoan thien); report/conf/figures/architecture_diagram.png (hoan thien),Chua bat dau
-16,28/7,Th3,Toi,MOC: THUYET TRINH,"Thu 3 28/7: THUYET TRINH - slide + code + demo model (uu tien, khong lam viec bai bao hom nay)",Ngay 15 - Toi,Khong co,Chua bat dau
-16,28/7,Th3,Bach,MOC: THUYET TRINH,Ho tro thuyet trinh (phan Nhanh 2/zero-day),Ngay 15 - Bach,Khong co,Chua bat dau
-16,28/7,Th3,Minh,MOC: THUYET TRINH,Trinh bay slide,Ngay 15 - Minh,Khong co,Chua bat dau
-16,28/7,Th3,Diep,MOC: THUYET TRINH,Trinh bay slide,Ngay 15 - Diep,Khong co,Chua bat dau
-17,29/7,Th4,Toi,MOC: GO/NO-GO Nhanh 3,"Quyet dinh: Nhanh 3 co so lieu session-level hop ly khong? Neu CO -> viet muc V-D + cap nhat Abstract/Intro theo huong (B). Neu KHONG -> giu framing (A), Nhanh 3 la future work (nhu ban draft cu)",Ngay 16 - Toi,"report/conf/rivf2026_paper.tex (V-D, quyet dinh framing)",Chua bat dau
-17,29/7,Th4,Bach,Bai RIVF,Theo quyet dinh GO/NO-GO; hoan thien bang latency du 2 truong hop,Ngay 16 - Bach,Khong co,Chua bat dau
-17,29/7,Th4,Minh,Bai RIVF,Tiep thu feedback advisor; cap nhat cau contributions theo ket qua GO/NO-GO,Ngay 16 - Minh,Khong co,Chua bat dau
-17,29/7,Th4,Diep,Bai RIVF,"Gui ban thao cho advisor (Linh Dinh-Van, Thai Kim-Dinh) review; cap nhat contributions theo ket qua GO/NO-GO",Ngay 16 - Diep,Khong co,Chua bat dau
-18,30/7,Th5,Toi,Bai RIVF,"Buffer: ra soat cuoi, kiem tra khong con [TODO:], kiem tra so trang dung gioi han RIVF",Ngay 17 - Toi,Khong co,Chua bat dau
-18,30/7,Th5,Bach,Bai RIVF,Buffer: ho tro ra soat,Ngay 17 - Bach,Khong co,Chua bat dau
-18,30/7,Th5,Minh,Bai RIVF,Buffer: ho tro ra soat,Ngay 17 - Minh,Khong co,Chua bat dau
-18,30/7,Th5,Diep,Bai RIVF,Test-compile ban PDF nop cuoi cung (kiem tra dung package file yeu cau),Ngay 17 - Diep,report/conf/rivf2026_paper.tex (final),Chua bat dau
-19,31/7,Th6,Toi,MOC: NOP RIVF,"HAN NOP RIVF 31/7 (kiem tra timezone/AoE truoc, khong gia dinh)",Ngay 18 - Toi,Khong co,Chua bat dau
-19,31/7,Th6,Bach,MOC: NOP RIVF,Ho tro nop,Ngay 18 - Bach,Khong co,Chua bat dau
-19,31/7,Th6,Minh,MOC: NOP RIVF,Ho tro nop,Ngay 18 - Minh,Khong co,Chua bat dau
-19,31/7,Th6,Diep,MOC: NOP RIVF,NOP qua EDAS (https://edas.info/N35414) truoc 23:59 31/7,Ngay 18 - Diep,report/conf/rivf2026_paper.tex,Chua bat dau
+Day,Date,Weekday,Owner,Role,Task,Dependency,Deliverable,Status
+1,13/7,Mon,Duc,Data + Train Branch 1 & 3,"Lock in the data contract (Branch 1 CSV schema, Branch 3 session schema) with the whole team; download raw D1 (SQLiV3); quick-test Branch 1 architectures: DistilBERT vs TF-IDF+GBM vs lightweight CNN on a small subset",None,data_contract.md; data/raw/d1_sqliv3_raw.csv; train/notebooks/model_comparison_branch1.ipynb,Overdue
+1,13/7,Mon,Bach,Branch 2 (Anomaly) - independent,Download raw D3 (CSIC2010); quick-test feature-extraction options for Branch 2 (TF-IDF/embedding),None,data/raw/d3_csic2010_raw.csv,Done
+1,13/7,Mon,Minh,Streamlit Web App - independent,"Build the Streamlit app scaffold (query test input page, mock results display)",None,app/streamlit_app.py,Not started
+1,13/7,Mon,Diep,Support - Report,"Write Sections 1-2 of the report (Introduction, Related Work) from the existing survey file",None,report/section1_section2.md,Not started
+2,14/7,Tue,Duc,Data + Train Branch 1 & 3,Fully clean D1; write the canonicalization pipeline; lock in the Branch 1 architecture,Day 1 - Duc,src/preprocessing/canonicalize.py; data/processed/branch1_train.csv,Done
+2,14/7,Tue,Bach,Branch 2 (Anomaly) - independent,"Clean D3, build the normal-traffic baseline",Day 1 - Bach,data/processed/branch2_normal.csv,Done
+2,14/7,Tue,Minh,Streamlit Web App - independent,"Monitoring dashboard page (query log, charts)",Day 1 - Minh,app/pages/dashboard.py,Not started
+2,14/7,Tue,Diep,Support - Report,Write Section 3 (Methodology) per the just-locked-in architecture,Day 1 - Duc,report/section3.md,Not started
+3,15/7,Wed,Duc,Data + Train Branch 1 & 3,Train the Branch 1 baseline,Day 2 - Duc,models/branch1_v1/,Done
+3,15/7,Wed,Bach,Branch 2 (Anomaly) - independent,Extract features/embeddings for the normal set,Day 2 - Bach,src/models/branch2_embed.py,Not started
+3,15/7,Wed,Minh,Streamlit Web App - independent,"Admin page - Overkill queue (approve/reject, mock data)",Day 2 - Minh,app/pages/admin_queue.py,Not started
+3,15/7,Wed,Diep,Support - Report,"Track progress, prepare a results-table template",None,report/results_table_template.md,Not started
+4,16/7,Thu,Duc,Data + Train Branch 1 & 3,Evaluate Branch 1 (P/R/F1); start setting up the Docker lab (DVWA/WebGoat) for Branch 3,Day 3 - Duc,reports/branch1_eval.json; docker/dvwa/docker-compose.yml,In progress
+4,16/7,Thu,Bach,Branch 2 (Anomaly) - independent,Train OC-SVM/Isolation Forest (+PCA if needed),Day 3 - Bach,models/branch2_v1/,Not started
+4,16/7,Thu,Minh,Streamlit Web App - independent,"Metrics page (P/R/F1, latency) - wired to the REAL API: GET /api/v1/metrics/branch1 (backend ready since Day 4, see deploy/README.md)",Day 4 - Duc (API backend),app/pages/metrics.py,Not started
+4,16/7,Thu,Diep,Support - Report,Update the draft Section 6 (evaluation) with preliminary Branch 1 results,Day 4 - Duc,report/section6_draft.md,Not started
+5,17/7,Fri,Duc,MLOps (reduced scope),"Basic central processing engine (3-branch decision logic, no complex Session Store needed yet) + continue the Branch 1+2 API",Day 4 - Duc; Day 4 - Bach,src/decision/central_processor.py,Not started
+5,17/7,Fri,Bach,Train everything - Branch 3 starts,Branch 2 done; set up the Docker lab (DVWA/WebGoat) + install sqlmap/mitmproxy for Branch 3,Day 4 - Bach,docker/dvwa/docker-compose.yml,In progress
+5,17/7,Fri,Minh,Streamlit Web App - independent,"Wire the REAL Branch 1 API + POST /api/v1/detect (verdict BLOCK/OVERKILL/ALLOW) - ready since Day 4; query test page drops the mock. Branch 2/3 return not_ready, render as placeholder",Day 4 - Duc (API backend),app/streamlit_app.py (updated),Not started
+5,17/7,Fri,Diep,Support - Report + RIVF paper,START EARLY on writing Intro + Related Work for the RIVF 2026 paper (reuse the existing survey); in parallel with the course report,None,paper/rivf2026/intro_related_work.tex,Not started
+6,18/7,Sat,Duc,MLOps (reduced scope),Finish the basic central processor + a simple Overkill queue (no complex TTL/eviction needed yet),Day 5 - Duc,src/decision/overkill_queue.py,Not started
+6,18/7,Sat,Bach,Train everything,"Run sqlmap --technique=B and --technique=T through the proxy, collect real traffic for Branch 3",Day 5 - Bach,data/raw/branch3_sqlmap_sessions/,Not started
+6,18/7,Sat,Minh,Streamlit Web App - independent,"Polish the UI, add the architecture-comparison chart (from the Day 1 notebook)",Day 5 - Minh,app/streamlit_app.py (updated),Not started
+6,18/7,Sat,Diep,Support - Report + RIVF paper,Write the RIVF paper's Method section (the locked-in 3-branch architecture + decision logic),Day 5 - Diep,paper/rivf2026/method.tex,Not started
+7,19/7,Sun,Duc,MLOps (reduced scope),"Finish the combined API (FastAPI) for Branch 1+2, test via the demo",Day 6 - Duc,deploy/main.py; deploy/routers/,In progress
+7,19/7,Sun,Bach,Train everything,Parse traffic into sessions; generate a small adversarial set (WAF-A-MoLE) applied to Branch 1,Day 6 - Bach,src/preprocessing/parse_sessions.py; data/adversarial/,Not started
+7,19/7,Sun,Minh,Streamlit Web App - independent,Buffer / progress review,None,None,Not started
+7,19/7,Sun,Diep,Support - Report + RIVF paper,Continue Method + Related Work for the RIVF paper,Day 6 - Diep,paper/rivf2026/method.tex (updated),Not started
+8,20/7,Mon,Duc,MLOps (actual),"[Past - recorded after the fact] Built the API scaffold (deploy/main.py, routers/ for 6+ endpoints: admin/data/demo/detect/health/metrics/monitor/branch1/branch2/branch3/train)",Day 7 - Duc,deploy/main.py; deploy/routers/*.py,Done
+8,20/7,Mon,Bach,Train Branch 2,"[Past] Continued tuning Branch 2 (OCSVM vs Isolation Forest, feature scaling/log-transform)",Day 7 - Bach,src/models/branch2_anomaly.py; train/train_branch2.py,Done
+8,20/7,Mon,Minh,Streamlit,[Past] Built more demo/admin pages,Day 7 - Minh,None,In progress
+8,20/7,Mon,Diep,Support - Report,[Past] Paused the RIVF paper - prioritized the 25 Jul report deadline (see the Day 9 note),None,None,Not started
+9,21/7,Tue,Duc,Metrics + demo notebook,"Done: added a full ROC curve for Branch 2 (train/train_branch2.py); wrote + tested train/notebooks/demo_detect.ipynb (loads both models, takes a query, returns a verdict) - 19/20 correct on a random sample",Day 8 - Duc,train/notebooks/demo_detect.ipynb; reports/branch2_eval.json (has roc_curve),Done
+9,21/7,Tue,Bach,Branch 2 metrics,"Verify Branch 2's results (FPR=0.3%, detection rate=20.7%, AUC=0.90 OCSVM); assess whether they're convincing enough for the report, propose a different threshold if needed",Day 8 - Bach,reports/branch2_eval.json,In progress
+9,21/7,Tue,Minh,Support for metrics/report,"System (API/Streamlit) postponed - temporarily helping with charts/visualizations for the report (ROC curve, confusion matrix)",Day 9 - Duc,None (awaiting confirmation),Not started
+9,21/7,Tue,Diep,Report,Rewrote the outline for both report versions (Version 1: current 2-branch scope + notebook; Version 2: full 3-branch + complete system) - outline approved with Duc,Day 9 - Duc,De_xuat_SQLi_Detection_AI.md,Done
+10,22/7,Wed,Duc,Report support,Help Diep with figures/data for Version 1; polish the demo notebook if needed,Day 9 - Duc,None,Not started
+10,22/7,Wed,Bach,Report support,Provide detailed Branch 2 figures/explanations for Diep's report,Day 9 - Bach,None,Not started
+10,22/7,Wed,Minh,Report support,"Draw charts/diagrams for the report (architecture, ROC curve, confusion matrix)",Day 9 - Minh,None,Not started
+10,22/7,Wed,Diep,Report Version 1,"Write Version 1 (current scope): Problem statement, Related work, 2-branch architecture, Data, Methodology, Experimental results",Day 9 - Diep,report/ban1_scope_hien_tai.md,Not started
+11,23/7,Thu,Duc,Report support,Help review technical figures in both report versions,Day 10 - Duc,None,Not started
+11,23/7,Thu,Bach,Report support,Review the Branch 2 section in both report versions,Day 10 - Bach,None,Not started
+11,23/7,Thu,Minh,Report support,Finish the remaining illustrations,Day 10 - Minh,None,Not started
+11,23/7,Thu,Diep,Report Version 1 + Version 2,Finish Version 1 (Discussion/Limitations/Conclusion); start Version 2 (3-branch architecture + full system + Branch 3 design),Day 10 - Diep,report/ban1_scope_hien_tai.md (finished); report/ban2_hoan_chinh.md (started),Not started
+12,24/7,Fri,Duc,Support,Help Bach verify the rerun results (the combined_coverage bug has been fixed in code); help Diep/Minh with figures for the midterm report,Day 11 - Duc,None,In progress
+12,24/7,Fri,Bach,Train - fix the zero-day bug,"The combined_coverage bug in train/run_zeroday_experiment.py has been fixed (the B1 catch/miss condition was inverted). RERUN the script to: (1) regenerate the 5 missing model weights (branch1_no_*, branch2_zeroday), (2) produce the correct combined_coverage figures. Then push all 7 models (2 production + 5 zero-day) to HF (Jason-42195/VNU-SQLi-Detection-Models)",Day 11 - Bach,models/branch1_no_*/model.joblib; models/branch2_zeroday/model.joblib; report/metrics/zeroday_experiment/summary.json (updated),Not started
+12,24/7,Fri,Minh,Midterm report,Help Diep write the midterm report (report/midterm/),Day 11 - Minh,report/midterm/AI-Based_SQLi_Detection_Midterm_Report.docx,In progress
+12,24/7,Fri,Diep,Midterm report,"Write/finish the midterm report (report/midterm/) - HIGHEST PRIORITY, due 25 Jul",Day 11 - Diep,report/midterm/AI-Based_SQLi_Detection_Midterm_Report.docx,In progress
+13,25/7,Sat,Duc,MILESTONE: Submit the midterm report,"Midterm report deadline 25 Jul 23:59. Once done: start DESIGNING Branch 3 (GRU/small-Transformer class model over [B1 embedding + B2 score] per step) + design the Cách A session-dataset generation script",Day 12 - Duc,src/models/branch3_*.py (design),Not started
+13,25/7,Sat,Bach,Train,Continue rerunning/verifying zero-day if not done by Day 12; start cleaning up to prepare a demo for the 28 Jul presentation,Day 12 - Bach,None,Not started
+13,25/7,Sat,Minh,MILESTONE: Submit the midterm report,Help Diep finish + submit the midterm report,Day 12 - Minh,None,Not started
+13,25/7,Sat,Diep,MILESTONE: Submit the midterm report,DEADLINE 23:59 Sat 25 Jul: report/midterm/AI-Based_SQLi_Detection_Midterm_Report.docx,Day 12 - Diep,report/midterm/AI-Based_SQLi_Detection_Midterm_Report.docx,Not started
+14,26/7,Sun,Duc,Branch 3 - dataset + model,"Build the Cách A session dataset (script combining D1 queries into simulated, labeled sessions) + code the Branch 3 model class",Day 13 - Duc,train/build_session_dataset.py; src/models/branch3_session.py,Not started
+14,26/7,Sun,Bach,Train,"Confirm the zero-day rerun results are reasonable (compare against the old miss-rate/DR columns, should be unchanged); help Duc label the session dataset; START measuring per-branch latency (replace estimated numbers with real benchmarks)",Day 13 - Bach,report/metrics/latency_benchmark.json (started),Not started
+14,26/7,Sun,Minh,References,"START building the real references list for the RIVF paper: replace all \bibitem placeholders, verify each citation (cross-check against the 11 refs from the midterm report)",Day 13 - Minh,report/conf/rivf2026_paper.tex (references),Not started
+14,26/7,Sun,Diep,Diagram + author info,Draw the architecture diagram (3 branches -> decision engine) for the paper; start filling in the missing author info (department/email/city),Day 13 - Diep,report/conf/figures/architecture_diagram.png (started),Not started
+15,27/7,Mon,Duc,Branch 3 - train + eval,Write the train script + eval script for Branch 3; train on the Cách A session dataset -> produce detection rate on blind/query-splitting sessions + FPR on benign sessions,Day 14 - Duc,report/metrics/branch3_eval.json,Not started
+15,27/7,Mon,Bach,Latency + train support,Finish the end-to-end/decision-engine latency benchmark table; help Duc run Branch 3 training (GPU),Day 14 - Bach,report/metrics/latency_benchmark.json (finished),Not started
+15,27/7,Mon,Minh,References + figures,"Finish the references list; re-export the Branch 1/2 figures at the correct IEEE column width, readable font",Day 14 - Minh,report/conf/rivf2026_paper.tex (references done); figures/*.png (re-export),Not started
+15,27/7,Mon,Diep,Slides + diagram + author info,Finish the presentation slides; finish the architecture diagram + author info,Day 14 - Diep,slide/presentation.pptx (finished); report/conf/figures/architecture_diagram.png (finished),Not started
+16,28/7,Tue,Duc,MILESTONE: PRESENTATION,"Tue 28 Jul: PRESENTATION - slides + code + model demo (priority, no RIVF paper work today)",Day 15 - Duc,None,Not started
+16,28/7,Tue,Bach,MILESTONE: PRESENTATION,Support the presentation (Branch 2/zero-day section),Day 15 - Bach,None,Not started
+16,28/7,Tue,Minh,MILESTONE: PRESENTATION,Present slides,Day 15 - Minh,None,Not started
+16,28/7,Tue,Diep,MILESTONE: PRESENTATION,Present slides,Day 15 - Diep,None,Not started
+17,29/7,Wed,Duc,MILESTONE: Branch 3 GO/NO-GO,"Decision: does Branch 3 have reasonable session-level results? If YES -> write Section V-D + update the Abstract/Intro for framing (B). If NO -> keep framing (A), Branch 3 stays future work (as in the old draft)",Day 16 - Duc,"report/conf/rivf2026_paper.tex (V-D, framing decision)",Not started
+17,29/7,Wed,Bach,RIVF paper,Follow the GO/NO-GO decision; finish the latency table covering both cases,Day 16 - Bach,None,Not started
+17,29/7,Wed,Minh,RIVF paper,Incorporate advisor feedback; update the contributions sentence per the GO/NO-GO outcome,Day 16 - Minh,None,Not started
+17,29/7,Wed,Diep,RIVF paper,"Send the draft to the advisors (Linh Dinh-Van, Thai Kim-Dinh) for review; update the contributions per the GO/NO-GO outcome",Day 16 - Diep,None,Not started
+18,30/7,Thu,Duc,RIVF paper,"Buffer: final review, check no [TODO:] placeholders remain, check the page count is within the RIVF limit",Day 17 - Duc,None,Not started
+18,30/7,Thu,Bach,RIVF paper,Buffer: help with the review,Day 17 - Bach,None,Not started
+18,30/7,Thu,Minh,RIVF paper,Buffer: help with the review,Day 17 - Minh,None,Not started
+18,30/7,Thu,Diep,RIVF paper,Test-compile the final submission PDF (check the required package files are correct),Day 17 - Diep,report/conf/rivf2026_paper.tex (final),Not started
+19,31/7,Fri,Duc,MILESTONE: SUBMIT RIVF,"RIVF submission deadline 31 Jul (check the timezone/AoE first, don't assume)",Day 18 - Duc,None,Not started
+19,31/7,Fri,Bach,MILESTONE: SUBMIT RIVF,Help with submission,Day 18 - Bach,None,Not started
+19,31/7,Fri,Minh,MILESTONE: SUBMIT RIVF,Help with submission,Day 18 - Minh,None,Not started
+19,31/7,Fri,Diep,MILESTONE: SUBMIT RIVF,Submit via EDAS (https://edas.info/N35414) before 23:59 on 31 Jul,Day 18 - Diep,report/conf/rivf2026_paper.tex,Not started

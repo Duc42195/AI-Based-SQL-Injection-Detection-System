@@ -36,7 +36,7 @@ class SessionRequest(BaseModel):
 # --------------------------------------------------------------------------- #
 # Per-branch responses
 # --------------------------------------------------------------------------- #
-class Nhanh1Response(BaseModel):
+class Branch1Response(BaseModel):
     """Branch-1 supervised multiclass result."""
 
     status: BranchStatus = "ready"
@@ -54,7 +54,7 @@ class Nhanh1Response(BaseModel):
     detail: str | None = None
 
 
-class Nhanh2Response(BaseModel):
+class Branch2Response(BaseModel):
     """Branch-2 anomaly result (stub until the model is trained)."""
 
     status: BranchStatus = "not_ready"
@@ -63,7 +63,7 @@ class Nhanh2Response(BaseModel):
     detail: str | None = None
 
 
-class Nhanh3Response(BaseModel):
+class Branch3Response(BaseModel):
     """Branch-3 session-level result (stub until the model is trained)."""
 
     status: BranchStatus = "not_ready"
@@ -86,9 +86,9 @@ class DetectResponse(BaseModel):
     """Unified response: all branches + fused decision (the system flow)."""
 
     query_canonical: str | None = None
-    nhanh1: Nhanh1Response
-    nhanh2: Nhanh2Response
-    nhanh3: Nhanh3Response
+    branch1: Branch1Response
+    branch2: Branch2Response
+    branch3: Branch3Response
     decision: Decision
 
 
@@ -169,8 +169,8 @@ class DemoStepResult(BaseModel):
     leaked: bool
     rows: list[dict] = Field(default_factory=list)
     error: str | None = None
-    nhanh1: Nhanh1Response | None = None
-    nhanh2: Nhanh2Response | None = None
+    branch1: Branch1Response | None = None
+    branch2: Branch2Response | None = None
 
 
 class DemoExecuteResponse(BaseModel):
@@ -178,7 +178,7 @@ class DemoExecuteResponse(BaseModel):
 
     protected: bool
     results: list[DemoStepResult]
-    nhanh3: Nhanh3Response | None = None
+    branch3: Branch3Response | None = None
     decision: Decision | None = None
 
 

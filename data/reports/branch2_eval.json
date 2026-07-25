@@ -1,6 +1,6 @@
 {
-  "version": "nhanh2_v1",
-  "branch": "nhanh2_anomaly",
+  "version": "branch2_v1",
+  "branch": "branch2_anomaly",
   "trained_at": "2026-07-16T11:38:29",
   "feature_names": [
     "length",

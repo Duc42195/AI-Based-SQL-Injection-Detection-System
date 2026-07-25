@@ -2,7 +2,7 @@
 
 Trains both Isolation Forest and One-Class SVM on the Branch-2 benign pool,
 evaluates FPR on held-out benign test data and detection rate on anomalous
-data, then saves the best model (by AUC) to models/nhanh2_v1/.
+data, then saves the best model (by AUC) to models/branch2_v1/.
 
 Changes from v0 (training audit 16/7):
   - Feature scaling (StandardScaler) inside AnomalyDetector.
@@ -22,7 +22,7 @@ import numpy as np
 import pandas as pd
 from sklearn.metrics import roc_auc_score, roc_curve
 
-from src.models.nhanh2_anomaly import AnomalyDetector
+from src.models.branch2_anomaly import AnomalyDetector
 from src.utils import Config, get_logger, load_config
 
 logger = get_logger(__name__)
@@ -39,16 +39,16 @@ def _load_data(cfg: Config) -> tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame]:
     """
     processed_dir = Path(cfg.get_path("paths.data_processed", "data/processed"))
 
-    normal_path = processed_dir / "nhanh2_data.csv"
+    normal_path = processed_dir / "branch2_data.csv"
     if not normal_path.exists():
         raise FileNotFoundError(
-            f"{normal_path} not found. Run scripts/build_nhanh2_data.py first."
+            f"{normal_path} not found. Run train/build_branch2_data.py first."
         )
     df = pd.read_csv(normal_path)
     train_df = df[df["split"] == "train"].reset_index(drop=True)
     test_benign_df = df[df["split"] == "test"].reset_index(drop=True)
 
-    anomalous_path = processed_dir / "nhanh2_anomalous_eval.csv"
+    anomalous_path = processed_dir / "branch2_anomalous_eval.csv"
     if anomalous_path.exists():
         test_anomalous_df = pd.read_csv(anomalous_path)
     else:
@@ -308,7 +308,7 @@ def main() -> None:
     # (it will be picked if auc is higher, but ensure we respect config)
     # We already prefer it by the tie-break condition above.
 
-    version = "nhanh2_v1"
+    version = "branch2_v1"
     out_dir = models_dir / version
     out_dir.mkdir(parents=True, exist_ok=True)
 
@@ -316,7 +316,7 @@ def main() -> None:
 
     eval_report = {
         "version": version,
-        "branch": "nhanh2_anomaly",
+        "branch": "branch2_anomaly",
         "trained_at": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()),
         "feature_names": feature_names,
         "train_rows": len(full_train),
@@ -333,7 +333,7 @@ def main() -> None:
         "chosen": best_results,
     }
 
-    report_path = Path(__file__).resolve().parents[1] / "report" / "metrics" / "nhanh2_eval.json"
+    report_path = Path(__file__).resolve().parents[1] / "report" / "metrics" / "branch2_eval.json"
     report_path.parent.mkdir(parents=True, exist_ok=True)
     with report_path.open("w", encoding="utf-8") as f:
         json.dump(eval_report, f, indent=2)

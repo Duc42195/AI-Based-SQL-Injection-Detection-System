@@ -1,6 +1,6 @@
 {
-  "version": "nhanh2_v1",
-  "branch": "nhanh2_anomaly",
+  "version": "branch2_v1",
+  "branch": "branch2_anomaly",
   "trained_at": "2026-07-21T04:09:58Z",
   "feature_names": [
     "length",
@@ -26510,6 +26510,6 @@
       "dr": 0.2073
     }
   },
-  "threshold_sweep_file": "nhanh2_threshold_sweep.csv",
+  "threshold_sweep_file": "branch2_threshold_sweep.csv",
   "eval_note": "PR curve, confusion matrix, per-class DR, and threshold sweep added on 21/7 for report. Model retrained with same config."
 }

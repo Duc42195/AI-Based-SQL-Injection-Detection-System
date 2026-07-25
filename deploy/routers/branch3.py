@@ -9,20 +9,20 @@ from __future__ import annotations
 
 from fastapi import APIRouter
 
-from deploy.schemas import Nhanh3Response, SessionRequest
+from deploy.schemas import Branch3Response, SessionRequest
 
-router = APIRouter(prefix="/nhanh3", tags=["nhanh3"])
+router = APIRouter(prefix="/branch3", tags=["branch3"])
 
 
-def run_nhanh3(queries: list[str]) -> Nhanh3Response:
+def run_branch3(queries: list[str]) -> Branch3Response:
     """Return the Branch-3 session result (not_ready stub for now)."""
-    return Nhanh3Response(
+    return Branch3Response(
         status="not_ready",
         detail="Branch-3 session model not trained yet.",
     )
 
 
-@router.post("/session", response_model=Nhanh3Response)
-def session(request: SessionRequest) -> Nhanh3Response:
+@router.post("/session", response_model=Branch3Response)
+def session(request: SessionRequest) -> Branch3Response:
     """Classify a whole session as benign or a session-level attack (stub)."""
-    return run_nhanh3(request.queries)
+    return run_branch3(request.queries)

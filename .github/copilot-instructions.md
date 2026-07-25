@@ -1,13 +1,13 @@
 # GitHub Copilot instructions
 
-**Nguồn hướng dẫn đầy đủ nằm ở [`AGENTS.md`](../AGENTS.md) ở gốc repo — hãy đọc file đó trước khi sinh/sửa code.**
+**Full guidance lives at [`AGENTS.md`](../AGENTS.md) at the repo root — read that before generating/editing code.**
 
-Tóm tắt các quy tắc bắt buộc (chi tiết trong AGENTS.md):
+Summary of required rules (details in AGENTS.md):
 
-- Không commit thẳng lên `main`; làm trên nhánh `feature/...`, merge qua PR. `main` luôn phải xanh.
-- Không hardcode path/ngưỡng/timeout — đọc từ `configs/config.yaml` qua `src.utils.load_config`.
-- Không dùng `print` trong code; dùng `from src.utils import get_logger`.
-- Không commit dữ liệu/model lớn (`data/`, `models/*.pkl|*.pt` đã bị `.gitignore`).
-- Không tự cài lib nặng (torch/transformers/...) hay đổi `pyproject.toml`/`uv.lock` khi chưa được duyệt.
-- Dùng `uv` để quản môi trường; chạy `uv run pytest` phải xanh trước khi commit.
-- Mọi hàm/class public: type hints + docstring.
+- Don't commit directly to `main`; work on a `feature/...` branch, merge via PR. `main` must always be green.
+- Don't hardcode paths/thresholds/timeouts — read from `configs/config.yaml` via `src.utils.load_config`.
+- Don't use `print` in code; use `from src.utils import get_logger`.
+- Don't commit large data/models (`data/`, `models/*.pkl|*.pt` are already `.gitignore`d).
+- Don't install heavy libs (torch/transformers/...) or change `pyproject.toml`/`uv.lock` without approval.
+- Use `uv` to manage the environment; `uv run pytest` must be green before committing.
+- Every public function/class: type hints + docstring.
