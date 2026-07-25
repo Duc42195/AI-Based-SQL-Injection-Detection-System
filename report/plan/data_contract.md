@@ -171,6 +171,29 @@ File: `data/processed/branch3_sessions_labeled.csv` (Day 8 deliverable, once D1 
 | `2` | `time_blind` | Sequence of queries probing via response delay |
 | `3` | `query_splitting` | Attack payload split across multiple consecutive requests |
 
+## 4.1. Actual build results — Cách A (`train/build_session_dataset.py`, run 26/7)
+
+File: `data/processed/branch3_sessions_cach_a.csv` (1,400 sessions / 7,223 rows, 350/class, 1,120 train / 280 test sessions, split at the session level). Schema differs from Section 4's target in two ways, both additive:
+
+- **`branch1_prob_{normal,union_based,error_based,boolean_blind,time_blind}`** (5 columns) instead of a single `branch1_label` int. The model's per-step input needs the full probability vector, not just the argmax — Branch 1 (TF-IDF + LogReg) has no hidden layer, so this probability vector *is* the "content embedding" Branch 3 consumes (see `src/models/branch3_session.py` docstring). `branch1_label` is kept too (argmax of the probabilities, for readability).
+- **`gap_seconds`** (inter-step time, 0.0 for step 0) — an explicit temporal feature. Initially omitted, then added after realizing the model's input otherwise had zero timing information despite `timestamp` already being in the schema.
+- All labels are **repeated on every row** of a session (not just the last), matching Section 4's "decided at implementation time" note.
+
+**Construction (all 4 session types built from existing `branch1_train.csv` labeled queries, not real traffic — that's Cách B, not done):**
+- `benign`: 2-10 unrelated `normal`-labeled queries, human-paced gaps (10-120s).
+- `boolean_blind` / `time_blind`: 2-10 real per-query attacks of that type (0-2 benign lead-in queries allowed), scripted-probing-paced gaps (1-15s).
+- `query_splitting`: ONE real attack payload fragmented into 2-4 pieces at token/punctuation boundaries (not raw character offsets — an earlier version split mid-keyword, producing garbled non-SQL-looking text; fixed before training). No per-query "splitting" label exists anywhere in the source data, so this type can't be sampled, only synthesized.
+
+Every step (including synthetic fragments) is scored by the **real trained `branch1_v1`/`branch2_v1` models** — not by copying the source dataset's own ground-truth label — so the features reflect what a live system would actually see, including Branch 1's frequent confusion on fragments (branch1_label spread across all 5 classes within a single query_splitting session in manual inspection).
+
+**⚠️ First-pass result was misleadingly easy (97.15% F1-macro, 100% DR on boolean_blind/time_blind) for a bad reason:** `boolean_blind`/`time_blind` sessions sample REAL attack queries that `branch1_v1` was trained on and already classifies correctly per-query most of the time. That makes the GRU's task "aggregate a bag of already-correct per-step labels" — not a test of Branch 3's actual value proposition (session-level detection when per-query signal is weak). Same failure mode the project already hit once with Branch 1's `stacked` class (Section 3.3) — trivially-easy data producing a high score that doesn't mean what it looks like it means.
+
+**Fix — hard-mode validation (`train/eval_branch3_hard.py`):** re-score `boolean_blind` session steps using `models/branch1_no_boolean_blind` (the leave-one-out zero-day variant from `train/run_zeroday_experiment.py` that has never seen a boolean_blind example and misses **90.2%** of it per-query — see `report/metrics/zeroday_experiment/summary.json`). `time_blind` isn't given the same treatment: its own zero-day miss rate is only 0.27% (mostly misrouted to `boolean_blind`, still flagged as *an* attack), so per-query blindness isn't a meaningful test for it the way it is for `boolean_blind`.
+
+**Result: Branch 3 still recovers 98.6% recall on `boolean_blind` sessions even when the per-query signal it's built from is 90.2% blind to that attack.** An ablation (dropping `gap_seconds`) shows recall only drops to 96% — meaning the result isn't primarily a timing-pattern shortcut, it's the GRU genuinely aggregating a *weak* per-step Branch-2 anomaly signal across the session into a confident session-level call. This is the first result in the project that actually demonstrates Branch 3's core claim (see `report/metrics/branch3_eval_hard.json`; regular/easy-mode result in `report/metrics/branch3_eval.json`).
+
+**Known limitations of Cách A** (real Cách B / sqlmap traffic would address these): sessions are i.i.d. samples of same-label queries, not a genuine escalating probe sequence (e.g. no systematic position/threshold progression within a `boolean_blind` session); `query_splitting` fragmentation is a heuristic, not real multi-request attack staging; gap timing is drawn from a fixed range per session type, not empirically measured.
+
 ---
 
 ## 5. Remaining work related to this contract (out of Day 1 scope)
@@ -181,4 +204,5 @@ File: `data/processed/branch3_sessions_labeled.csv` (Day 8 deliverable, once D1 
 - [x] Build `data/processed/branch2_normal.csv` (Section 3.2, 15 Jul).
 - [ ] Supplement D4 (payload-box) for rare classes once the real distribution is measured.
 - [ ] Actually train Isolation Forest for Branch 2 (not done yet — dataset just built), evaluate FPR/detection rate on `branch2_anomalous_eval.csv`.
-- [ ] Branch 3: not started yet — depends on the Docker lab + sqlmap traffic (Day 8-9 per the plan); shouldn't build fake data before real traffic is available.
+- [x] Branch 3 Cách A (simulated) session dataset + GRU model — see Section 4.1 (26 Jul).
+- [ ] Branch 3 Cách B (real sqlmap + Docker-lab traffic) — still not started; depends on the Docker lab (Day 8-9 per the original plan, never executed under the reduced 25/7 scope).

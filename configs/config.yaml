@@ -167,6 +167,28 @@ branch3_session:
     boolean_blind: 1
     time_blind: 2
     query_splitting: 3
+  # Cách A (simulated) session dataset — see train/build_session_dataset.py.
+  # Sessions are built from existing Branch 1 labeled queries rather than real
+  # captured traffic (that's Cách B, sqlmap+Docker-lab, not yet done).
+  cach_a:
+    sessions_per_class: 350
+    min_len: 2
+    max_len: 10
+    # [min, max] seconds between steps — benign traffic is human-paced,
+    # attack probing (boolean/time-blind, query-splitting) is scripted/rapid.
+    benign_step_gap_seconds: [10, 120]
+    attack_step_gap_seconds: [1, 15]
+    # query_splitting sessions are synthesized by fragmenting one real attack
+    # payload into this many pieces (no per-query "splitting" label exists in
+    # the source data, so there's nothing to sample directly).
+    splitting_fragments: [2, 4]
+    test_fraction: 0.2
+  # GRU training hyperparameters — see train/train_branch3.py.
+  train:
+    hidden_dim: 32
+    epochs: 30
+    learning_rate: 0.001
+    batch_size: 16
 
 decision:
   # Overkill policy: SQLi=0 & Anomaly=1 -> hold for Admin review.
