@@ -107,7 +107,7 @@ def load_d3(path: Path, split_filter: str | None = None) -> list[tuple[str, bool
     """Load D3 CSIC 2010 rows (wrapped raw HTTP requests) as (url, is_attack).
 
     Args:
-        path: Path to d3_csic2010_raw.csv (see scripts/fetch_and_wrap_d3_csic2010.py).
+        path: Path to d3_csic2010_raw.csv (see train/fetch_and_wrap_d3_csic2010.py).
         split_filter: If given, only load rows whose ``split`` column equals
             this value (e.g. ``"train"``). ``None`` loads all rows.
 

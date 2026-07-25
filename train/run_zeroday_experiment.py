@@ -25,7 +25,7 @@ from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.linear_model import LogisticRegression
 from sklearn.metrics import classification_report
 
-from src.models.nhanh2_anomaly import AnomalyDetector
+from src.models.branch2_anomaly import AnomalyDetector
 from src.preprocessing.statistical_features import extract_statistical_features
 from src.preprocessing.multiclass_tagger import LABEL_NAMES
 from src.utils import get_logger, load_config
@@ -37,7 +37,7 @@ logger = get_logger(__name__)
 EXCLUDED_LABELS = [1, 2, 3, 4]  # union_based, error_based, boolean_blind, time_blind
 
 
-def train_nhanh1_exclude(
+def train_branch1_exclude(
     train_df: pd.DataFrame,
     test_df: pd.DataFrame,
     exclude_label: int,
@@ -111,26 +111,26 @@ def main() -> None:
     ]))
 
     # ── 1. Load data ──
-    nhanh1_df = pd.read_csv(processed_dir / "nhanh1_train.csv")
-    nhanh2_df = pd.read_csv(processed_dir / "nhanh2_data.csv")
-    anomalous_df = pd.read_csv(processed_dir / "nhanh2_anomalous_eval.csv")
+    branch1_df = pd.read_csv(processed_dir / "branch1_train.csv")
+    branch2_df = pd.read_csv(processed_dir / "branch2_data.csv")
+    anomalous_df = pd.read_csv(processed_dir / "branch2_anomalous_eval.csv")
 
-    train_df = nhanh1_df[nhanh1_df["split"] == "train"].reset_index(drop=True)
-    test_df = nhanh1_df[nhanh1_df["split"] == "test"].reset_index(drop=True)
-    nhanh2_train = nhanh2_df[nhanh2_df["split"] == "train"].reset_index(drop=True)
-    nhanh2_test = nhanh2_df[nhanh2_df["split"] == "test"].reset_index(drop=True)
+    train_df = branch1_df[branch1_df["split"] == "train"].reset_index(drop=True)
+    test_df = branch1_df[branch1_df["split"] == "test"].reset_index(drop=True)
+    branch2_train = branch2_df[branch2_df["split"] == "train"].reset_index(drop=True)
+    branch2_test = branch2_df[branch2_df["split"] == "test"].reset_index(drop=True)
 
-    logger.info("Data: nhanh1_train=%d test=%d | nhanh2_train=%d test=%d | anomalous=%d",
-                len(train_df), len(test_df), len(nhanh2_train), len(nhanh2_test), len(anomalous_df))
+    logger.info("Data: branch1_train=%d test=%d | branch2_train=%d test=%d | anomalous=%d",
+                len(train_df), len(test_df), len(branch2_train), len(branch2_test), len(anomalous_df))
 
     # ── 2. Train Branch 2 (anomaly) ──
-    nhanh2_model_dir = models_dir / "nhanh2_zeroday"
-    if nhanh2_model_dir.exists():
-        logger.info("Loading existing Branch 2 model from %s", nhanh2_model_dir)
-        detector = AnomalyDetector.load(nhanh2_model_dir)
+    branch2_model_dir = models_dir / "branch2_zeroday"
+    if branch2_model_dir.exists():
+        logger.info("Loading existing Branch 2 model from %s", branch2_model_dir)
+        detector = AnomalyDetector.load(branch2_model_dir)
     else:
-        logger.info("Training Branch 2 (One-Class SVM) on %d benign samples ...", len(nhanh2_train))
-        X_n2_train = nhanh2_train[feature_names].to_numpy(dtype=np.float64)
+        logger.info("Training Branch 2 (One-Class SVM) on %d benign samples ...", len(branch2_train))
+        X_n2_train = branch2_train[feature_names].to_numpy(dtype=np.float64)
         detector = AnomalyDetector(
             algorithm="one_class_svm",
             contamination=0.005,
@@ -139,10 +139,10 @@ def main() -> None:
             feature_names=feature_names,
         )
         detector.fit(X_n2_train)
-        detector.save(nhanh2_model_dir)
+        detector.save(branch2_model_dir)
 
     # ── Baseline: Branch 2 on normal test data ──
-    X_benign_test = nhanh2_test[feature_names].to_numpy(dtype=np.float64)
+    X_benign_test = branch2_test[feature_names].to_numpy(dtype=np.float64)
     benign_scores = detector.score(X_benign_test)
     benign_flags = detector.anomaly_flags(X_benign_test)
     baseline_fpr = float(benign_flags.mean())
@@ -170,7 +170,7 @@ def main() -> None:
 
         # 3a. Train Branch 1 without this label
         logger.info("Training Branch 1 without '%s' ...", label_name)
-        vectorizer, clf, f1_macro = train_nhanh1_exclude(train_df, test_df, label_id, cfg)
+        vectorizer, clf, f1_macro = train_branch1_exclude(train_df, test_df, label_id, cfg)
         logger.info("F1-macro (excl %s)=%.4f", label_name, f1_macro)
 
         # 3b. Get excluded label's data from test set
@@ -183,21 +183,21 @@ def main() -> None:
 
         # 3c. Branch 1 prediction on excluded-label data
         X_excl_tfidf = vectorizer.transform(excluded_data["query_canonical"].astype(str))
-        preds_nhanh1 = clf.predict(X_excl_tfidf)
-        pred_labels = [LABEL_NAMES.get(p, f"label_{p}") for p in preds_nhanh1]
+        preds_branch1 = clf.predict(X_excl_tfidf)
+        pred_labels = [LABEL_NAMES.get(p, f"label_{p}") for p in preds_branch1]
         pred_distro = pd.Series(pred_labels).value_counts().to_dict()
-        miss_rate = float((preds_nhanh1 == 0).mean())  # predicted as normal
+        miss_rate = float((preds_branch1 == 0).mean())  # predicted as normal
         logger.info("Branch 1 predictions on excluded '%s': %s", label_name, pred_distro)
         logger.info("Branch 1 miss rate (predicted normal): %.4f", miss_rate)
 
         # 3d. Branch 2 anomaly detection on excluded-label data
         X_excl_feats = extract_features_df(excluded_data, feature_names)
 
-        scores_nhanh2 = detector.score(X_excl_feats)
-        flags_nhanh2 = detector.anomaly_flags(X_excl_feats)
-        dr_nhanh2 = float(flags_nhanh2.mean())
+        scores_branch2 = detector.score(X_excl_feats)
+        flags_branch2 = detector.anomaly_flags(X_excl_feats)
+        dr_branch2 = float(flags_branch2.mean())
         logger.info("Branch 2 DR on excluded '%s': %.4f (%d/%d)",
-                    label_name, dr_nhanh2, int(flags_nhanh2.sum()), len(flags_nhanh2))
+                    label_name, dr_branch2, int(flags_branch2.sum()), len(flags_branch2))
 
         # 3e. Combined coverage: fraction of excluded-label (attack) samples
         # caught by EITHER branch. BUG FIX (2026-07-24): this used to OR
@@ -205,11 +205,11 @@ def main() -> None:
         # it should be "B1 CAUGHT it" (preds!=0) OR "B2 caught it". The old
         # formula made combined_coverage internally inconsistent with the
         # miss-rate/detection-rate columns (see report/conf/outline.md).
-        either_flag = (preds_nhanh1 != 0) | (flags_nhanh2 == 1)
+        either_flag = (preds_branch1 != 0) | (flags_branch2 == 1)
         combined_coverage = float(either_flag.mean())
         logger.info("Combined coverage (B1 caught OR B2 anomaly): %.4f", combined_coverage)
 
-        save_dir = models_dir / f"nhanh1_no_{label_name}"
+        save_dir = models_dir / f"branch1_no_{label_name}"
         save_dir.mkdir(parents=True, exist_ok=True)
         import joblib
         joblib.dump(vectorizer, save_dir / "vectorizer.joblib")
@@ -230,8 +230,8 @@ def main() -> None:
             "branch1_f1_macro": round(f1_macro, 4),
             "branch1_miss_rate": round(miss_rate, 4),
             "branch1_prediction_distribution": {str(k): int(v) for k, v in pred_distro.items()},
-            "branch2_detection_rate": round(dr_nhanh2, 4),
-            "branch2_n_detected": int(flags_nhanh2.sum()),
+            "branch2_detection_rate": round(dr_branch2, 4),
+            "branch2_n_detected": int(flags_branch2.sum()),
             "combined_coverage": round(combined_coverage, 4),
         }
 

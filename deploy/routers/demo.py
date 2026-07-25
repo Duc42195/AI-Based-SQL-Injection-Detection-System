@@ -12,9 +12,9 @@ from fastapi import APIRouter
 
 from deploy import demo_db
 from deploy.routers.detect import fuse_decision
-from deploy.routers.nhanh1 import run_nhanh1
-from deploy.routers.nhanh2 import run_nhanh2
-from deploy.routers.nhanh3 import run_nhanh3
+from deploy.routers.branch1 import run_branch1
+from deploy.routers.branch2 import run_branch2
+from deploy.routers.branch3 import run_branch3
 from deploy.schemas import (
     DemoDatabaseResponse,
     DemoExecuteRequest,
@@ -41,7 +41,7 @@ def execute(request: DemoExecuteRequest) -> DemoExecuteResponse:
       allows (the 'with model' button).
     """
     results: list[DemoStepResult] = []
-    nhanh1_responses = []
+    branch1_responses = []
 
     for user_input in request.inputs:
         sql = demo_db.build_sql(user_input)
@@ -61,9 +61,9 @@ def execute(request: DemoExecuteRequest) -> DemoExecuteResponse:
             continue
 
         # Protected: classify the constructed SQL exactly as /detect does.
-        n1 = run_nhanh1(sql)
-        n2 = run_nhanh2(sql)
-        nhanh1_responses.append(n1)
+        n1 = run_branch1(sql)
+        n2 = run_branch2(sql)
+        branch1_responses.append(n1)
         blocked = n1.status == "ready" and bool(n1.is_sqli)
         outcome = None if blocked else demo_db.execute_raw(user_input)
         results.append(
@@ -75,8 +75,8 @@ def execute(request: DemoExecuteRequest) -> DemoExecuteResponse:
                 leaked=outcome["leaked"] if outcome else False,
                 rows=outcome["rows"] if outcome else [],
                 error=outcome["error"] if outcome else None,
-                nhanh1=n1,
-                nhanh2=n2,
+                branch1=n1,
+                branch2=n2,
             )
         )
 
@@ -84,16 +84,16 @@ def execute(request: DemoExecuteRequest) -> DemoExecuteResponse:
         return DemoExecuteResponse(protected=False, results=results)
 
     # Fuse one decision over the session (Branch 3 sees the whole input list).
-    nhanh3 = run_nhanh3(request.inputs)
+    branch3 = run_branch3(request.inputs)
     # Escalate to the worst per-step Branch-1 verdict for the fused decision.
-    worst_n1 = _worst_nhanh1(nhanh1_responses)
-    decision = fuse_decision(worst_n1, run_nhanh2(request.inputs[-1]), nhanh3)
+    worst_n1 = _worst_branch1(branch1_responses)
+    decision = fuse_decision(worst_n1, run_branch2(request.inputs[-1]), branch3)
     return DemoExecuteResponse(
-        protected=True, results=results, nhanh3=nhanh3, decision=decision
+        protected=True, results=results, branch3=branch3, decision=decision
     )
 
 
-def _worst_nhanh1(responses):
+def _worst_branch1(responses):
     """Pick the most-severe Branch-1 response (an attack outranks normal)."""
     for resp in responses:
         if resp.status == "ready" and resp.is_sqli:

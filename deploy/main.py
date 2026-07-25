@@ -21,9 +21,9 @@ from deploy.routers import (
     health,
     metrics,
     monitor,
-    nhanh1,
-    nhanh2,
-    nhanh3,
+    branch1,
+    branch2,
+    branch3,
     train,
 )
 from src.utils import get_logger, load_config
@@ -62,9 +62,9 @@ def create_app() -> FastAPI:
     # Health lives at the root; everything else under the versioned prefix.
     app.include_router(health.router)
     app.include_router(detect.router, prefix=prefix)
-    app.include_router(nhanh1.router, prefix=prefix)
-    app.include_router(nhanh2.router, prefix=prefix)
-    app.include_router(nhanh3.router, prefix=prefix)
+    app.include_router(branch1.router, prefix=prefix)
+    app.include_router(branch2.router, prefix=prefix)
+    app.include_router(branch3.router, prefix=prefix)
     app.include_router(metrics.router, prefix=prefix)
     app.include_router(admin.router, prefix=prefix)
     # MLOps + Test-page routers.

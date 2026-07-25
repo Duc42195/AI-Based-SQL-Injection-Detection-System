@@ -11,7 +11,7 @@ from fastapi import HTTPException
 from src.preprocessing.multiclass_tagger import LABEL_NAMES
 from src.utils import load_config
 
-VALID_TASKS = ("nhanh1", "nhanh2", "nhanh3")
+VALID_TASKS = ("branch1", "branch2", "branch3")
 
 
 def validate_task(task: str) -> str:
@@ -26,9 +26,9 @@ def validate_task(task: str) -> str:
 
 def label_options(task: str) -> list[str]:
     """Return the label vocabulary a given task's annotator should offer."""
-    if task == "nhanh1":
+    if task == "branch1":
         return [LABEL_NAMES[i] for i in sorted(LABEL_NAMES)]
-    if task == "nhanh2":
+    if task == "branch2":
         # Branch 2 is benign-only anomaly detection: label is binary.
         return ["normal", "anomaly"]
     # Branch 3 session labels come from config (fallback to a sensible default).

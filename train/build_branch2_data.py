@@ -4,7 +4,7 @@ Loads the unified HF dataset (Jason-42195/VNU-SQLi-Detection), keeps only
 normal rows (label=0), extracts statistical features, and saves as a CSV for
 anomaly detection training.
 
-This replaces the old build_nhanh2_dataset.py approach (which built from raw
+This replaces the old build_branch2_dataset.py approach (which built from raw
 D1/D3/D7 sources). The HF dataset already includes properly canonicalized text
 and stratified splits, so we skip de-novo cleaning and reuse split+label
 directly.
@@ -32,8 +32,8 @@ def main() -> None:
     processed_dir = Path(cfg.get_path("paths.data_processed", "data/processed"))
     processed_dir.mkdir(parents=True, exist_ok=True)
 
-    logger.info("Loading HF dataset Jason-42195/VNU-SQLi-Detection (nhanh1_train.csv) ...")
-    ds = load_dataset("Jason-42195/VNU-SQLi-Detection", data_files="nhanh1_train.csv", split="train")
+    logger.info("Loading HF dataset Jason-42195/VNU-SQLi-Detection (branch1_train.csv) ...")
+    ds = load_dataset("Jason-42195/VNU-SQLi-Detection", data_files="branch1_train.csv", split="train")
     logger.info("Total rows: %d", len(ds))
 
     normal = ds.filter(lambda r: r["label"] == 0)
@@ -60,7 +60,7 @@ def main() -> None:
     test_count = sum(1 for r in rows if r["split"] == "test")
     logger.info("Train=%d  Test=%d  Total=%d", train_count, test_count, len(rows))
 
-    out_path = processed_dir / "nhanh2_data.csv"
+    out_path = processed_dir / "branch2_data.csv"
     fieldnames = [
         "id", "query_raw", "query_canonical", "has_comment_marker",
         *features, "source", "split",
@@ -74,7 +74,7 @@ def main() -> None:
     logger.info("Loading anomalous eval CSV from HF ...")
     try:
         anom_ds = load_dataset(
-            "Jason-42195/VNU-SQLi-Detection", data_files="nhanh2_anomalous_eval.csv", split="train"
+            "Jason-42195/VNU-SQLi-Detection", data_files="branch2_anomalous_eval.csv", split="train"
         )
         anom_rows: list[dict] = []
         for i, row in enumerate(anom_ds):
@@ -89,7 +89,7 @@ def main() -> None:
                 "entropy": row["entropy"],
                 "source": row["source"],
             })
-        anom_out = processed_dir / "nhanh2_anomalous_eval.csv"
+        anom_out = processed_dir / "branch2_anomalous_eval.csv"
         with anom_out.open("w", newline="", encoding="utf-8") as f:
             writer = csv.DictWriter(f, fieldnames=fieldnames[:-1])
             writer.writeheader()

@@ -41,12 +41,12 @@ def load_data(processed_dir: Path) -> tuple[pd.DataFrame, pd.DataFrame]:
     """Load the Nhanh 1 train/test split.
 
     Args:
-        processed_dir: Directory containing nhanh1_train.csv.
+        processed_dir: Directory containing branch1_train.csv.
 
     Returns:
         (train_df, test_df) tuple.
     """
-    df = pd.read_csv(processed_dir / "nhanh1_train.csv")
+    df = pd.read_csv(processed_dir / "branch1_train.csv")
     train_df = df[df["split"] == "train"].reset_index(drop=True)
     test_df = df[df["split"] == "test"].reset_index(drop=True)
     logger.info("Loaded train=%d test=%d rows", len(train_df), len(test_df))
@@ -450,12 +450,12 @@ def main() -> None:
 
     cfg = load_config()
     processed_dir = Path(cfg.get_path("paths.data_processed", "data/processed"))
-    models_dir = Path(cfg.get_path("paths.models_dir", "models")) / "nhanh1_comparison"
+    models_dir = Path(cfg.get_path("paths.models_dir", "models")) / "branch1_comparison"
     models_dir.mkdir(parents=True, exist_ok=True)
 
     reports_dir = Path("report/metrics")
     reports_dir.mkdir(parents=True, exist_ok=True)
-    out_path = reports_dir / "nhanh1_architecture_comparison.json"
+    out_path = reports_dir / "branch1_architecture_comparison.json"
 
     results: dict[str, Any] = {}
     if out_path.exists():

@@ -1,6 +1,6 @@
 {
-  "version": "nhanh1_v1",
-  "branch": "nhanh1_supervised_multiclass",
+  "version": "branch1_v1",
+  "branch": "branch1_supervised_multiclass",
   "architecture": "tfidf_logreg",
   "trained_at": "2026-07-16T12:16:08",
   "train_rows": 54236,
@@ -14,7 +14,7 @@
     "3": "boolean_blind",
     "4": "time_blind"
   },
-  "dataset": "data/processed/nhanh1_train.csv",
+  "dataset": "data/processed/branch1_train.csv",
   "tfidf": {
     "analyzer": "char_wb",
     "ngram_min": 2,

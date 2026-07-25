@@ -1,9 +1,9 @@
 """Generate comprehensive metrics for both Nhánh 1 and Nhánh 2.
 
 Produces:
-- reports/nhanh1_eval.json (updated with per-class ROC curves)
-- reports/nhanh2_eval.json (updated with PR curve, confusion matrix)
-- reports/nhanh2_threshold_sweep.csv
+- reports/branch1_eval.json (updated with per-class ROC curves)
+- reports/branch2_eval.json (updated with PR curve, confusion matrix)
+- reports/branch2_threshold_sweep.csv
 - reports/figures/ (6+ PNG figures for the report)
 """
 
@@ -27,7 +27,7 @@ matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 from matplotlib import rcParams
 
-from src.models.nhanh2_anomaly import AnomalyDetector
+from src.models.branch2_anomaly import AnomalyDetector
 from src.preprocessing.multiclass_tagger import LABEL_NAMES
 from src.preprocessing.statistical_features import extract_statistical_features
 from src.utils import get_logger, load_config
@@ -58,15 +58,15 @@ FIGURES_DIR.mkdir(parents=True, exist_ok=True)
 # ─── Nhánh 1: Per-class ROC curves ────────────────────────────────────────────
 
 
-def load_nhanh1_model_and_data():
-    logger.info("[Nhánh 1] Loading model from models/nhanh1_v1/")
-    vectorizer = joblib.load(PROJECT / "models/nhanh1_v1" / "vectorizer.joblib")
-    clf = joblib.load(PROJECT / "models/nhanh1_v1" / "model.joblib")
+def load_branch1_model_and_data():
+    logger.info("[Nhánh 1] Loading model from models/branch1_v1/")
+    vectorizer = joblib.load(PROJECT / "models/branch1_v1" / "vectorizer.joblib")
+    clf = joblib.load(PROJECT / "models/branch1_v1" / "model.joblib")
 
     logger.info("[Nhánh 1] Loading test data from HF ...")
     ds = load_dataset(
         "Jason-42195/VNU-SQLi-Detection",
-        data_files="nhanh1_train.csv",
+        data_files="branch1_train.csv",
         split="train",
     )
     df = ds.to_pandas()
@@ -76,7 +76,7 @@ def load_nhanh1_model_and_data():
     return vectorizer, clf, test_df
 
 
-def compute_nhanh1_roc_per_class(clf, vectorizer, test_df):
+def compute_branch1_roc_per_class(clf, vectorizer, test_df):
     logger.info("[Nhánh 1] Computing per-class ROC curves ...")
     X_test = vectorizer.transform(test_df["query_canonical"].astype(str))
     y_test = test_df["label"].to_numpy()
@@ -121,14 +121,14 @@ def compute_nhanh1_roc_per_class(clf, vectorizer, test_df):
     ax.legend(loc="lower right", fontsize=8)
     ax.set_xlim(-0.02, 1.02)
     ax.set_ylim(-0.02, 1.02)
-    fig.savefig(FIGURES_DIR / "nhanh1_roc_per_class.png")
+    fig.savefig(FIGURES_DIR / "branch1_roc_per_class.png")
     plt.close(fig)
     logger.info("[Nhánh 1] ROC curves saved")
     return roc_data
 
 
-def update_nhanh1_eval(roc_data):
-    eval_path = PROJECT / "report" / "metrics" / "nhanh1_eval.json"
+def update_branch1_eval(roc_data):
+    eval_path = PROJECT / "report" / "metrics" / "branch1_eval.json"
     with eval_path.open("r", encoding="utf-8") as f:
         report = json.load(f)
     report["roc_curves_per_class"] = roc_data
@@ -144,21 +144,21 @@ def update_nhanh1_eval(roc_data):
 # ─── Nhánh 2: PR curve, confusion matrix, per-class DR, threshold sweep ──────
 
 
-def load_nhanh2_model_and_data():
-    logger.info("[Nhánh 2] Loading model from models/nhanh2_v1/")
-    detector = AnomalyDetector.load(PROJECT / "models" / "nhanh2_v1")
+def load_branch2_model_and_data():
+    logger.info("[Nhánh 2] Loading model from models/branch2_v1/")
+    detector = AnomalyDetector.load(PROJECT / "models" / "branch2_v1")
 
     logger.info("[Nhánh 2] Loading eval data ...")
     data_dir = PROJECT / "data" / "processed"
-    benign_df = pd.read_csv(data_dir / "nhanh2_data.csv")
+    benign_df = pd.read_csv(data_dir / "branch2_data.csv")
     test_benign = benign_df[benign_df["split"] == "test"].copy()
-    anom_df = pd.read_csv(data_dir / "nhanh2_anomalous_eval.csv")
+    anom_df = pd.read_csv(data_dir / "branch2_anomalous_eval.csv")
 
     logger.info("[Nhánh 2] Test benign: %d | Anomalous: %d", len(test_benign), len(anom_df))
     return detector, test_benign, anom_df
 
 
-def compute_nhanh2_metrics(detector, test_benign, anom_df):
+def compute_branch2_metrics(detector, test_benign, anom_df):
     logger.info("[Nhánh 2] Computing features ...")
     feat_names = ["length", "special_char_ratio", "sql_keyword_count", "entropy"]
 
@@ -186,7 +186,7 @@ def compute_nhanh2_metrics(detector, test_benign, anom_df):
     ax.legend(loc="upper right")
     ax.set_xlim(-0.02, 1.02)
     ax.set_ylim(-0.02, 1.02)
-    fig.savefig(FIGURES_DIR / "nhanh2_pr_curve.png")
+    fig.savefig(FIGURES_DIR / "branch2_pr_curve.png")
     plt.close(fig)
     logger.info("[Nhánh 2] PR curve saved (AP=%.4f)", avg_prec)
 
@@ -260,7 +260,7 @@ def compute_nhanh2_metrics(detector, test_benign, anom_df):
     logger.info("[Nhánh 2] Current approx threshold: %.6f (FPR=%.4f)", current_thresh_approx, fpr_val)
 
     # Save sweep CSV
-    sweep_path = PROJECT / "report" / "metrics" / "nhanh2_threshold_sweep.csv"
+    sweep_path = PROJECT / "report" / "metrics" / "branch2_threshold_sweep.csv"
     with sweep_path.open("w", newline="", encoding="utf-8") as f:
         writer = csv.DictWriter(f, fieldnames=sweep_rows[0].keys())
         writer.writeheader()
@@ -280,7 +280,7 @@ def compute_nhanh2_metrics(detector, test_benign, anom_df):
     ax1.set_title("Nhánh 2 — Threshold Trade-off")
     ax1.legend(loc="center right")
     ax1.set_xlim(min(thresh_vals), max(thresh_vals))
-    fig.savefig(FIGURES_DIR / "nhanh2_threshold_tradeoff.png")
+    fig.savefig(FIGURES_DIR / "branch2_threshold_tradeoff.png")
     plt.close(fig)
     logger.info("[Nhánh 2] Threshold trade-off plot saved")
 
@@ -293,7 +293,7 @@ def compute_nhanh2_metrics(detector, test_benign, anom_df):
     ax.set_ylabel("Frequency")
     ax.set_title("Nhánh 2 — Score Distribution")
     ax.legend(fontsize=8)
-    fig.savefig(FIGURES_DIR / "nhanh2_score_dist.png")
+    fig.savefig(FIGURES_DIR / "branch2_score_dist.png")
     plt.close(fig)
     logger.info("[Nhánh 2] Score distribution saved")
 
@@ -313,8 +313,8 @@ def compute_nhanh2_metrics(detector, test_benign, anom_df):
     }
 
 
-def update_nhanh2_eval(new_metrics):
-    eval_path = PROJECT / "report" / "metrics" / "nhanh2_eval.json"
+def update_branch2_eval(new_metrics):
+    eval_path = PROJECT / "report" / "metrics" / "branch2_eval.json"
     with eval_path.open("r", encoding="utf-8") as f:
         report = json.load(f)
     report["precision_recall"] = new_metrics["pr_curve"]
@@ -340,14 +340,14 @@ def main():
     logger.info("=" * 60)
 
     # ── Nhánh 1 ──
-    vectorizer, clf, test_df = load_nhanh1_model_and_data()
-    roc_data = compute_nhanh1_roc_per_class(clf, vectorizer, test_df)
-    update_nhanh1_eval(roc_data)
+    vectorizer, clf, test_df = load_branch1_model_and_data()
+    roc_data = compute_branch1_roc_per_class(clf, vectorizer, test_df)
+    update_branch1_eval(roc_data)
 
     # ── Nhánh 2 ──
-    detector, test_benign, anom_df = load_nhanh2_model_and_data()
-    new_metrics = compute_nhanh2_metrics(detector, test_benign, anom_df)
-    update_nhanh2_eval(new_metrics)
+    detector, test_benign, anom_df = load_branch2_model_and_data()
+    new_metrics = compute_branch2_metrics(detector, test_benign, anom_df)
+    update_branch2_eval(new_metrics)
 
     logger.info("=" * 60)
     logger.info("All metrics generated. Figures saved to %s", FIGURES_DIR)

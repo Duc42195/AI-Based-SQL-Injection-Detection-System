@@ -9,9 +9,9 @@ OUT = Path("data/processed")
 OUT.mkdir(parents=True, exist_ok=True)
 
 FILES = {
-    "nhanh1_train.csv": "Branch 1 — 68K rows, 6 classes (for supervised training)",
-    "nhanh2_normal.csv": "Branch 2 — normal traffic (for unsupervised training)",
-    "nhanh2_anomalous_eval.csv": "Branch 2 — anomalous eval set (all attack types)",
+    "branch1_train.csv": "Branch 1 — 68K rows, 6 classes (for supervised training)",
+    "branch2_normal.csv": "Branch 2 — normal traffic (for unsupervised training)",
+    "branch2_anomalous_eval.csv": "Branch 2 — anomalous eval set (all attack types)",
 }
 
 for fname, desc in FILES.items():

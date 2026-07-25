@@ -5,7 +5,7 @@ from __future__ import annotations
 import numpy as np
 import pytest
 
-from src.models.nhanh2_anomaly import AnomalyDetector
+from src.models.branch2_anomaly import AnomalyDetector
 
 
 @pytest.fixture

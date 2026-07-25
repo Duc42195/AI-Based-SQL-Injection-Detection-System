@@ -1,4 +1,4 @@
-"""Build data/processed/nhanh2_normal.csv — the Branch-2 benign pool.
+"""Build data/processed/branch2_normal.csv — the Branch-2 benign pool.
 
 Unlike Branch 1, Branch 2 (anomaly detection) trains on 100% benign data and
 does NOT need class balance — more clean normal rows only helps it estimate
@@ -120,7 +120,7 @@ def main() -> None:
         r["split"] = "test"
     final_rows = train_rows + test_rows
 
-    out_path = processed_dir / "nhanh2_normal.csv"
+    out_path = processed_dir / "branch2_normal.csv"
     fieldnames = [
         "id",
         "query_raw",
@@ -161,7 +161,7 @@ def main() -> None:
             }
         )
 
-    eval_path = processed_dir / "nhanh2_anomalous_eval.csv"
+    eval_path = processed_dir / "branch2_anomalous_eval.csv"
     with eval_path.open("w", newline="", encoding="utf-8") as f:
         writer = csv.DictWriter(
             f,

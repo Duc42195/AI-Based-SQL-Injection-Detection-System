@@ -3,7 +3,7 @@
 MOCK TRAINER: a job advances one epoch per ``SECONDS_PER_EPOCH`` of wall-clock
 time, producing a decaying loss curve and log lines, then a confusion matrix +
 metrics. This lets the frontend build the live-training UX now; replace
-``_simulate`` with a real trainer (scripts/train_*.py, backgrounded) later — the
+``_simulate`` with a real trainer (train/train_*.py, backgrounded) later — the
 status/result shapes are the stable contract.
 """
 
