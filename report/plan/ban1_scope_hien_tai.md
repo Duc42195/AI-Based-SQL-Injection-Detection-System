@@ -1,56 +1,58 @@
-# Báo cáo — Hệ thống phát hiện SQL Injection dựa trên AI
+# Report — AI-Based SQL Injection Detection System
 
-## (Bản 1 — theo scope thực nghiệm hiện tại: Nhánh 1 + Nhánh 2)
+## (Version 1 — current experimental scope: Branch 1 + Branch 2)
 
-> Nộp: Thứ 7, 25/7/2026. Phạm vi: 2 nhánh đã có kết quả thực nghiệm thật (Nhánh 1 supervised
-> đa lớp, Nhánh 2 anomaly detection) + notebook demo. Không đề cập chi tiết Nhánh 3/hệ thống
-> đầy đủ — xem [ban2_hoan_chinh.md](../midterm/ban2_hoan_chinh.md) cho tầm nhìn đầy đủ.
+> Submission: Saturday, 25 Jul 2026. Scope: the 2 branches with real experimental results
+> (Branch 1 supervised multi-class, Branch 2 anomaly detection) + demo notebook. Doesn't
+> cover Branch 3/the full system in detail — see `ban2_hoan_chinh.md` (Version 2) for the
+> full vision. *(Note: this file's target, previously at `report/final/ban2_hoan_chinh.md`,
+> no longer exists on disk after the repo restructure — link left as a filename reference.)*
 
 ---
 
-## 1. Đặt vấn đề và Mục tiêu
+## 1. Problem Statement and Objectives
 
-*(TODO — Diệp: dùng lại Mục 1 của `De_xuat_SQLi_Detection_AI.md`, bỏ phần nhắc Nhánh 3 là trọng tâm)*
+*(TODO — Diep: reuse Section 1 of `De_xuat_SQLi_Detection_AI.md`, drop the part framing Branch 3 as the focus)*
 
-## 2. Công trình liên quan
+## 2. Related Work
 
-*(TODO — dùng lại khảo sát đã có, giữ nguyên)*
+*(TODO — reuse the existing survey as-is)*
 
-## 3. Kiến trúc đề xuất (2 nhánh)
+## 3. Proposed Architecture (2 branches)
 
-*(TODO — sơ đồ Nhánh 1 + Nhánh 2 + verdict đơn giản, xem `train/notebooks/demo_detect.ipynb` mục 2)*
+*(TODO — Branch 1 + Branch 2 diagram + simple verdict, see `train/notebooks/demo_detect.ipynb` section 2)*
 
-## 4. Dữ liệu và Tiền xử lý
+## 4. Data and Preprocessing
 
-*(TODO — D1/D4/D7 cho Nhánh 1, D1/D3/D7 cho Nhánh 2; canonicalization; xem `data_contract.md`)*
+*(TODO — D1/D4/D7 for Branch 1, D1/D3/D7 for Branch 2; canonicalization; see `data_contract.md`)*
 
-## 5. Phương pháp
+## 5. Methodology
 
-### 5.1 Nhánh 1 — Supervised đa lớp
-*(TODO — so sánh 4 kiến trúc, chọn TF-IDF+LogReg, lý do)*
+### 5.1 Branch 1 — Supervised multi-class
+*(TODO — compare 4 architectures, chose TF-IDF+LogReg, rationale)*
 
-### 5.2 Nhánh 2 — Anomaly Detection
-*(TODO — Isolation Forest vs One-Class SVM, chọn OCSVM, lý do)*
+### 5.2 Branch 2 — Anomaly Detection
+*(TODO — Isolation Forest vs One-Class SVM, chose OCSVM, rationale)*
 
-## 6. Thực nghiệm và Kết quả
+## 6. Experiments and Results
 
-### 6.1 Nhánh 1
-*(TODO — F1-macro=0.982, per-class, confusion matrix — xem `report/metrics/nhanh1_eval.json`)*
+### 6.1 Branch 1
+*(TODO — F1-macro=0.982, per-class, confusion matrix — see `report/metrics/branch1_eval.json`)*
 
-### 6.2 Nhánh 2
-*(TODO — FPR=0,3%, detection rate=20,7%, AUC=0,90 (OCSVM); ROC curve — xem `report/metrics/nhanh2_eval.json`)*
+### 6.2 Branch 2
+*(TODO — FPR=0.3%, detection rate=20.7%, AUC=0.90 (OCSVM); ROC curve — see `report/metrics/branch2_eval.json`)*
 
-### 6.3 Demo minh hoạ
-*(TODO — kết quả từ `train/notebooks/demo_detect.ipynb`: ví dụ input/output, sanity-check 19/20 đúng trên mẫu 20 dòng)*
+### 6.3 Illustrative demo
+*(TODO — results from `train/notebooks/demo_detect.ipynb`: sample input/output, sanity-check 19/20 correct on a 20-row sample)*
 
-## 7. Thảo luận và Hạn chế
+## 7. Discussion and Limitations
 
-*(TODO — nhiễu nhãn `boolean_blind` ~13%, dữ liệu D1 license chưa rõ, chưa test adversarial đầy đủ — xem `data_contract.md`)*
+*(TODO — ~13% label noise in `boolean_blind`, D1 license unclear, adversarial testing not yet complete — see `data_contract.md`)*
 
-## 8. Kết luận và Hướng phát triển
+## 8. Conclusion and Future Work
 
-*(TODO — tóm tắt 2 nhánh đã làm; Nhánh 3 + hệ thống đầy đủ + Continual Learning là bước tiếp theo, xem Bản 2)*
+*(TODO — summarize the 2 completed branches; Branch 3 + the full system + Continual Learning are the next steps, see Version 2)*
 
-## Tài liệu tham khảo
+## References
 
-*(TODO — dùng lại từ khảo sát đã có)*
+*(TODO — reuse from the existing survey)*

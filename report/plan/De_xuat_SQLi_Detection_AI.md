@@ -1,302 +1,302 @@
-# BẢN ĐỀ XUẤT ĐỀ TÀI: HỆ THỐNG PHÁT HIỆN SQL INJECTION DỰA TRÊN TRÍ TUỆ NHÂN TẠO
-### (AI-Based SQL Injection Detection System) — Bản sửa đổi V9 (24/7: 3 mốc rõ ràng — xem Mục 0)
-### Phân công: Tôi=làm mượt Nhánh 1 + tích hợp, Bách=Nhánh 2 (đã train xong, đang verify), Minh=Streamlit, Diệp=Support/Báo cáo
+# PROJECT PROPOSAL: AI-BASED SQL INJECTION DETECTION SYSTEM
+### (AI-Based SQL Injection Detection System) — Revision V9 (24 Jul: 3 clear milestones — see Section 0)
+### Role split: Duc = polish Branch 1 + integration, Bach = Branch 2 (trained, being verified), Minh = Streamlit, Diep = Support/Report
 
-## 0. Mốc thời gian (cập nhật 24/7 — QUAN TRỌNG, đọc trước khi xem các mục khác)
+## 0. Timeline (updated 24 Jul — IMPORTANT, read before the other sections)
 
-**⚠️ Đổi lần 3 (24/7) — 3 mốc rõ ràng:**
+**⚠️ 3rd revision (24 Jul) — 3 clear milestones:**
 
-| Mốc | Ngày | Nội dung | Phạm vi |
+| Milestone | Date | Content | Scope |
 |---|---|---|---|
-| **HẠN NỘP** | **Thứ 7 25/7, 23:59** | **Nhánh 1 + Nhánh 2**: code, metric, model, báo cáo (Bản 1) phải xong hoàn toàn | Không đổi so với kế hoạch trước — Nhánh 3/hệ thống vẫn ngoài phạm vi |
-| **Metric cho báo cáo hội nghị** | **Chủ Nhật 26/7** | Hoàn thiện metric/hình/bảng riêng cho bản báo cáo hội nghị (RIVF, Bản 2) — 1 ngày đệm sau hạn chính để trau chuốt số liệu | Không code mới, chỉ rà soát/trình bày lại số liệu đã có |
-| **Source code đầy đủ** | **31/12/2026** | Nhánh 3 + hệ thống tích hợp (API/`deploy/`, Bộ xử lý trung tâm, Continual Learning...) — xem Mục 13 (Future Work) | **Lùi xa, không gấp** — có ~5 tháng, không cần kế hoạch ngày-theo-ngày ngay bây giờ |
-| Nộp bài RIVF 2026 | 31/7 23:59 | Bài báo 6 trang IEEE qua EDAS | Riêng, không đổi |
-| Thông báo kết quả RIVF | 15/10 | — | — |
-| Camera-ready RIVF | 11/11 | — | Nên có it nhất 1 phần Nhánh 3 xong trước mốc này |
-| Hội nghị RIVF 2026 | 18-20/12 | VinUniversity, Hà Nội | Source code đầy đủ (31/12) trễ hơn hội nghị — chấp nhận được, hội nghị dùng kết quả Bản 2 (2 nhánh + thiết kế Nhánh 3) |
+| **SUBMISSION DEADLINE** | **Sat 25 Jul, 23:59** | **Branch 1 + Branch 2**: code, metrics, model, report (Version 1) must be fully complete | Unchanged from the previous plan — Branch 3/the full system stays out of scope |
+| **Conference report metrics** | **Sun 26 Jul** | Polish metrics/figures/tables specifically for the conference report (RIVF, Version 2) — one buffer day after the main deadline to refine the figures | No new code, just reviewing/re-presenting existing figures |
+| **Full source code** | **31 Dec 2026** | Branch 3 + integrated system (API/`deploy/`, central processing engine, Continual Learning...) — see Section 13 (Future Work) | **Far out, not urgent** — ~5 months available, no need for a day-by-day plan right now |
+| Submit RIVF 2026 paper | 31 Jul 23:59 | 6-page IEEE paper via EDAS | Separate track, unchanged |
+| RIVF results notification | 15 Oct | — | — |
+| RIVF camera-ready | 11 Nov | — | Should have at least part of Branch 3 done before this milestone |
+| RIVF 2026 conference | 18-20 Dec | VinUniversity, Hanoi | The full source code deadline (31 Dec) lands after the conference — acceptable; the conference presents Version 2's results (2 branches + Branch 3 design) |
 
-**Vì sao cắt Nhánh 3:** xác nhận thực tế (21/7) — Nhánh 3 hiện **chưa có gì** (không Docker lab, không session data, không model), trong khi chỉ còn 5 ngày. Cố giữ Nhánh 3 trong phạm vi sẽ khiến cả 3 nhánh đều dở dang. Quyết định: **làm chắc 2 nhánh** hơn là làm dở cả 3. Nhánh 3 vẫn giữ nguyên trong thiết kế/đóng góp lý thuyết của đề tài (Mục 1, 3, 4.3) nhưng ghi rõ là **chưa triển khai thực nghiệm** trong bản nộp 25/7 — xem Mục 13 (Future Work).
+**Why Branch 3 was cut:** confirmed in practice (21 Jul) — Branch 3 currently has **nothing built** (no Docker lab, no session data, no model), with only 5 days left. Trying to keep Branch 3 in scope would leave all 3 branches half-finished. Decision: **nail 2 branches solidly** rather than half-finish all 3. Branch 3 remains part of the project's design/theoretical contribution (Sections 1, 3, 4.3) but is clearly marked as **not experimentally implemented** in the 25 Jul submission — see Section 13 (Future Work).
 
-**Tin tốt về Nhánh 2:** kiểm tra thực tế (21/7) cho thấy Nhánh 2 **không phải nút thắt** — toàn bộ pipeline (build data từ HF + train Isolation Forest/OCSVM) chạy xong trong **~75 giây**. Vấn đề "thiếu model" trước đó chỉ do file `.joblib` không commit (đúng chủ đích, tránh file lớn trong git), không phải do thiếu thời gian huấn luyện.
+**Good news on Branch 2:** a real-world check (21 Jul) showed Branch 2 is **not a bottleneck** — the entire pipeline (build data from HF + train Isolation Forest/OCSVM) finishes in **~75 seconds**. The earlier "missing model" issue was just because the `.joblib` file isn't committed (intentional, to avoid large files in git), not a training-time shortfall.
 
-**Đổi lần 2 (cùng ngày 21/7) — bỏ luôn hệ thống, viết 2 bản báo cáo:** sau khi xác nhận Nhánh 1+2 đã ổn, quyết định **không xây API/Bộ xử lý trung tâm/Streamlit** cho bản nộp 25/7 nữa — thay bằng `train/notebooks/demo_detect.ipynb` (đã viết + chạy thử, load model thật, nhập query trả verdict, sanity-check 19/20 đúng trên mẫu ngẫu nhiên). Đồng thời viết **2 bản báo cáo song song**:
-- **[`report/plan/ban1_scope_hien_tai.md`](ban1_scope_hien_tai.md)** — đúng những gì đã làm thật (2 nhánh + notebook), nộp 25/7. *(24/7: di chuyển vào `report/plan/` khi tái cấu trúc repo)*
-- **[`report/midterm/ban2_hoan_chinh.md`](../midterm/ban2_hoan_chinh.md)** — tầm nhìn đầy đủ (3 nhánh + hệ thống tích hợp), Nhánh 3/API đánh dấu rõ là thiết kế/Future Work; dùng làm nguồn tham khảo cho báo cáo hội nghị (Chủ Nhật 26/7), bài hội nghị thật nằm ở `report/conf/`. *(24/7: di chuyển vào `report/final/`; đổi tên thành `report/midterm/` vì đây là báo cáo giữa kỳ — Nhánh 3 + hệ thống đầy đủ dời hạn cứng 31/12/2026, không phải "final".)*
-
----
-
-## 1. Đặt vấn đề và Mục tiêu đề tài
-
-**Bối cảnh:** SQL Injection (SQLi) là một trong những lỗ hổng bảo mật web nguy hiểm và phổ biến nhất. Các giải pháp truyền thống (WAF luật cứng) gặp khó khăn với biến thể tấn công mới (zero-day) và dễ gây False Positive.
-
-**Mục tiêu:** Xây dựng hệ thống gác cổng thông minh tại tầng Database. Thiết kế đầy đủ gồm **3 nhánh song song** (supervised, anomaly detection theo từng câu, và **session-level/sequence** theo chuỗi câu) kết hợp cơ chế **Continual Learning** và chính sách **Overkill (giữ & xác minh)** — nhưng **bản nộp 25/7 chỉ triển khai thực nghiệm 2 nhánh đầu** (xem Mục 0 lý do).
-
-**Đóng góp — phân biệt rõ đã làm (25/7) vs. thiết kế/Future Work:**
-1. **[ĐÃ TRIỂN KHAI]** Nhánh 1 (supervised đa lớp, F1-macro=0.982) + Nhánh 2 (anomaly detection, OCSVM AUC=0.90) kết hợp trên cùng pipeline canonicalization, minh hoạ qua notebook demo (`train/notebooks/demo_detect.ipynb`) — API/hệ thống tích hợp là Future Work (xem Mục 13).
-2. **[THIẾT KẾ — Future Work]** Nhánh 3 — mô hình phân cấp (hierarchical) theo session/chuỗi câu, giải quyết khoảng trống mà toàn bộ 11 nguồn khảo sát ở Related Work đều bỏ qua: tấn công dạng **temporal query splitting** (Blind SQLi Boolean/Time-based) mà từng câu riêng lẻ trông hợp lệ, chỉ lộ pattern khi nhìn theo chuỗi. Kiến trúc đã thiết kế đầy đủ (Mục 4.3) nhưng **chưa có dữ liệu/thực nghiệm** tại thời điểm nộp 25/7.
-3. **[THIẾT KẾ — Future Work]** Vòng lặp Continual Learning từ phản hồi Admin (chính sách Overkill) — decision logic cơ bản 2 nhánh đã có, vòng lặp retrain đầy đủ chưa triển khai.
+**2nd revision (same day, 21 Jul) — drop the system entirely, write 2 report versions:** after confirming Branch 1+2 were solid, decided **not to build the API/central processing engine/Streamlit** for the 25 Jul submission — replaced by `train/notebooks/demo_detect.ipynb` (written + tested, loads the real models, takes a query, returns a verdict; 19/20 correct on a random sample sanity-check). Also writing **2 parallel report versions**:
+- **[`report/plan/ban1_scope_hien_tai.md`](ban1_scope_hien_tai.md)** — exactly what was actually built (2 branches + notebook), due 25 Jul. *(24 Jul: moved into `report/plan/` during the repo restructure)*
+- **`report/midterm/ban2_hoan_chinh.md`** — the full vision (3 branches + integrated system), Branch 3/API clearly marked as design/Future Work; used as a source for the conference report (Sun 26 Jul), the real conference paper lives in `report/conf/`. *(24 Jul: moved into `report/final/`; renamed to `report/midterm/` since this is the mid-term report — Branch 3 + the full system have a separate hard deadline of 31 Dec 2026, so it isn't "final".)* *(Note added during the English-translation pass: this file no longer exists on disk after a later restructure — reference kept as a filename pointer, not a working link.)*
 
 ---
 
-## 2. Công trình liên quan
-*(Xem file riêng "Khảo sát công trình liên quan" — đã có trích dẫn đầy đủ [1]-[11]. Điểm mấu chốt: không nguồn nào mô hình hóa mối quan hệ giữa nhiều query trong cùng session cho bài toán SQLi — đây là khoảng trống mà Nhánh 3 lấp vào.)*
+## 1. Problem Statement and Project Objectives
+
+**Context:** SQL Injection (SQLi) is one of the most dangerous and common web security vulnerabilities. Traditional solutions (hard-coded-rule WAFs) struggle with novel attack variants (zero-day) and are prone to False Positives.
+
+**Objective:** Build an intelligent gatekeeper system at the Database layer. Full design comprises **3 parallel branches** (supervised, per-query anomaly detection, and **session-level/sequence** over query chains) combined with a **Continual Learning** mechanism and an **Overkill (hold & verify)** policy — but **the 25 Jul submission only experimentally implements the first 2 branches** (see Section 0 for why).
+
+**Contributions — clearly distinguishing what's done (25 Jul) vs. design/Future Work:**
+1. **[IMPLEMENTED]** Branch 1 (supervised multi-class, F1-macro=0.982) + Branch 2 (anomaly detection, OCSVM AUC=0.90) combined on the same canonicalization pipeline, demonstrated via a demo notebook (`train/notebooks/demo_detect.ipynb`) — the API/integrated system is Future Work (see Section 13).
+2. **[DESIGN — Future Work]** Branch 3 — a hierarchical model over sessions/query chains, addressing a gap that all 11 surveyed Related Work sources overlook: **temporal query splitting** attacks (Boolean/Time-based Blind SQLi) where each individual query looks valid and the pattern only shows up across a sequence. The architecture is fully designed (Section 4.3) but **has no data/experiments** as of the 25 Jul submission.
+3. **[DESIGN — Future Work]** A Continual Learning loop from Admin feedback (the Overkill policy) — basic 2-branch decision logic exists, but the full retrain loop isn't implemented.
 
 ---
 
-## 3. Kiến trúc hệ thống và Luồng dữ liệu (Real-time Pipeline) — cập nhật 3 nhánh
+## 2. Related Work
+*(See the separate "Related Work Survey" file — already has full citations [1]-[11]. Key point: no source models the relationship between multiple queries within the same session for the SQLi problem — this is the gap Branch 3 fills.)*
 
-> ⚠️ **Sơ đồ dưới đây là thiết kế đầy đủ 3 nhánh.** Bản nộp 25/7 chỉ triển khai thực nghiệm **Nhánh 1 + Nhánh 2** và nhánh quyết định rút gọn tương ứng (2 dòng đầu của "Bộ xử lý trung tâm"); **Nhánh 3 và dòng quyết định thứ 3 ("Nhánh 1+2 sạch + Nhánh 3...") là Future Work**, chưa có thực nghiệm.
+---
+
+## 3. System Architecture and Data Flow (Real-time Pipeline) — updated for 3 branches
+
+> ⚠️ **The diagram below is the full 3-branch design.** The 25 Jul submission only experimentally implements **Branch 1 + Branch 2** and the corresponding reduced decision path (the first 2 lines of "Central Processing Engine"); **Branch 3 and the 3rd decision line ("Branch 1+2 clean + Branch 3...") are Future Work**, with no experiments yet.
 
 ```
 [User Request] ──> [Web Backend] ──> [Database Proxy / AI Agent] ──> [Database]
                                             │
-                                (Canonicalization → Đánh chặn & Phân tích)
+                                (Canonicalization → Interception & Analysis)
                                             │
                     ┌───────────────┬───────────────┬────────────────┐
                     ▼               ▼               ▼
-              [Nhánh 1: SQLi]  [Nhánh 2: Anomaly] [Nhánh 3: Session]
-              (per-query,       (per-query,        (chuỗi K query gần nhất
-               supervised)       unsupervised)       theo session/IP/time-window)
+              [Branch 1: SQLi] [Branch 2: Anomaly] [Branch 3: Session]
+              (per-query,       (per-query,        (last K queries in the
+               supervised)       unsupervised)      session/IP/time window)
                     │               │               │
                     └───────────────┴───────────────┘
                                      ▼
-                          [Bộ xử lý trung tâm]
-              - Nhánh 1 = Tấn công            → Chặn ngay, ghi log
-              - Nhánh 1 sạch + Nhánh 2 bất thường
-                → HOLD (Overkill), chờ Admin xác nhận
-              - Nhánh 1+2 sạch + Nhánh 3 phát hiện pattern chuỗi bất thường
-                → HOLD session (Overkill mở rộng), có thể chặn toàn bộ session
-              - Tất cả sạch                    → Cho phép
+                          [Central Processing Engine]
+              - Branch 1 = Attack                → Block immediately, log it
+              - Branch 1 clean + Branch 2 anomalous
+                → HOLD (Overkill), await Admin confirmation
+              - Branch 1+2 clean + Branch 3 detects an anomalous sequence pattern
+                → HOLD the whole session (extended Overkill), may block the entire session
+              - Everything clean                  → Allow
                                      │
-                          [Fail-safe nếu AI service timeout/lỗi]
+                          [Fail-safe if the AI service times out/errors]
                                      │
-                          [Continual Learning: nhãn từ hàng đợi Admin
-                           → kho dữ liệu mới → retrain định kỳ]
+                          [Continual Learning: labels from the Admin queue
+                           → new data store → periodic retrain]
 ```
 
-**Session Store (thành phần kỹ thuật mới cho Nhánh 3):** cần bộ nhớ đệm (in-memory cache hoặc Redis) lưu K câu SQL/embedding gần nhất theo khóa session/IP, có TTL để tự xóa session cũ. Đây là điểm khác biệt kỹ thuật so với V2 — hệ thống trước đó hoàn toàn stateless theo từng request, giờ cần giữ trạng thái ngắn hạn.
+**Session Store (new technical component for Branch 3):** requires a cache (in-memory or Redis) storing the last K SQL statements/embeddings keyed by session/IP, with a TTL to auto-expire old sessions. This is a technical departure from V2 — the previous system was fully stateless per-request, and now needs short-lived state.
 
 ---
 
-## 4. Khoanh vùng dữ liệu và Giải pháp công nghệ
+## 4. Data Scoping and Technical Approach
 
-### 4.1 Lựa chọn kiến trúc mô hình cho Nhánh 1 (per-query)
-Giữ nguyên như V2: so sánh DistilBERT vs. TF-IDF/char n-gram + Gradient Boosting vs. CNN nhẹ kiểu tokenizer-riêng-cho-SQL (tham khảo kiến trúc nhẹ trong khảo sát Related Work — ~69K tham số, nhanh hơn DistilBERT hàng chục lần). Chọn theo F1/latency đo thực tế, không mặc định chọn transformer.
+### 4.1 Model architecture choice for Branch 1 (per-query)
+Unchanged from V2: compares DistilBERT vs. TF-IDF/char n-gram + Gradient Boosting vs. a lightweight CNN with a custom SQL tokenizer (referencing a lightweight architecture from the Related Work survey — ~69K parameters, tens of times faster than DistilBERT). Chosen based on measured F1/latency, not defaulting to a transformer.
 
-**Kết quả thực nghiệm (16/7) — đã chốt: TF-IDF + Logistic Regression.** So sánh 4 candidate trên tập test 13.632 dòng, **6 lớp gồm cả `stacked`** (`train/compare_nhanh1_architectures.py`, kết quả đầy đủ ở `report/metrics/nhanh1_architecture_comparison.json` + `train/notebooks/model_comparison_nhanh1.ipynb`):
+**Experimental result (16 Jul) — locked in: TF-IDF + Logistic Regression.** Compared 4 candidates on a 13,632-row test set, **6 classes including `stacked`** (`train/compare_branch1_architectures.py`, full results in `report/metrics/branch1_architecture_comparison.json` + `train/notebooks/model_comparison_branch1.ipynb`):
 
 | Model | F1-macro | p50 latency | Size | Train time |
 |---|---|---|---|---|
-| **TF-IDF + LogReg** (chọn) | 0.985 | **0,5 ms** | 3,9 MB | 10 s |
-| TF-IDF + LightGBM | **0,993** | 60 ms | 6,0 MB | 264 s |
-| DistilBERT | 0,992 | 2,8 ms (GPU) | 256 MB | 1443 s |
-| CNN + SQL-tokenizer | 0,987 | **0,3 ms** | **116 KB** (28K params) | 10 s |
+| **TF-IDF + LogReg** (chosen) | 0.985 | **0.5 ms** | 3.9 MB | 10 s |
+| TF-IDF + LightGBM | **0.993** | 60 ms | 6.0 MB | 264 s |
+| DistilBERT | 0.992 | 2.8 ms (GPU) | 256 MB | 1443 s |
+| CNN + SQL-tokenizer | 0.987 | **0.3 ms** | **116 KB** (28K params) | 10 s |
 
-Lý do chọn LogReg: chênh lệch F1 giữa 4 model không đáng kể (0.985–0.993), trong khi LightGBM chậm gấp ~120 lần (60 ms — quá cao cho proxy real-time), DistilBERT tốn 256 MB + cần GPU + train 24 phút mà không hơn F1. CNN là ứng viên dự phòng tốt (nhanh/nhỏ nhất) nếu sau này cần học đặc trưng mạnh hơn.
+Reason for choosing LogReg: the F1 gap between the 4 models is negligible (0.985–0.993), while LightGBM is ~120x slower (60 ms — too high for a real-time proxy), and DistilBERT costs 256 MB + needs a GPU + 24 minutes to train without beating F1. CNN is a good fallback candidate (fastest/smallest) if stronger feature learning is needed later.
 
-**⚠️ Phát hiện sau khi train (16/7) — đã bỏ lớp `stacked` khỏi dataset:** cả 4 model đạt F1 ~0.99 và lớp `stacked` (363 mẫu synthetic) đạt **100% recall ở cả 4** → dấu hiệu dữ liệu **quá dễ phân biệt** (template lặp cấu trúc), KHÔNG phải tín hiệu chất lượng thật. Quyết định: **loại `stacked` khỏi training** (`branch1_supervised.balance.exclude_labels: [5]` trong `config.yaml`), giữ code sinh (`synthetic_stacked.py`) để dùng lại khi có data thật từ Docker lab/sqlmap (Ngày 5-6). Dataset còn **5 lớp, 67.796 dòng**.
+**⚠️ Finding after training (16 Jul) — `stacked` dropped from the dataset:** all 4 models hit F1 ~0.99 and the `stacked` class (363 synthetic samples) hit **100% recall on all 4** → a sign the data is **too easy to distinguish** (repeated template structure), NOT a genuine quality signal. Decision: **exclude `stacked` from training** (`branch1_supervised.balance.exclude_labels: [5]` in `config.yaml`), keep the generation code (`synthetic_stacked.py`) for reuse once real data exists from the Docker lab/sqlmap (Day 5-6). Dataset now **5 classes, 67,796 rows**.
 
-**F1-macro đúng sau khi bỏ `stacked`: 0.9822** (`models/nhanh1_v1/`, kiến trúc không đổi — TF-IDF+LogReg). Lưu ý: lần retrain đầu tiên báo nhầm F1=0.8185 do bug tính `classification_report` (hardcode đủ 6 nhãn dù `stacked` không còn trong data → sklearn tính điểm 0 cho nhãn không tồn tại, kéo macro-average sai) — đã sửa ở cả `train_nhanh1.py` và `compare_nhanh1_architectures.py` (chi tiết: `data_contract.md` Mục 3.3). Confusion matrix cho thấy nhầm lẫn duy nhất đáng kể là `normal ↔ boolean_blind` (khớp với ~13% nhiễu nhãn đã đo ở rổ `boolean_blind`) — con số F1 này vẫn không nên hiểu là hệ thống "gần hoàn hảo", thước đo thật là tập test adversarial (Ngày 7).
+**Correct F1-macro after dropping `stacked`: 0.9822** (`models/branch1_v1/`, architecture unchanged — TF-IDF+LogReg). Note: the first retrain incorrectly reported F1=0.8185 due to a `classification_report` bug (hardcoded all 6 labels even though `stacked` was no longer in the data → sklearn scored the missing label 0, skewing the macro-average) — fixed in both `train_branch1.py` and `compare_branch1_architectures.py` (details: `data_contract.md` Section 3.3). The confusion matrix shows the only notable confusion is `normal ↔ boolean_blind` (matches the ~13% label noise measured in the `boolean_blind` bucket) — this F1 figure still shouldn't be read as "near-perfect", the real test is the adversarial set (Day 7).
 
-### 4.2 Nhánh 2: Phát hiện bất thường theo từng câu (giữ nguyên V2)
+### 4.2 Branch 2: Per-query anomaly detection (unchanged from V2)
 
-### 4.3 Nhánh 3 (MỚI): Session-level / Sequence Model
+### 4.3 Branch 3 (NEW): Session-level / Sequence Model
 
-**Kiến trúc phân cấp (Hierarchical):**
+**Hierarchical architecture:**
 ```
 Query 1 ─┐
-Query 2 ─┼─> [Tầng 1: Encoder nhẹ mỗi query] ─> embedding q1, q2, q3...
-Query 3 ─┘   (tái sử dụng encoder đã chọn ở Nhánh 1 — không train lại)
+Query 2 ─┼─> [Layer 1: lightweight per-query encoder] ─> embedding q1, q2, q3...
+Query 3 ─┘   (reuses the encoder already chosen for Branch 1 — not retrained)
                                     │
                                     ▼
-                     [Tầng 2: Sequence Model nhẹ]
-                     (học trên chuỗi embedding theo session)
+                     [Layer 2: lightweight Sequence Model]
+                     (trained on the embedding sequence per session)
                                     │
                                     ▼
                      Session-level anomaly score
 ```
 
-**Lựa chọn mô hình cho Tầng 2 — cần thử nghiệm so sánh (xem Kế hoạch 2 tuần):**
-| Lựa chọn | Ưu điểm | Nhược điểm |
+**Layer-2 model choice — needs comparative experimentation (see the 2-week plan):**
+| Option | Pros | Cons |
 |---|---|---|
-| GRU 1 lớp | Nhẹ, xử lý chuỗi độ dài thay đổi tự nhiên | Xử lý tuần tự, khó song song hóa |
-| 1D-CNN theo thời gian (temporal conv) | Rất nhanh, song song hóa tốt | Cửa sổ ngữ cảnh cố định, kém hơn với chuỗi dài |
-| Transformer encoder nhỏ (2 lớp, self-attention) | Bắt được quan hệ xa giữa các query trong chuỗi | Nặng hơn 2 lựa chọn trên |
+| 1-layer GRU | Lightweight, naturally handles variable-length sequences | Sequential processing, hard to parallelize |
+| Temporal 1D-CNN | Very fast, parallelizes well | Fixed context window, weaker on long sequences |
+| Small Transformer encoder (2 layers, self-attention) | Captures long-range relationships between queries in the sequence | Heavier than the two options above |
 
-### 4.4 Dữ liệu cho Nhánh 3 — thu thập bằng công cụ tấn công thật (đáng tin hơn script mô phỏng)
-- **Docker lab dễ tổn thương:** dựng DVWA/WebGoat trong container cục bộ, chỉ dùng nội bộ cho mục đích thu thập dữ liệu huấn luyện.
-- **Malicious session (thật, không mô phỏng):** chạy `sqlmap --technique=B` (boolean-blind) và `--technique=T` (time-blind) nhắm vào lab, bắt toàn bộ traffic bằng proxy trung gian (mitmproxy/Burp Suite) đặt giữa sqlmap và lab app → có log request/response đầy đủ, đúng định dạng thật, kèm timestamp.
-- **Sanity check ground truth:** chỉ giữ lại session mà sqlmap **báo trích xuất dữ liệu thành công** — tránh gán nhãn 1 cho session tấn công thất bại.
-- **Malicious session bổ sung (từ WAF-A-MoLE):** khi chạy WAF-A-MoLE để sinh tập test adversarial cho Mục 7 (Nhánh 1/2), log lại toàn bộ chuỗi các lần thử biến đổi liên tiếp — tận dụng lại, không tốn thêm công thu thập.
-- **Benign session:** group theo cookie có sẵn trong CSIC 2010 (D3), hoặc crawler đơn giản duyệt DVWA ở chế độ bình thường — thực tế hơn ghép ngẫu nhiên các câu rời rạc.
-- **Ranh giới session:** định nghĩa tường minh = session ID (hoặc IP) + ngưỡng nghỉ 30 phút — cần ghi rõ trong báo cáo vì đây là điểm phản biện thường gặp.
+### 4.4 Data for Branch 3 — collected using real attack tooling (more credible than a simulation script)
+- **Vulnerable Docker lab:** stand up DVWA/WebGoat in a local container, used internally purely for training-data collection.
+- **Malicious session (real, not simulated):** run `sqlmap --technique=B` (boolean-blind) and `--technique=T` (time-blind) against the lab, capturing all traffic via a man-in-the-middle proxy (mitmproxy/Burp Suite) placed between sqlmap and the lab app → full request/response logs, real format, with timestamps.
+- **Ground-truth sanity check:** only keep sessions where sqlmap **reports successful data extraction** — avoid labeling a failed attack session as positive.
+- **Supplemental malicious sessions (from WAF-A-MoLE):** when running WAF-A-MoLE to generate the adversarial test set for Section 7 (Branch 1/2), log the full sequence of consecutive mutation attempts — reused, no extra collection effort.
+- **Benign sessions:** grouped by existing cookies in CSIC 2010 (D3), or a simple crawler browsing DVWA normally — more realistic than randomly concatenating disconnected queries.
+- **Session boundary:** explicitly defined as session ID (or IP) + a 30-minute idle threshold — needs to be stated clearly in the report, since this is a common point of pushback.
 
-**Schema nhãn 2 tầng (Hierarchical Labeling) — điểm mới cần nêu trong Phương pháp:**
-Vì chưa dataset SQLi nào có sẵn nhãn theo session, đề tài tự định nghĩa schema 2 tầng, khớp với kiến trúc phân cấp:
-- Tầng câu (per-query, giữ như D1): 0 = Normal, 1 = SQLi.
-- Tầng session (mới): 0 = Benign, 1 = Blind Boolean-based, 2 = Blind Time-based, 3 = Query-splitting/multi-step.
+**2-tier labeling schema (Hierarchical Labeling) — a new element to cover in the Methodology:**
+Since no existing SQLi dataset has session-level labels, the project defines its own 2-tier schema, matching the hierarchical architecture:
+- Query tier (per-query, same as D1): 0 = Normal, 1 = SQLi.
+- Session tier (new): 0 = Benign, 1 = Blind Boolean-based, 2 = Blind Time-based, 3 = Query-splitting/multi-step.
 
-### 4.5 Cập nhật nguồn dữ liệu Nhánh 1 — bổ sung D7, xử lý mất cân bằng lớp (15/7)
+### 4.5 Branch 1 data source update — added D7, addressed class imbalance (15 Jul)
 
-Verify thực tế trên D1 (SQLiV3) cho thấy dataset quá nghèo để phân loại đa lớp: **0 mẫu `stacked`**, và lớp `boolean_blind` chỉ là "rổ chứa" các payload không khớp 4 luật kia (gồm cả DDL không liên quan). Cần bổ sung nguồn:
+Real-world verification on D1 (SQLiV3) showed the dataset is too sparse for multi-class classification: **0 `stacked` samples**, and the `boolean_blind` class is just a "catch-all" for payloads not matching the other 4 rules (including unrelated DDL statements). Additional sources needed:
 
-- **D7 — SR-BH 2020** ([Harvard Dataverse](https://dataverse.harvard.edu/dataset.xhtml?persistentId=doi:10.7910/DVN/OGOIXX)): honeypot thật, thu 12 ngày (2020), đa nhãn CAPEC. 527.813 dòng, 250.285 dòng gắn nhãn gốc `SQL Injection`.
-- Sau khi tự tag lại (không tin nhãn gốc — phát hiện nhiễu nhãn, có dòng static asset bị gắn nhầm SQLi): bổ sung thêm `union_based` +83.189, `error_based` +7.423, `boolean_blind` +126.926, `time_blind` +32.747.
-- **`stacked` = 0 mẫu ở cả D1+D4+D7** (đã thử cả regex chặt lẫn lỏng) → không có nguồn public nào chứa kỹ thuật này. Xử lý: **sinh tổng hợp 363 mẫu duy nhất** (template hoá 11 prefix × 11 câu lệnh phá hoại/leo thang quyền × 3 hậu tố comment — con số thực tế, không phải ước tính ban đầu ~1-2K), gắn nguồn `synthetic_stacked` và nêu rõ trong Hạn chế (Mục 7) — đây là dữ liệu tự tạo, không phải thu thập thật. Quy mô nhỏ hơn nhiều so với các lớp khác (~15K) là hạn chế cần nêu rõ.
-- **Chiến lược cân bằng:** undersample các lớp lớn (`union_based`, `boolean_blind`, `time_blind`) về cùng bậc độ lớn (~15.000/lớp), giữ nguyên toàn bộ `error_based` (~7.800, không đủ để undersample). Dùng **F1-macro** làm metric chính cho Nhánh 1 (Accuracy không phản ánh đúng do mất cân bằng gốc).
-- Chi tiết số liệu đầy đủ (bảng theo từng nguồn, ví dụ nhiễu nhãn cụ thể): xem `data_contract.md`.
+- **D7 — SR-BH 2020** ([Harvard Dataverse](https://dataverse.harvard.edu/dataset.xhtml?persistentId=doi:10.7910/DVN/OGOIXX)): a real honeypot, 12 days of collection (2020), multi-label CAPEC. 527,813 rows, 250,285 rows with the original `SQL Injection` label.
+- After re-tagging ourselves (not trusting the original labels — found label noise, including static-asset rows mistagged as SQLi): added `union_based` +83,189, `error_based` +7,423, `boolean_blind` +126,926, `time_blind` +32,747.
+- **`stacked` = 0 samples across D1+D4+D7** (tried both strict and loose regex) → no public source contains this technique. Fix: **synthetically generated 363 unique samples** (templated from 11 prefixes × 11 destructive/privilege-escalation statements × 3 comment suffixes — a real measured count, not the initial ~1-2K estimate), tagged with source `synthetic_stacked` and clearly noted in Limitations (Section 7) — this is self-generated data, not real collection. Its much smaller scale than the other classes (~15K) is a limitation worth stating clearly.
+- **Balancing strategy:** undersample the large classes (`union_based`, `boolean_blind`, `time_blind`) down to a similar order of magnitude (~15,000/class), keep all of `error_based` (~7,800, not enough to undersample). Use **F1-macro** as the primary metric for Branch 1 (Accuracy doesn't reflect performance correctly given the original imbalance).
+- Full detailed figures (per-source table, specific label-noise examples): see `data_contract.md`.
 
-**Cập nhật 15/7 — đã build xong `data/processed/nhanh1_train.csv`:** kiểm tra chéo cờ nhãn gốc D7 (dataset đa nhãn) cho kết quả tốt ở mức tổng hợp (99,1% `SQL Injection=1` không dính cờ khác; 0% `Normal=1` mâu thuẫn cờ khác) — **nhưng đọc tay trực tiếp nội dung mẫu `Normal=1` phát hiện vấn đề nghiêm trọng hơn**: có dòng chứa `sleep(15)` (time-blind SQLi thật) và payload Shellshock (`() {{ :;}}; /bin/sleep 15`) bị SR-BH tự gắn nhầm `Normal=1`, dù không mâu thuẫn cờ nào của chính nó. So cờ chéo là không đủ — phải đọc nội dung mới bắt được.
-- Xử lý: thêm lưới lọc nội dung (`matches_any_attack_signature`, độc lập với nhãn nguồn) áp cho mọi dòng dự kiến `normal` trước khi chấp nhận.
-- **3 vòng sanity-check liên tiếp phát hiện thêm biến thể lọt lưới mỗi vòng:** vòng 1 loại 1.561 dòng; soi tay vòng 2 phát hiện `&cat /etc/passwd&` (dùng `&` thay `;`) và SSI injection lọt qua → mở rộng regex, tổng loại **2.731 dòng** (~9,8%); vòng 3 phát hiện **fuzzer né tránh có chủ đích** (`cat$jj $jj/etc$jj/passwd`, chèn token rác giữa từ khóa) vẫn lọt. **Quyết định dừng vá regex** — đây là bài toán evasion vô hạn biến thể, đúng chỗ xử lý là canonicalization + tập adversarial (Ngày 7), không phải lặp vá filter tĩnh dataset. Ghi nhận là rủi ro chấp nhận được cho MVP.
-- **Nhiễu nhãn không chỉ ở phía `normal`:** soi tay 30 mẫu `boolean_blind` (rổ chứa cuối) phát hiện **~13% (4/30) sai hẳn** — SSRF, CRLF/header injection, 1 dòng benign hoàn toàn bị SR-BH tự gắn `SQL Injection=1`. Đây là con số **đo được**, không phải ước tính, cần đưa vào Hạn chế (Mục 7) của báo cáo.
-- Giới hạn còn lại: filter chỉ nhắm SQLi + OS command injection/SSI, **chưa phủ hết 12 loại tấn công của SR-BH** (XSS, SSRF vẫn có thể lọt vào `normal`) — chấp nhận được cho Nhánh 1 (chỉ cần SQLi), nhưng **Nhánh 2 (anomaly, cần benign pool sạch hơn nhiều) phải làm kỹ hơn** khi tới lượt (Ngày 5-6).
-- Kết quả cuối: **68.159 dòng** (train 54.527 / test 13.632, stratified, seed=42), 15.000/lớp cho 3 lớp lớn, giữ nguyên `error_based` (7.796) và `stacked` (363). Sanity-check tay đầy đủ ~100 mẫu/lớp vẫn chưa làm (mới soi mẫu nhỏ 15-20/lớp) — nên bổ sung trước khi chốt số liệu chính thức cho báo cáo.
-- Đã thêm XSS vào filter dùng chung (`<script>`, `javascript:`, `onerror=/onload=`) sau khi phát hiện thêm trong mẫu — rebuild Nhánh 1 loại tổng **2.892 dòng** normal nhiễu (tăng từ 2.731).
-- Dataset đã public trên Hugging Face: [Jason-42195/VNU-SQLi-Detection](https://huggingface.co/datasets/Jason-42195/VNU-SQLi-Detection). License đã verify: D4 (payload-box) = MIT, D7 (SR-BH 2020) = CC0 1.0 (xác nhận trực tiếp từ Harvard Dataverse); riêng **D1 (SQLiV3) chưa rõ ràng** — trang Kaggle gốc không gán license, mirror GitHub tự gắn MIT cho repo của họ nhưng không chắc có quyền trên chính data. Toàn bộ dataset (gộp D1) nên coi là **provenance-unclear**, không phải MIT/CC0 sạch, cho tới khi xác minh thêm.
+**Update 15 Jul — finished building `data/processed/branch1_train.csv`:** cross-checking D7's original label flags (a multi-label dataset) looked good in aggregate (99.1% of `SQL Injection=1` rows carry no other flag; 0% of `Normal=1` rows conflict with another flag) — **but manually reading the actual content of `Normal=1` samples found a more serious problem**: some rows contain `sleep(15)` (real time-blind SQLi) and a Shellshock payload (`() {{ :;}}; /bin/sleep 15`) that SR-BH itself mistagged `Normal=1`, despite not conflicting with any of its own flags. Cross-checking flags alone isn't enough — only reading content catches this.
+- Fix: added a content-based filter (`matches_any_attack_signature`, independent of the source label) applied to every row destined for `normal` before accepting it.
+- **3 consecutive sanity-check rounds each found more variants slipping through:** round 1 removed 1,561 rows; manual review in round 2 found `&cat /etc/passwd&` (using `&` instead of `;`) and SSI injection slipping through → broadened the regex, **2,731 rows removed in total** (~9.8%); round 3 found a **deliberately evasive fuzzer variant** (`cat$jj $jj/etc$jj/passwd`, inserting junk tokens between keywords) still slipping through. **Decided to stop patching the regex** — this is an unbounded-variant evasion problem, and the right place to handle it is canonicalization + an adversarial set (Day 7), not endless static dataset-filter patching. Logged as an accepted risk for the MVP.
+- **Label noise isn't limited to the `normal` side:** manual review of 30 `boolean_blind` samples (the catch-all bucket) found **~13% (4/30) clearly wrong** — SSRF, CRLF/header injection, one fully-benign row that SR-BH itself tagged `SQL Injection=1`. This is a **measured** figure, not an estimate, and needs to go into the report's Limitations (Section 7).
+- Remaining limitation: the filter only targets SQLi + OS command injection/SSI, **doesn't cover all 12 of SR-BH's attack categories** (XSS, SSRF can still leak into `normal`) — acceptable for Branch 1 (SQLi-only concern), but **Branch 2 (anomaly, needs a much cleaner benign pool) will need to do this more rigorously** when its turn comes (Day 5-6).
+- Final result: **68,159 rows** (train 54,527 / test 13,632, stratified, seed=42), 15,000/class for the 3 large classes, all of `error_based` (7,796) and `stacked` (363) kept. A full ~100-sample-per-class manual sanity-check still hasn't been done (only a small 15-20/class sample reviewed so far) — should be added before finalizing figures for the report.
+- Added XSS to the shared filter (`<script>`, `javascript:`, `onerror=/onload=`) after finding more instances in the sample — rebuilding Branch 1 removed **2,892** noisy normal rows in total (up from 2,731).
+- The dataset is now public on Hugging Face: [Jason-42195/VNU-SQLi-Detection](https://huggingface.co/datasets/Jason-42195/VNU-SQLi-Detection). Licenses verified: D4 (payload-box) = MIT, D7 (SR-BH 2020) = CC0 1.0 (confirmed directly from Harvard Dataverse); **D1 (SQLiV3) remains unclear** — the original Kaggle page has no assigned license, and the GitHub mirror self-applies MIT to their own repo but it's unclear they have rights over the underlying data itself. The combined dataset (including D1) should be treated as **provenance-unclear**, not clean MIT/CC0, until further verified.
 
-**Cập nhật 15/7 (tiếp) — bắt đầu dữ liệu Nhánh 2:** tái cấu trúc code — tách các hàm load D1/D3/D4/D7 ra module dùng chung `src/preprocessing/data_sources.py` (tránh 2 nhánh có 2 định nghĩa "normal sạch" khác nhau). Nhánh 2 dùng **đặc trưng thống kê/cấu trúc** (length, tỷ lệ ký tự đặc biệt, số từ khóa SQL, entropy — `src/preprocessing/statistical_features.py`), không dùng TF-IDF, vì cần tổng quát hoá tới cú pháp chưa từng thấy (zero-day). Không cap số lượng (khác Nhánh 1) — lấy hết normal sạch từ D1+D3+D7.
-- Kết quả: **91.935 dòng benign** (train 73.548/test 18.387) sau khi lọc (~7,4% ứng viên bị loại) + dedup (loại thêm ~113K dòng trùng — nhiều asset tĩnh lặp lại trong D3/D7); giữ riêng **25.065 dòng anomalous (D3)** để đánh giá FPR/detection rate sau (chưa dùng để train).
-- ⚠️ Phát hiện quan trọng cho lúc đánh giá: tập D3-anomalous có **nhiều loại tấn công** (không chỉ SQLi — buffer overflow, XSS, path traversal...), nên `sql_keyword_count` trung bình của nó **thấp hơn** cả tập normal (0,13 vs 0,35). Cần lọc riêng phần SQLi trong D3-anomalous nếu muốn đo đúng khả năng bắt SQLi zero-day, hoặc chấp nhận benchmark này là "phát hiện bất thường nói chung".
-- **Nhánh 3: chưa bắt đầu** — phụ thuộc traffic thật từ Docker lab + sqlmap (Ngày 8-9), quyết định không build data giả trước khi có traffic thật.
+**Update 15 Jul (continued) — started on Branch 2 data:** refactored code — split the D1/D3/D4/D7 loading functions out into a shared module `src/preprocessing/data_sources.py` (avoids the two branches having two different definitions of "clean normal"). Branch 2 uses **statistical/structural features** (length, special-character ratio, SQL keyword count, entropy — `src/preprocessing/statistical_features.py`), not TF-IDF, since it needs to generalize to syntax it has never seen (zero-day). No count cap (unlike Branch 1) — takes all clean normal data from D1+D3+D7.
+- Result: **91,935 benign rows** (train 73,548/test 18,387) after filtering (~7.4% of candidates removed) + dedup (removed ~113K more duplicates — many repeated static assets in D3/D7); kept **25,065 anomalous rows (D3)** separately for later FPR/detection-rate evaluation (not used for training).
+- ⚠️ Important finding for evaluation time: the D3-anomalous set contains **many attack types** (not just SQLi — buffer overflow, XSS, path traversal...), so its average `sql_keyword_count` is **lower** than even the normal set (0.13 vs 0.35). Isolating the SQLi subset within D3-anomalous is needed for an accurate read on zero-day SQLi detection, or this benchmark should be treated as "general anomaly detection".
+- **Branch 3: not started yet** — depends on real traffic from the Docker lab + sqlmap (Day 8-9); decided not to build fake data before real traffic exists.
 
 ---
 
-## 5. Cơ chế kết hợp và Ra quyết định — cập nhật 3 nhánh
+## 5. Fusion and Decision Mechanism — updated for 3 branches
 
-| Nhánh 1 | Nhánh 2 | Nhánh 3 (session) | Hành động |
+| Branch 1 | Branch 2 | Branch 3 (session) | Action |
 |---|---|---|---|
-| Tấn công (1) | — | — | **Chặn ngay lập tức**, ghi log |
-| Hợp lệ (0) | Bất thường | — | **HOLD** truy vấn, chờ Admin xác nhận (Overkill) |
-| Hợp lệ (0) | Bình thường | Chuỗi bất thường | **HOLD toàn bộ session**, cờ khả nghi, chờ Admin xác nhận |
-| Hợp lệ (0) | Bình thường | Bình thường | **Cho phép** |
+| Attack (1) | — | — | **Block immediately**, log it |
+| Valid (0) | Anomalous | — | **HOLD** the query, await Admin confirmation (Overkill) |
+| Valid (0) | Normal | Anomalous sequence | **HOLD the whole session**, flag as suspicious, await Admin confirmation |
+| Valid (0) | Normal | Normal | **Allow** |
 
 ---
 
-## 6. Đánh giá mô hình
-Như V2 (P/R/F1, FPR, latency, test adversarial), bổ sung: **đánh giá riêng Nhánh 3** trên tập session thu thập được (Mục 4.4) theo schema nhãn 2 tầng — đặc biệt đo khả năng phát hiện đúng từng loại (Boolean-based/Time-based/Query-splitting) mà Nhánh 1+2 bỏ lọt (đây là số liệu "chứng minh giá trị" của Nhánh 3, nên làm kỹ, và cũng là chỉ số chứng minh giá trị của bộ dữ liệu tự thu thập — một đóng góp riêng có thể trình bày tách khỏi phần mô hình).
+## 6. Model Evaluation
+Same as V2 (P/R/F1, FPR, latency, adversarial testing), plus: **a dedicated Branch 3 evaluation** on the collected session set (Section 4.4) per the 2-tier label schema — specifically measuring the ability to correctly detect each type (Boolean-based/Time-based/Query-splitting) that Branch 1+2 miss (this is the metric that "proves the value" of Branch 3, so it should be done carefully, and it also demonstrates the value of the self-collected dataset — a contribution that can be presented separately from the modeling work).
 
 ---
 
-## 7. Rủi ro, hạn chế và Threat Model mở rộng
+## 7. Risks, Limitations, and Extended Threat Model
 
-### 7.1 Query Splitting — 2 dạng cần phân biệt
+### 7.1 Query Splitting — 2 forms to distinguish
 
-**Dạng 1 — Horizontal split (chia theo tham số, cùng 1 request):** phần lớn đã được xử lý bởi vị trí đặt hệ thống (Vị trí B — Proxy nhìn câu SQL SAU khi backend đã build), vì Nhánh 1/2 luôn thấy câu hoàn chỉnh sau khi nối tham số. Chỉ nguy hiểm với kiến trúc lọc ở tầng input/WAF trước khi build — không phải kiến trúc của đề tài này.
+**Form 1 — Horizontal split (split across parameters, same request):** mostly already handled by where the system is deployed (Position B — the Proxy sees the SQL statement AFTER the backend has already built it), since Branch 1/2 always see the complete statement after parameter concatenation. Only dangerous for architectures that filter at the input/WAF layer before the query is built — not this project's architecture.
 
-**Dạng 2 — Temporal split (chia theo thời gian, qua nhiều request):** đây là dạng thật sự nguy hiểm với kiến trúc 2 nhánh cũ, vì từng câu riêng lẻ hợp lệ về cú pháp. Ví dụ: Blind Boolean-based (dò nhị phân từng ký tự qua hàng trăm request liên tiếp, literal value thay đổi có hệ thống), Time-based Blind (dò qua độ trễ phản hồi thay vì nội dung). Dấu hiệu chỉ lộ ra khi nhìn theo chuỗi — **đây là lý do cần Nhánh 3.**
+**Form 2 — Temporal split (split over time, across multiple requests):** this is the form genuinely dangerous to the old 2-branch architecture, since each individual query is syntactically valid. Examples: Blind Boolean-based (binary-searching one character at a time across hundreds of consecutive requests, with systematically-varying literal values), Time-based Blind (inferring via response delay instead of content). The signal only shows up when viewed as a sequence — **this is why Branch 3 is needed.**
 
-### 7.2 Threat model mở rộng — các case khác cần lưu ý phạm vi
+### 7.2 Extended threat model — other cases worth noting for scope
 
-| Loại tấn công | Mô tả | Có thuộc phạm vi giải quyết? |
+| Attack type | Description | In scope? |
 |---|---|---|
-| Second-order SQLi | Payload lưu an toàn ở request A, kích hoạt ở request B không cùng session, có thể cách nhau nhiều ngày | **Ngoài phạm vi** (kể cả Nhánh 3) — ghi rõ trong Hạn chế |
-| Out-of-band (OOB) SQLi | Dữ liệu exfiltrate qua kênh DNS/HTTP khác, không qua response | **Ngoài phạm vi** — cần giám sát network/DNS riêng |
-| HTTP Parameter Pollution | Backend/WAF đọc giá trị tham số trùng tên khác nhau | Giảm rủi ro nhờ Vị trí B của Proxy — nêu rõ lý do chọn vị trí này |
-| Stacked queries (`; DROP...`) | Chèn câu lệnh thứ 2 sau `;` trong 1 request | Đã thuộc khả năng Nhánh 1 — chỉ cần canonicalization không xóa nhầm `;` |
+| Second-order SQLi | Payload stored safely in request A, triggered in request B in a different session, possibly days apart | **Out of scope** (even for Branch 3) — noted in Limitations |
+| Out-of-band (OOB) SQLi | Data exfiltrated via a separate DNS/HTTP channel, not through the response | **Out of scope** — needs separate network/DNS monitoring |
+| HTTP Parameter Pollution | Backend/WAF read different values for a duplicate parameter name | Risk reduced by the Proxy's Position B — worth stating as a rationale for this placement |
+| Stacked queries (`; DROP...`) | A second statement injected after `;` in one request | Already within Branch 1's capability — just needs canonicalization to not accidentally strip `;` |
 
-### 7.3 Dữ liệu được soạn để né 2 nhánh (giữ từ V2)
-4 nhóm: biến đổi cú pháp tương đương, encoding, mô phỏng thống kê, chia nhỏ payload. Xem WAF-A-MoLE [7] để có đặc tả kỹ thuật chi tiết và công cụ sinh tự động.
+### 7.3 Data crafted to evade the 2 branches (kept from V2)
+4 categories: syntactically-equivalent transformations, encoding, statistical mimicry, payload splitting. See WAF-A-MoLE [7] for a detailed technical spec and automated generation tooling.
 
-### 7.4 Rủi ro khác
-Single point of failure tại Proxy, chi phí độ trễ, và **rủi ro mới của Nhánh 3:** cần đảm bảo Session Store không bị đầy/tràn bộ nhớ nếu số lượng session đồng thời lớn — cần chính sách TTL/eviction rõ ràng.
-
----
-
-## 8. Continual Learning (giữ nguyên V2, mở rộng nhận nhãn từ cả Nhánh 3)
-Khi Admin xác nhận HOLD (từ Nhánh 2 hoặc Nhánh 3), gán nhãn và lưu vào kho dữ liệu mới → retrain định kỳ (rehearsal) → validation gate trước khi promote.
-
-## 9. Concept Drift — MLOps rút gọn theo Google (giữ nguyên V2)
-
-## 10. Kế hoạch triển khai kỹ thuật (Deployment)
-Như V2 (FastAPI + CTranslate2 nếu dùng transformer). Bổ sung: cần chọn công nghệ Session Store (in-memory dict/LRU cho MVP, hoặc Redis nếu cần chia sẻ giữa nhiều instance Proxy).
+### 7.4 Other risks
+Single point of failure at the Proxy, latency overhead, and **a new risk from Branch 3:** need to ensure the Session Store doesn't fill up/overflow memory under a large number of concurrent sessions — needs a clear TTL/eviction policy.
 
 ---
 
-## 11. KẾ HOẠCH CHI TIẾT (13/7 – 25/7) — 4 người, chạy song song
+## 8. Continual Learning (unchanged from V2, extended to accept labels from Branch 3 too)
+When Admin confirms a HOLD (from Branch 2 or Branch 3), label it and store it in the new-data pool → periodic retrain (rehearsal) → validation gate before promotion.
 
-**Nhân sự — Ngày 1-8 (13-20/7, đã xảy ra):**
-- **Tôi** — Dữ liệu + Huấn luyện Nhánh 1 (xong: `models/nhanh1_v1/`, F1-macro=0.9822, 5 lớp) → xây khung API (`deploy/main.py`, `deploy/routers/`).
-- **Bách** — Nhánh 2 (Anomaly), độc lập (Isolation Forest + One-Class SVM, tuning, audit).
-- **Minh** — Streamlit (khung + các trang demo/admin).
-- **Diệp** — Support/báo cáo (tạm dừng bài RIVF — xem Mục 0).
+## 9. Concept Drift — Google's lightweight MLOps approach (unchanged from V2)
 
-**Phân công Ngày 9-13 (21-25/7) — CHỈ 5 NGÀY, scope tối thiểu (đổi lần 2, bỏ luôn hệ thống):**
+## 10. Deployment Plan
+Same as V2 (FastAPI + CTranslate2 if using a transformer). Addition: need to choose a Session Store technology (in-memory dict/LRU for the MVP, or Redis if sharing state across multiple Proxy instances is needed).
 
-| Vai trò | Việc chính |
+---
+
+## 11. DETAILED PLAN (13 Jul – 25 Jul) — 4 people, running in parallel
+
+**Staffing — Day 1-8 (13-20 Jul, already happened):**
+- **Duc** — Data + Branch 1 training (done: `models/branch1_v1/`, F1-macro=0.9822, 5 classes) → built the API scaffold (`deploy/main.py`, `deploy/routers/`).
+- **Bach** — Branch 2 (Anomaly), independent (Isolation Forest + One-Class SVM, tuning, audit).
+- **Minh** — Streamlit (scaffold + demo/admin pages).
+- **Diep** — Support/report (RIVF paper paused for now — see Section 0).
+
+**Day 9-13 assignments (21-25 Jul) — ONLY 5 DAYS LEFT, minimum scope (2nd revision, system dropped entirely):**
+
+| Role | Main task |
 |---|---|
-| **Tôi** | **Metric sâu hơn** (thêm ROC curve đầy đủ cho Nhánh 2) + viết & chạy thử **`train/notebooks/demo_detect.ipynb`** (load model thật, nhập query, trả verdict — đã xong, 19/20 đúng trên mẫu) + hỗ trợ Diệp số liệu/hình cho 2 bản báo cáo |
-| **Bách** | Verify kỹ kết quả Nhánh 2 (OCSVM: FPR=0,3%, detection rate=20,7%, AUC=0,90) — đủ thuyết phục cho báo cáo chưa; cung cấp số liệu/giải thích chi tiết cho Diệp |
-| **Minh** | Hệ thống/Streamlit **hoãn lại** — chuyển sang hỗ trợ vẽ biểu đồ/trực quan hoá (ROC curve, confusion matrix, sơ đồ kiến trúc) cho báo cáo |
-| **Diệp** | Viết **2 bản báo cáo song song**: [`ban1_scope_hien_tai.md`](ban1_scope_hien_tai.md) (đúng 2 nhánh đã làm) + [`ban2_hoan_chinh.md`](../midterm/ban2_hoan_chinh.md) (tầm nhìn đầy đủ 3 nhánh, Nhánh 3 đánh dấu Future Work) |
+| **Duc** | **Deeper metrics** (added a full ROC curve for Branch 2) + wrote & tested **`train/notebooks/demo_detect.ipynb`** (loads the real models, takes a query, returns a verdict — done, 19/20 correct on the sample) + helped Diep with figures/data for the 2 report versions |
+| **Bach** | Rigorously verify Branch 2's results (OCSVM: FPR=0.3%, detection rate=20.7%, AUC=0.90) — is it convincing enough for the report; provide detailed figures/explanations to Diep |
+| **Minh** | System/Streamlit **postponed** — switched to helping with charts/visualizations (ROC curve, confusion matrix, architecture diagram) for the report |
+| **Diep** | Writing **2 parallel report versions**: [`ban1_scope_hien_tai.md`](ban1_scope_hien_tai.md) (exactly the 2 completed branches) + `ban2_hoan_chinh.md` (the full 3-branch vision, Branch 3 marked as Future Work) |
 
-**Ngày 14 (Chủ Nhật 26/7) — thêm mới (24/7):** cả nhóm dành 1 ngày đệm hoàn thiện riêng **metric cho báo cáo hội nghị** (Bản 2) — rà soát số liệu, bổ sung hình/bảng còn thiếu, không code mới.
+**Day 14 (Sun 26 Jul) — added (24 Jul):** the whole team spends 1 buffer day polishing **metrics specifically for the conference report** (Version 2) — reviewing figures, adding any missing charts/tables, no new code.
 
-**Bảng chi tiết theo từng ngày/từng người nằm trong `ke_hoach_2_tuan.csv`** (56 dòng, Ngày 1-14, kết thúc 26/7) — xem Mục 14 để biết cách cập nhật tự động bằng Claude Code.
+**The detailed day-by-day/per-person table lives in `ke_hoach_2_tuan.csv`** (56 rows, Day 1-14, ending 26 Jul) — see Section 14 for how it's updated automatically via Claude Code.
 
-**Tóm tắt luồng chính (chi tiết đầy đủ xem CSV):**
-- *Ngày 1-8 (đã xong):* Tôi lo D1 → train Nhánh 1 → xây API. Bách lo D3 → train/đánh giá Nhánh 2. Minh dựng khung Streamlit. Diệp viết báo cáo phần đầu.
-- *Ngày 9 (21/7, hôm nay):* Verify Nhánh 2 (fix model thiếu + thêm ROC curve); viết + chạy thử notebook demo; viết lại dàn ý 2 bản báo cáo (đã duyệt).
-- *Ngày 10-11 (22-23/7):* Hỗ trợ số liệu/hình cho báo cáo; Diệp viết Bản 1 (Method/Kết quả) rồi bắt đầu Bản 2.
-- *Ngày 12 (24/7):* Buffer sửa lỗi, hoàn thiện Bản 2 (Threat model/Thảo luận/Kết luận), rà soát cả 2 bản.
-- *Ngày 13 (25/7, THỨ 7 — HẠN NỘP):* Nộp notebook + 2 bản báo cáo.
+**Summary of the main flow (full detail in the CSV):**
+- *Day 1-8 (done):* Duc handled D1 → trained Branch 1 → built the API. Bach handled D3 → trained/evaluated Branch 2. Minh built the Streamlit scaffold. Diep wrote the report's opening sections.
+- *Day 9 (21 Jul, that day):* Verified Branch 2 (fixed the missing model + added a ROC curve); wrote + tested the demo notebook; rewrote the outline for both report versions (approved).
+- *Day 10-11 (22-23 Jul):* Helped supply figures/charts for the report; Diep wrote Version 1 (Method/Results) then started Version 2.
+- *Day 12 (24 Jul):* Buffer day for fixes, finishing Version 2 (Threat model/Discussion/Conclusion), reviewing both versions.
+- *Day 13 (25 Jul, SATURDAY — SUBMISSION DEADLINE):* Submitted the notebook + both report versions.
 
-**Về bài RIVF 2026 (31/7):** tạm dừng lại (Mục 0) — sẽ lên kế hoạch chi tiết lại **sau khi qua hạn 25/7**, khi biết rõ còn bao nhiêu thời gian/nhân lực và Nhánh 3 có kịp làm thêm hay không trước 31/7.
-
----
-
-## 12. Rủi ro (cập nhật 21/7 theo hạn mới)
-
-**Rủi ro lớn nhất đã được loại bỏ:** trước đây lo Bách bị chặn bởi Nhánh 3 (Docker lab/sqlmap mất nhiều ngày) — nay **Nhánh 3 đã cắt hẳn khỏi phạm vi**, nên không còn đường găng (critical path) đó nữa.
-
-**Rủi ro cũng giảm thêm (đổi lần 2):** bỏ luôn API/Bộ xử lý trung tâm/Streamlit khỏi scope 25/7 (thay bằng notebook demo đơn giản, đã viết + chạy thử xong) — không còn rủi ro tích hợp hệ thống phức tạp trong thời gian ngắn. Rủi ro chính giờ chỉ còn: **viết đủ 2 bản báo cáo chất lượng trong 4 ngày**.
-
-**Nhánh 2 không còn là rủi ro** — đã verify thực tế (21/7): toàn bộ pipeline build+train chạy trong ~75 giây, đã thêm ROC curve đầy đủ. Việc còn lại chỉ là kiểm tra số liệu có đủ thuyết phục cho báo cáo.
-
-**Gợi ý nếu vẫn thiếu thời gian tới Ngày 12 (24/7):** ưu tiên cắt theo thứ tự — (1) Bản 2 (hoàn chỉnh) có thể sơ sài hơn ở phần Future Work nếu gấp; (2) không cắt: Bản 1 (scope hiện tại) phải đầy đủ, notebook demo phải chạy đúng, nộp đúng hạn 25/7.
+**On the RIVF 2026 paper (31 Jul):** paused for now (Section 0) — will be re-planned in detail **after the 25 Jul deadline**, once it's clear how much time/manpower is left and whether Branch 3 can get any further work done before 31 Jul.
 
 ---
 
-## 13. Future Work — những gì bị cắt khỏi bản nộp 25/7 (hạn cuối: 31/12/2026)
+## 12. Risks (updated 21 Jul per the new deadline)
 
-**Bối cảnh:** để kịp hạn 25/7 với chỉ 5 ngày, đề tài **thu hẹp phạm vi thực nghiệm xuống 2 nhánh** (Nhánh 1 + Nhánh 2). Các hạng mục dưới đây vẫn là một phần thiết kế/đóng góp của đề tài (xem Mục 1, 3, 4.3) nhưng **chưa có thực nghiệm** trong bản nộp này. **Mốc rõ ràng (24/7): toàn bộ danh sách dưới đây phải xong trước 31/12/2026** — không gấp (≈5 tháng), nhưng là hạn cứng, không phải "làm khi rảnh". Nên hoàn thiện ít nhất một phần Nhánh 3 trước camera-ready RIVF (11/11) nếu muốn trình bày đầy đủ tại hội nghị (18-20/12) — phần còn lại có thể xong sau hội nghị, miễn trước 31/12.
+**Biggest risk eliminated:** previously worried Bach would be blocked by Branch 3 (Docker lab/sqlmap taking many days) — now that **Branch 3 has been fully cut from scope**, that critical path no longer exists.
 
-1. **Hệ thống tích hợp (API + Bộ xử lý trung tâm + Streamlit demo) — mới cắt (21/7, đổi lần 2).** Trước đó dự định làm cho 25/7, nay thay bằng `train/notebooks/demo_detect.ipynb` (load model, nhập query, trả verdict — logic gộp đơn giản, không phải Bộ xử lý trung tâm thật). Cần: đóng gói FastAPI (`deploy/main.py`, `deploy/routers/` — đã có khung từ trước, cần hoàn thiện), Bộ xử lý trung tâm đầy đủ (Overkill queue thật), Streamlit demo kết nối API thật.
-2. **Nhánh 3 (Session-level / Sequence Model) — toàn bộ.** Đây là đóng góp lý thuyết chính của đề tài (giải quyết khoảng trống về temporal query splitting mà Related Work bỏ qua) nhưng **chưa triển khai bất kỳ phần nào** tại 21/7: chưa Docker lab, chưa session data, chưa model. Cần: dựng lab (DVWA/WebGoat) → sqlmap thu traffic thật → gán nhãn 2 tầng → so sánh kiến trúc Tầng 2 (GRU/CNN/Transformer nhẹ) → train + đánh giá.
-3. **Continual Learning đầy đủ** — pipeline gán nhãn từ hàng đợi Overkill → retrain có rehearsal → validation gate. Bản 25/7 chỉ có decision logic cơ bản (BLOCK/OVERKILL/ALLOW), không có vòng lặp học liên tục.
-4. **Concept Drift monitoring production** — log định kỳ PSI/KL-divergence, FPR/Recall theo thời gian, versioning + rollback model.
-5. **Session Store production-grade** (TTL/eviction, Redis) — cần thiết khi có Nhánh 3.
-6. **Benchmark latency/throughput dưới tải thật** — bản 25/7 chỉ test chức năng đúng/sai, chưa đo throughput dưới tải cao.
-7. **Adversarial hardening nhiều vòng** (WAF-A-MoLE lặp lại nhiều vòng sinh-test-retrain cho Nhánh 1).
-8. **Sanity-check nhãn tay quy mô lớn** (~100+/lớp, kiểm định chéo nhiều người) — hiện mới soi mẫu nhỏ (15-30/lớp).
-9. **Publish dataset chính thức** — license D1 (SQLiV3) chưa rõ ràng (xem `data_contract.md`), cần xác minh/thay thế trước khi trích dẫn rộng rãi.
-10. **So sánh với nhiều baseline SOTA hơn** — cho phiên bản mở rộng (journal) nếu muốn nâng tầm công bố sau hội nghị.
+**Risk further reduced (2nd revision):** dropped the API/central processing engine/Streamlit from the 25 Jul scope entirely (replaced by a simple demo notebook, already written + tested) — no more risk of complex system integration in a short timeframe. The main remaining risk is now just: **writing 2 quality report versions in 4 days**.
+
+**Branch 2 is no longer a risk** — verified in practice (21 Jul): the full build+train pipeline runs in ~75 seconds, and a full ROC curve has been added. What's left is just checking whether the figures are convincing enough for the report.
+
+**Suggestion if still short on time by Day 12 (24 Jul):** cut in this priority order — (1) Version 2 (the full one) can be thinner in the Future Work section if pressed for time; (2) don't cut: Version 1 (current scope) must be complete, the demo notebook must run correctly, submitted on time on 25 Jul.
 
 ---
 
-## 14. File theo dõi tiến độ và cách cập nhật tự động
+## 13. Future Work — what was cut from the 25 Jul submission (final deadline: 31 Dec 2026)
 
-Kế hoạch chi tiết (13 ngày × 4 người, 13/7-25/7, kèm sản phẩm bàn giao) nằm trong `ke_hoach_2_tuan.csv` — mỗi dòng là 1 task với cột: `Ngay, NgayThang, Thu, NguoiPhuTrach, VaiTro, CongViec, PhuThuoc, SanPham, TrangThai`. Dùng lệnh trong file `Prompt_Claude_Code_Cap_Nhat_Ke_Hoach.md` để nhờ Claude Code tự hỏi vai trò, tự xác định ngày hiện tại, tự kiểm tra deliverable đã tồn tại trong repo chưa, và tự cập nhật cột `TrangThai` + đồng bộ tóm tắt vào file đề xuất này.
+**Context:** to make the 25 Jul deadline with only 5 days, the project **narrowed its experimental scope to 2 branches** (Branch 1 + Branch 2). The items below remain part of the project's design/contribution (see Sections 1, 3, 4.3) but **have no experiments** in this submission. **Clear milestone (24 Jul): everything on this list must be done before 31 Dec 2026** — not urgent (≈5 months), but a hard deadline, not "whenever there's time". At least part of Branch 3 should be finished before the RIVF camera-ready (11 Nov) if a full presentation at the conference (18-20 Dec) is wanted — the rest can be finished after the conference, as long as it's before 31 Dec.
+
+1. **Integrated system (API + central processing engine + Streamlit demo) — newly cut (21 Jul, 2nd revision).** Previously planned for 25 Jul, now replaced by `train/notebooks/demo_detect.ipynb` (loads a model, takes a query, returns a verdict — simple combined logic, not a real central processing engine). Needed: package the FastAPI app (`deploy/main.py`, `deploy/routers/` — scaffold already exists, needs finishing), a full central processing engine (a real Overkill queue), a Streamlit demo connected to the real API.
+2. **Branch 3 (Session-level / Sequence Model) — entirely.** This is the project's main theoretical contribution (addressing the temporal-query-splitting gap that Related Work overlooks) but **nothing has been implemented** as of 21 Jul: no Docker lab, no session data, no model. Needed: stand up the lab (DVWA/WebGoat) → collect real traffic via sqlmap → 2-tier labeling → compare Layer-2 architectures (lightweight GRU/CNN/Transformer) → train + evaluate.
+3. **Full Continual Learning** — the pipeline from Overkill-queue labeling → rehearsal-based retrain → validation gate. The 25 Jul version only has basic decision logic (BLOCK/OVERKILL/ALLOW), no continual-learning loop.
+4. **Production Concept Drift monitoring** — periodic PSI/KL-divergence logging, FPR/Recall over time, model versioning + rollback.
+5. **Production-grade Session Store** (TTL/eviction, Redis) — needed once Branch 3 exists.
+6. **Latency/throughput benchmarking under real load** — the 25 Jul version only tests functional correctness, hasn't measured throughput under heavy load.
+7. **Multi-round adversarial hardening** (repeated WAF-A-MoLE generate-test-retrain cycles for Branch 1).
+8. **Large-scale manual label sanity-checking** (~100+/class, cross-validated by multiple people) — currently only a small sample reviewed (15-30/class).
+9. **Official dataset publication** — D1 (SQLiV3)'s license is unclear (see `data_contract.md`), needs verification/replacement before citing it widely.
+10. **Comparison against more SOTA baselines** — for an extended (journal) version if aiming for a stronger publication after the conference.
 
 ---
 
-## 15. Nhật ký cập nhật tiến độ (tự động — Claude Code ghi vào đây)
+## 14. Progress-tracking file and how it's updated automatically
 
-*(Mục này để trống, sẽ được Claude Code tự động thêm dòng mỗi khi chạy lệnh cập nhật kế hoạch — xem `Prompt_Claude_Code_Cap_Nhat_Ke_Hoach.md`. Mỗi lần chạy, thêm 1 dòng dạng: `[YYYY-MM-DD, Vai trò: X] Việc hôm nay: ... | Đã xong: ... | Trễ hạn: ...`)*
+The detailed plan (13 days × 4 people, 13 Jul-25 Jul, with deliverables) lives in `ke_hoach_2_tuan.csv` — each row is one task with columns: `Ngay, NgayThang, Thu, NguoiPhuTrach, VaiTro, CongViec, PhuThuoc, SanPham, TrangThai`. Use the command in `Prompt_Claude_Code_Cap_Nhat_Ke_Hoach.md` to have Claude Code ask for your role, determine the current date, check which deliverables already exist in the repo, and automatically update the `TrangThai` column + sync a summary into this proposal file.
 
-[2026-07-14, Vai trò: Toi] Việc hôm nay: Làm sạch D1 đầy đủ; viết pipeline canonicalization; chốt kiến trúc Nhánh 1 (đang bị chặn bởi Ngày 1 - Toi chưa hoàn thành) | Đã xong: Không có | Trễ hạn: Ngày 1 - Toi (Chốt data contract; tải D1 thô; test nhanh kiến trúc Nhánh 1) — không sản phẩm nào tồn tại (`data_contract.md`, `data/raw/d1_sqliv3_raw.csv`, `notebooks/model_comparison_nhanh1.ipynb`)
+---
 
-[2026-07-16, Vai trò: Toi] Việc hôm nay (Ngày 4): Đánh giá Nhánh 1 (P/R/F1) + bắt đầu setup Docker lab | Đã xong: (bù các ngày trước) so sánh 4 kiến trúc Nhánh 1 → chốt TF-IDF+LogReg (F1-macro 0.985, p50 0.5ms), train `models/nhanh1_v1/`, `reports/nhanh1_eval.json`, `notebooks/model_comparison_nhanh1.ipynb`; ngoài kế hoạch: đã build xong `data/processed/nhanh2_normal.csv` (91.935 dòng benign) cho Nhánh 2 | Trễ hạn/còn lại: `docker/dvwa/docker-compose.yml` (setup Docker lab cho Nhánh 3 — chưa làm); sanity-check tay đầy đủ 100 mẫu/lớp; lưu ý F1 cao đáng ngờ (dữ liệu quá dễ, chưa test adversarial)
+## 15. Progress update log (automatic — Claude Code appends here)
 
-[2026-07-16, Vai trò: Toi] Thông báo cho Bách: Ngày 1-2 của Bách (`data/raw/d3_csic2010_raw.csv`, `data/processed/nhanh2_normal.csv`) **đã có sẵn** — Toi làm chung khi build data Nhánh 1+2 (xem Mục 3.2 `data_contract.md`). Bách KHÔNG cần làm lại, có thể bắt đầu thẳng từ Ngày 3. Lưu ý: 4 đặc trưng thống kê (length, special_char_ratio, sql_keyword_count, entropy — `src/preprocessing/statistical_features.py`) đã có sẵn làm cột trong `nhanh2_normal.csv`, có thể dùng luôn cho Ngày 3 (trích đặc trưng) thay vì tự làm TF-IDF/embedding riêng, hoặc vẫn tự làm hướng khác nếu muốn so sánh. `nhanh2_anomalous_eval.csv` (25.065 dòng D3 anomalous) đã chuẩn bị sẵn để đánh giá FPR/detection rate ở Ngày 5. Toàn bộ data đã public trên HF: https://huggingface.co/datasets/Jason-42195/VNU-SQLi-Detection
+*(This section is left empty and gets a new line automatically each time the plan-update command runs — see `Prompt_Claude_Code_Cap_Nhat_Ke_Hoach.md`. Each run appends a line like: `[YYYY-MM-DD, Role: X] Today's work: ... | Done: ... | Overdue: ...`)*
 
-[2026-07-17, Vai trò: Toi] Phân công lại từ Ngày 5: hoán đổi track giữa Toi và Bách — Toi chuyển sang toàn bộ MLOps (Bo xu ly trung tam, Session Store, API, benchmark, Continual Learning, Concept Drift), Bách nhận thêm toàn bộ Nhánh 3 (Docker lab, sqlmap, session data, train) ngoài Nhánh 1+2 đã xong. Minh (Streamlit) và Diệp (Support) không đổi. Đã cập nhật `ke_hoach_2_tuan.csv` (Ngày 5-13) và Mục 11-12 tài liệu này. Lý do: Bách đã xong Nhánh 2 sớm + có kinh nghiệm train, Toi đang chủ động làm API rồi (nhánh `feature/api-backend-mlops`).
+[2026-07-14, Role: Duc] Today's work: Fully cleaned D1; wrote the canonicalization pipeline; locked in the Branch 1 architecture (blocked by Day 1 - Duc not yet finished) | Done: Nothing | Overdue: Day 1 - Duc (lock in the data contract; download raw D1; quick-test Branch 1 architectures) — no deliverable exists yet (`data_contract.md`, `data/raw/d1_sqliv3_raw.csv`, `notebooks/model_comparison_branch1.ipynb`)
 
-[2026-07-17, Vai trò: Toi] THU GỌN SCOPE (yêu cầu người dùng): xác nhận RIVF 2026 (đã tra trang thật) — hạn nộp 31/7/2026, 6 trang IEEE, EDAS, hội nghị 18-20/12 tại VinUniversity. 3 mốc mới: (1) 28/7 = train xong 3 nhánh + demo (KHÔNG bắt buộc Continual Learning/Concept Drift/Session Store production/benchmark tải — dời Future Work), (2) 31/7 = nộp bài RIVF, (3) trước 18/12 (nhắm camera-ready 11/11) = hoàn thiện toàn bộ hệ thống. Đã thêm Mục 0 (mốc thời gian), viết lại Mục 11-12, thêm Mục 13 (Future Work, 9 hạng mục). Cập nhật `ke_hoach_2_tuan.csv` từ 56 lên 76 dòng (Ngày 1-19): rút gọn Ngày 5-14, thêm Ngày 15-16 (chốt MVP), Ngày 17-19 (sprint viết + nộp bài — Diệp bắt đầu viết từng phần từ Ngày 5, không dồn cuối).
+[2026-07-16, Role: Duc] Today's work (Day 4): Evaluate Branch 1 (P/R/F1) + start setting up the Docker lab | Done: (catching up on previous days) compared 4 Branch 1 architectures → locked in TF-IDF+LogReg (F1-macro 0.985, p50 0.5ms), trained `models/branch1_v1/`, `reports/branch1_eval.json`, `notebooks/model_comparison_branch1.ipynb`; off-plan: also finished building `data/processed/branch2_normal.csv` (91,935 benign rows) for Branch 2 | Overdue/remaining: `docker/dvwa/docker-compose.yml` (Docker lab setup for Branch 3 — not done); full 100-sample-per-class manual sanity-check; note the suspiciously high F1 (data too easy, no adversarial testing yet)
 
-[2026-07-21, Vai trò: Toi] ĐỔI HẠN KHẨN CẤP (yêu cầu người dùng): hạn thật là Thứ 7 tuần này (25/7), không phải 28/7. Thu gọn scope quyết liệt: chỉ Nhánh 1 (làm mượt) + Nhánh 2 (đã kiểm tra — kiểm tra thực tế cho thấy KHÔNG phải nút thắt, toàn bộ pipeline build+train chạy ~75 giây; đã fix xong model.joblib bị thiếu, retrain lại: OCSVM FPR=0,3%, detection rate=20,7%, AUC=0,90). Nhánh 3 CẮT HẲN khỏi phạm vi 25/7 (xác nhận chưa có Docker lab/session data/model nào) — chuyển toàn bộ vào Future Work, giữ nguyên trong thiết kế/đóng góp lý thuyết của đề tài. Bài RIVF 2026 (31/7) tạm dừng kế hoạch chi tiết, sẽ làm lại sau 25/7. Đã cập nhật: header (V8), Mục 0 (mốc thời gian mới), Mục 1 (đóng góp — phân biệt đã làm/Future Work), Mục 3 (ghi chú sơ đồ), Mục 11-13 (kế hoạch/rủi ro/Future Work viết lại), Mục 14 (số dòng CSV). `ke_hoach_2_tuan.csv`: 76 → 52 dòng (Ngày 1-13, xóa Ngày 14-19 cũ).
+[2026-07-16, Role: Duc] Notified Bach: Bach's Day 1-2 tasks (`data/raw/d3_csic2010_raw.csv`, `data/processed/branch2_normal.csv`) are **already done** — Duc did them together while building Branch 1+2 data (see Section 3.2 of `data_contract.md`). Bach does NOT need to redo them, can start directly from Day 3. Note: the 4 statistical features (length, special_char_ratio, sql_keyword_count, entropy — `src/preprocessing/statistical_features.py`) are already columns in `branch2_normal.csv`, ready to use for Day 3 (feature extraction) instead of building TF-IDF/embeddings from scratch, or still try a different approach if a comparison is wanted. `branch2_anomalous_eval.csv` (25,065 D3-anomalous rows) is already prepared for FPR/detection-rate evaluation on Day 5. All data is already public on HF: https://huggingface.co/datasets/Jason-42195/VNU-SQLi-Detection
 
-[2026-07-21, Vai trò: Toi] ĐỔI KẾ HOẠCH LẦN 2 (cùng ngày, sau khi duyệt dàn ý): bỏ luôn toàn bộ hệ thống (API/Bộ xử lý trung tâm/Streamlit) khỏi scope 25/7, không chỉ Nhánh 3. Thay bằng: (1) metric sâu hơn — thêm ROC curve đầy đủ cho Nhánh 2 (`scripts/train_nhanh2.py`), (2) `notebooks/demo_detect.ipynb` — đã viết VÀ CHẠY THỬ THÀNH CÔNG (load model Nhánh 1+2 thật, nhập query, trả verdict; bắt được 1 bug thật — AnomalyDetector cần numpy array không phải list thường; sanity-check 19/20 đúng trên mẫu ngẫu nhiên, ca sai khớp hạn chế đã biết), (3) 2 bản báo cáo song song — `report/ban1_scope_hien_tai.md` (khung đã tạo, scope 2 nhánh) và `report/ban2_hoan_chinh.md` (khung đã tạo, tầm nhìn đầy đủ 3 nhánh + hệ thống, đánh dấu rõ phần nào là Future Work). Cập nhật Mục 0, 11, 12, 13 (thêm mục Future Work mới "Hệ thống tích hợp"). `ke_hoach_2_tuan.csv` Ngày 9-13 viết lại theo scope này.
+[2026-07-17, Role: Duc] Reassignment starting Day 5: swapped tracks between Duc and Bach — Duc switches to all of MLOps (central processing engine, Session Store, API, benchmarking, Continual Learning, Concept Drift), Bach takes on all of Branch 3 (Docker lab, sqlmap, session data, training) in addition to the already-finished Branch 1+2. Minh (Streamlit) and Diep (Support) unchanged. Updated `ke_hoach_2_tuan.csv` (Day 5-13) and Sections 11-12 of this document. Reason: Bach finished Branch 2 early and has training experience, Duc is already actively working on the API (branch `feature/api-backend-mlops`).
 
-[2026-07-24, Vai trò: Toi] ĐỔI KẾ HOẠCH LẦN 3 — 3 mốc rõ ràng: (1) Thứ 7 25/7 23:59 = Nhánh 1+2 code/metric/model/báo cáo (Bản 1) phải xong — không đổi so với kế hoạch trước; (2) Chủ Nhật 26/7 = hoàn thiện metric riêng cho báo cáo hội nghị (Bản 2), 1 ngày đệm không code mới; (3) 31/12/2026 = hạn cứng cho source code đầy đủ (Nhánh 3 + hệ thống tích hợp, toàn bộ Future Work Mục 13) — lùi xa, không gấp. Phát hiện: repo đã được tái cấu trúc lớn (chưa rõ do ai) — `api/`→`deploy/`, `scripts/`+`notebooks/`→`train/`, `De_xuat...md`/`data_contract.md`/`ke_hoach_2_tuan.csv`/`ban1_scope_hien_tai.md`→`report/plan/`, `ban2_hoan_chinh.md`→`report/final/`, `reports/`→`report/metrics/`. Đã có sẵn `report/final/Dàn ý.md` (722 dòng, tiếng Anh, Chương 1 Intro→Related Work→Research Gap) và `report/final/Template(1).docx` — có vẻ đang chuẩn bị viết báo cáo chính thức theo template riêng. Cập nhật Mục 0 (3 mốc), Mục 11 (thêm Ngày 14), Mục 13 (hạn 31/12), sửa đường dẫn file theo cấu trúc mới. `ke_hoach_2_tuan.csv`: 52→56 dòng, thêm Ngày 14 (26/7, metric hội nghị).
+[2026-07-17, Role: Duc] SCOPE REDUCTION (user request): confirmed RIVF 2026 (checked the real site) — submission deadline 31 Jul 2026, 6-page IEEE paper, EDAS, conference 18-20 Dec at VinUniversity. 3 new milestones: (1) 28 Jul = finish training all 3 branches + demo (Continual Learning/Concept Drift/production Session Store/load benchmarking NOT required — pushed to Future Work), (2) 31 Jul = submit the RIVF paper, (3) before 18 Dec (targeting camera-ready 11 Nov) = finish the full system. Added Section 0 (timeline), rewrote Sections 11-12, added Section 13 (Future Work, 9 items). Updated `ke_hoach_2_tuan.csv` from 56 to 76 rows (Day 1-19): trimmed Day 5-14, added Day 15-16 (finalize MVP), Day 17-19 (writing + submission sprint — Diep starts writing sections from Day 5, not all at the end).
+
+[2026-07-21, Role: Duc] URGENT DEADLINE CHANGE (user request): the real deadline is this Saturday (25 Jul), not 28 Jul. Aggressively narrowed scope: only Branch 1 (polishing) + Branch 2 (already checked — real-world verification shows it's NOT a bottleneck, the full build+train pipeline runs in ~75 seconds; fixed the missing model.joblib, retrained: OCSVM FPR=0.3%, detection rate=20.7%, AUC=0.90). Branch 3 CUT ENTIRELY from the 25 Jul scope (confirmed no Docker lab/session data/model exists yet) — moved fully into Future Work, kept in the project's design/theoretical contribution. Detailed planning for the RIVF 2026 paper (31 Jul) paused for now, will resume after 25 Jul. Updated: header (V8), Section 0 (new timeline), Section 1 (contributions — distinguishing done/Future Work), Section 3 (diagram note), Sections 11-13 (plan/risks/Future Work rewritten), Section 14 (CSV row count). `ke_hoach_2_tuan.csv`: 76 → 52 rows (Day 1-13, old Day 14-19 removed).
+
+[2026-07-21, Role: Duc] PLAN CHANGE #2 (same day, after the outline was approved): dropped the entire system (API/central processing engine/Streamlit) from the 25 Jul scope, not just Branch 3. Replaced with: (1) deeper metrics — added a full ROC curve for Branch 2 (`train/train_branch2.py`), (2) `notebooks/demo_detect.ipynb` — written AND SUCCESSFULLY TESTED (loads the real Branch 1+2 models, takes a query, returns a verdict; caught one real bug — AnomalyDetector needs a numpy array, not a plain list; sanity-check 19/20 correct on a random sample, the one mismatch is a known limitation), (3) 2 parallel report versions — `report/ban1_scope_hien_tai.md` (skeleton created, 2-branch scope) and `report/ban2_hoan_chinh.md` (skeleton created, full 3-branch + system vision, clearly marking which parts are Future Work). Updated Sections 0, 11, 12, 13 (added a new Future Work item, "Integrated system"). Rewrote `ke_hoach_2_tuan.csv` Day 9-13 for this scope.
+
+[2026-07-24, Role: Duc] PLAN CHANGE #3 — 3 clear milestones: (1) Sat 25 Jul 23:59 = Branch 1+2 code/metrics/model/report (Version 1) must be done — unchanged from the previous plan; (2) Sun 26 Jul = polish metrics specifically for the conference report (Version 2), 1 buffer day with no new code; (3) 31 Dec 2026 = hard deadline for the full source code (Branch 3 + integrated system, all of Section 13's Future Work) — far out, not urgent. Finding: the repo underwent a major restructure (unclear by whom) — `api/`→`deploy/`, `scripts/`+`notebooks/`→`train/`, `De_xuat...md`/`data_contract.md`/`ke_hoach_2_tuan.csv`/`ban1_scope_hien_tai.md`→`report/plan/`, `ban2_hoan_chinh.md`→`report/final/`, `reports/`→`report/metrics/`. Found `report/final/Dàn ý.md` already in place (722 lines, English, Chapter 1 Intro→Related Work→Research Gap) and `report/final/Template(1).docx` — looks like preparation for writing the official report against a specific template. Updated Section 0 (3 milestones), Section 11 (added Day 14), Section 13 (31 Dec deadline), fixed file paths for the new structure. `ke_hoach_2_tuan.csv`: 52→56 rows, added Day 14 (26 Jul, conference metrics).
