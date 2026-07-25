@@ -1,84 +1,84 @@
-# Training Audit — Nhánh 2 (Anomaly Detection)
+# Training Audit — Branch 2 (Anomaly Detection)
 
-**Ngày:** 16/7/2026
-**Tác giả:** AI Agent (theo yêu cầu của Bách)
+**Date:** 16 Jul 2026
+**Author:** AI Agent (at Bach's request)
 
-## Tóm tắt thay đổi
+## Summary of changes
 
-Đã phát hiện và sửa **4 vấn đề kinh điển** trong quá trình training Branch 2:
+Found and fixed **4 classic issues** during Branch 2 training:
 
-| # | Vấn đề | Mức độ | Fix |
+| # | Issue | Severity | Fix |
 |---|--------|:------:|-----|
-| 1 | Feature scaling gây hại | 🔴 | Bỏ StandardScaler, chỉ log1p-transform length |
-| 2 | contamination chung cho cả 2 model | 🟡 | Tách riêng: IF cont=0.01, OCSVM nu=0.005 |
-| 3 | Length outlier cực trị (5370 vs mean 47) | 🟡 | log1p-transform length |
-| 4 | Chưa tune hyperparameter | 🟡 | Grid search 28 combos, OCSVM gamma=0.01, nu=0.005 |
+| 1 | Feature scaling was harmful | 🔴 | Dropped StandardScaler, only log1p-transform length |
+| 2 | Shared contamination across both models | 🟡 | Split apart: IF cont=0.01, OCSVM nu=0.005 |
+| 3 | Extreme length outlier (5370 vs mean 47) | 🟡 | log1p-transform length |
+| 4 | Hyperparameters not yet tuned | 🟡 | Grid search over 28 combos, OCSVM gamma=0.01, nu=0.005 |
 
-## Chi tiết từng vấn đề
+## Issue details
 
-### 1. Feature scaling — phản trực giác nhưng quan trọng
+### 1. Feature scaling — counterintuitive but important
 
-**Phát hiện:** Scale toàn bộ 4 features bằng StandardScaler làm AUC giảm mạnh:
+**Finding:** Scaling all 4 features with StandardScaler sharply reduced AUC:
 - IF: 0.734 → 0.678 (↓)
 - OCSVM: 0.805 → 0.533 (↓↓)
 
-**Nguyên nhân:** Feature length chiếm ~80% discriminative power (permutation importance drop 0.288). Scaling san bằng trọng số, khiến special_char_ratio (mean 0.039 cả 2 nhóm — gần như vô dụng) được nâng lên ngang hàng → pha loãng tín hiệu từ length.
+**Root cause:** The length feature accounts for ~80% of discriminative power (permutation importance drop 0.288). Scaling flattens the weighting, pulling special_char_ratio (mean 0.039 for both groups — nearly useless) up to the same level → diluting the signal from length.
 
-**Quyết định:** `scale_features: false`. Chỉ log1p-transform length để xử lý outlier.
+**Decision:** `scale_features: false`. Only log1p-transform length to handle the outlier.
 
 ### 2. Per-algorithm contamination
 
-**Vấn đề:** contamination chung cho IF và OCSVM. IF cần cont=0.01 để đạt DR hợp lý; OCSVM cần nu=0.005 (tuned). Set chung 0.005 → IF DR=0%.
+**Issue:** IF and OCSVM shared one contamination value. IF needs cont=0.01 for a reasonable DR; OCSVM needs nu=0.005 (tuned). Using a shared 0.005 → IF DR=0%.
 
-**Fix:** Thêm `ocsvm_nu: 0.005` riêng, `contamination: 0.01` dùng cho IF. Mỗi model tune độc lập — research best practice.
+**Fix:** Added a separate `ocsvm_nu: 0.005`, with `contamination: 0.01` used for IF. Each model tuned independently — a research best practice.
 
-**IF DR=3.59% thay vì 0%** sau fix — có thể so sánh công bằng.
+**IF DR=3.59% instead of 0%** after the fix — now a fair comparison.
 
 ### 3. Length outlier
 
-Benign: max=5370, mean=47, std=57 → tồn tại 1 hoặc vài extreme outlier.
-Anomalous (D3): max=453, mean=137 — không có outlier tương tự.
+Benign: max=5370, mean=47, std=57 → one or a few extreme outliers exist.
+Anomalous (D3): max=453, mean=137 — no similar outlier.
 
-log1p-transform đưa length về range [0.69, 8.59], giúp model không bị skew bởi outlier.
+log1p-transform brings length into the range [0.69, 8.59], preventing the model from being skewed by the outlier.
 
-**Lưu ý research:** log-transform nén extreme value → IF (tree split) mất tín hiệu, DR giảm từ 12.32% xuống 3.59%. OCSVM (RBF kernel) ít bị ảnh hưởng hơn.
+**Research note:** log-transform compresses extreme values → IF (tree splits) loses signal, DR drops from 12.32% to 3.59%. OCSVM (RBF kernel) is less affected.
 
 ### 4. Hyperparameter tuning
 
-Grid search trên 80% training, validate AUC trên 20% training + anomalous:
+Grid search on 80% of training data, validated AUC on the remaining 20% + the anomalous set:
 
 **Isolation Forest (12 combos):**
 - n_estimators ∈ {50, 100, 200}
 - contamination ∈ {0.001, 0.005, 0.01, "auto"}
-- Kết quả: AUC validation phẳng (~0.665–0.666) — contamination không ảnh hưởng ranking
-- Final: contamination=0.01 (chọn dựa trên FPR/DR trade-off, không phải AUC)
+- Result: validation AUC is flat (~0.665–0.666) — contamination doesn't affect ranking
+- Final: contamination=0.01 (chosen based on the FPR/DR trade-off, not AUC)
 
 **One-Class SVM (16 combos):**
 - gamma ∈ {"scale", "auto", 0.1, 0.01}
 - contamination ∈ {0.001, 0.005, 0.01, 0.05}
 - **Best: gamma=0.01, contamination=0.005 → AUC val=0.897, test=0.887**
 
-## Kết quả cuối cùng (Fair Comparison)
+## Final results (Fair Comparison)
 
 | Model | FPR | DR | AUC | Hyperparameters |
 |-------|:---:|:--:|:---:|----------------|
 | IF | 0.50% | 3.59% | 0.678 | cont=0.01, n_est=100 |
 | **OCSVM** | **0.40%** | **19.98%** | **0.887** | **nu=0.005, gamma=0.01** |
 
-Cả 2 dùng chung preprocessing (log1p-transform length, không scale). Mỗi model tune riêng.
+Both share the same preprocessing (log1p-transform length, no scaling). Each model tuned separately.
 
-**Improvement so với baseline** (OCSVM default, no log-transform, cont=0.01):
+**Improvement vs. baseline** (OCSVM default, no log-transform, cont=0.01):
 - AUC: 0.805 → **0.887** (↑10.2%)
 - FPR: 0.73% → **0.40%** (↓45%)
-- DR: 23.67% → 19.98% (↓3.7%, trade-off chấp nhận được)
+- DR: 23.67% → 19.98% (↓3.7%, an acceptable trade-off)
 
-## Files đã thay đổi
+## Files changed
 
-| File | Thay đổi |
+| File | Change |
 |------|----------|
-| `configs/config.yaml` | Thêm scale_features, log_transform_features, tune section, ocsvm_gamma, ocsvm_nu |
-| `src/models/nhanh2_anomaly.py` | Thêm preprocessing pipeline (log1p-transform + StandardScaler), save/load scaler |
-| `scripts/train_nhanh2.py` | Thêm hyperparameter grid search, per-algorithm contamination, refactor _build_detector |
-| `tests/test_nhanh2_anomaly.py` | Không đổi — 8 tests vẫn pass |
-| `notebooks/nhanh2_eval.ipynb` | Kết quả tuned, per-algorithm params, Training Audit section |
-| `reports/nhanh2_training_audit.md` | File này |
+| `configs/config.yaml` | Added scale_features, log_transform_features, tune section, ocsvm_gamma, ocsvm_nu |
+| `src/models/branch2_anomaly.py` | Added the preprocessing pipeline (log1p-transform + StandardScaler), save/load scaler |
+| `train/train_branch2.py` | Added hyperparameter grid search, per-algorithm contamination, refactored _build_detector |
+| `tests/test_branch2_anomaly.py` | Unchanged — 8 tests still pass |
+| `train/notebooks/branch2_eval.ipynb` | Tuned results, per-algorithm params, Training Audit section |
+| `report/conf/branch2_training_audit.md` | This file |
