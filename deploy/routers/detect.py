@@ -1,7 +1,7 @@
 """Unified detection endpoint — runs all branches and fuses one verdict.
 
 This is the end-to-end system flow: canonicalize -> Branch 1/2/3 -> apply the
-decision matrix from the README (Vị trí B proxy policy). Branches not yet
+decision matrix from the README (Position B proxy policy). Branches not yet
 trained contribute ``not_ready``; the decision degrades gracefully to whatever
 signal is available, so the frontend gets a real verdict today and a richer one
 as Branch 2/3 come online — with no client change.
