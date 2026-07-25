@@ -56,10 +56,10 @@ This is the complete inventory of figures this report should have, with exactly 
 | :---- | :---- | :---- | :---- |
 | Figure 1.1 | General CNN workflow for SQLi detection (generic/illustrative) | already embedded in this file (Section 1.5.1) | Section 1.5.1 |
 | Figure 1.2 | General anomaly detection workflow (generic/illustrative) | already embedded in this file (Section 1.7) | Section 1.7 |
-| Figure 2.1 | Branch 1 — per-class ROC curves | `report/metrics/figures/nhanh1_roc_per_class.png` | Section 2.8, right after Table 2.3 |
-| Figure 2.2 | Branch 2 — Precision–Recall curve (OCSVM) | `report/metrics/figures/nhanh2_pr_curve.png` | Section 2.9, right after Table 2.4 |
-| Figure 2.3 | Branch 2 — anomaly score distribution, benign vs. anomalous | `report/metrics/figures/nhanh2_score_dist.png` | Section 2.9, alongside Figure 2.2 |
-| Figure 2.4 | Branch 2 — FPR/Detection-Rate threshold trade-off | `report/metrics/figures/nhanh2_threshold_tradeoff.png` | Section 2.9, right after Table 2.5 |
+| Figure 2.1 | Branch 1 — per-class ROC curves | `report/metrics/figures/branch1_roc_per_class.png` | Section 2.8, right after Table 2.3 |
+| Figure 2.2 | Branch 2 — Precision–Recall curve (OCSVM) | `report/metrics/figures/branch2_pr_curve.png` | Section 2.9, right after Table 2.4 |
+| Figure 2.3 | Branch 2 — anomaly score distribution, benign vs. anomalous | `report/metrics/figures/branch2_score_dist.png` | Section 2.9, alongside Figure 2.2 |
+| Figure 2.4 | Branch 2 — FPR/Detection-Rate threshold trade-off | `report/metrics/figures/branch2_threshold_tradeoff.png` | Section 2.9, right after Table 2.5 |
 
 **Missing, recommended (not yet created):** a simple architecture diagram of the Database Proxy placement + two-branch decision flow (Section 2.1/2.6 would both benefit from this — currently text-only). Not blocking for the midterm submission, but worth adding before the final report.
 
@@ -790,7 +790,7 @@ After excluding the `stacked` class (Section 2.4) and retraining on the resultin
 | boolean_blind | 0.948 | 0.974 | 0.961 | 3,000 |
 | time_blind | 1.000 | 1.000 | 1.000 | 3,000 |
 
-**→ Insert Figure 2.1 here (`report/metrics/figures/nhanh1_roc_per_class.png`) — Branch 1 per-class ROC curves.**
+**→ Insert Figure 2.1 here (`report/metrics/figures/branch1_roc_per_class.png`) — Branch 1 per-class ROC curves.**
 
 The confusion matrix shows the only material confusion is between `normal` and `boolean_blind` (157 `normal` rows misclassified as `boolean_blind`; 74 `boolean_blind` rows misclassified as `normal`), which is consistent with the ~13% measured label noise found in `boolean_blind` during manual review (Section 2.4). As stated in the evaluation notes, this F1 score should not be read as "near-perfect" performance — it is measured on a clean test split, not on adversarially-perturbed input (Section 2.12.5).
 
@@ -807,12 +807,12 @@ Table 2.4 compares the two candidate algorithms.
 
 One-Class SVM was selected for its substantially higher AUC and detection rate at a comparable (in fact lower) false-positive rate. On the held-out evaluation (3,000 benign, 25,065 anomalous, mixed-attack-type as noted in Section 2.5), the chosen model produces 9 false positives out of 3,000 benign queries (FPR = 0.3%) and correctly flags 5,196 of 25,065 anomalous queries (detection rate = 20.7%), with average precision (PR-AUC) = 0.982.
 
-**→ Insert Figure 2.2 here (`report/metrics/figures/nhanh2_pr_curve.png`) — Branch 2 Precision–Recall curve.**
-**→ Insert Figure 2.3 here (`report/metrics/figures/nhanh2_score_dist.png`) — Branch 2 anomaly score distribution, benign vs. anomalous.**
+**→ Insert Figure 2.2 here (`report/metrics/figures/branch2_pr_curve.png`) — Branch 2 Precision–Recall curve.**
+**→ Insert Figure 2.3 here (`report/metrics/figures/branch2_score_dist.png`) — Branch 2 anomaly score distribution, benign vs. anomalous.**
 
 As noted in Section 2.5, the 20.7% detection rate is measured against a multi-attack-type evaluation set, not a SQLi-only one; it should be read as a general anomaly detection rate unless the evaluation set is first filtered to SQLi-only rows.
 
-**Why a headline detection rate of 20.7% is consistent with AUC = 0.902.** FPR and detection rate are both computed at a *single, fixed* decision threshold — the one corresponding to the deployed operating point (contamination = 0.005). AUC, by contrast, integrates performance across the *entire* range of possible thresholds. A high AUC with a low detection rate at one specific point simply means the model separates benign from anomalous traffic well overall, and the deployed threshold was chosen deliberately conservative (to keep FPR — and therefore the Overkill/HOLD administrator workload, Section 2.6 — very low), not that the model is weak. A full sweep across 21 thresholds (`report/metrics/nhanh2_threshold_sweep.csv`) makes this trade-off explicit; Table 2.5 shows selected points from that sweep.
+**Why a headline detection rate of 20.7% is consistent with AUC = 0.902.** FPR and detection rate are both computed at a *single, fixed* decision threshold — the one corresponding to the deployed operating point (contamination = 0.005). AUC, by contrast, integrates performance across the *entire* range of possible thresholds. A high AUC with a low detection rate at one specific point simply means the model separates benign from anomalous traffic well overall, and the deployed threshold was chosen deliberately conservative (to keep FPR — and therefore the Overkill/HOLD administrator workload, Section 2.6 — very low), not that the model is weak. A full sweep across 21 thresholds (`report/metrics/branch2_threshold_sweep.csv`) makes this trade-off explicit; Table 2.5 shows selected points from that sweep.
 
 ### **Table 2.5 Branch 2 Threshold Sweep (Selected Operating Points)**
 
@@ -825,7 +825,7 @@ As noted in Section 2.5, the 20.7% detection rate is measured against a multi-at
 | Relaxed 4 | 30.6% | 97.1% | 96.4% |
 | Maximally relaxed | ~100% | 100% | — |
 
-**→ Insert Figure 2.4 here (`report/metrics/figures/nhanh2_threshold_tradeoff.png`) — FPR / Detection-Rate threshold trade-off.**
+**→ Insert Figure 2.4 here (`report/metrics/figures/branch2_threshold_tradeoff.png`) — FPR / Detection-Rate threshold trade-off.**
 
 Detection rate rises sharply as the threshold is relaxed — reaching 97.1% at 30.6% FPR — which is exactly what a high AUC predicts. The deployed operating point was chosen at the very-low-FPR end of this curve because, under the Overkill policy (Section 2.6), every false positive becomes work for an administrator; the appropriate operating point is therefore a deployment/product decision, not a fixed property of the model, and Table 2.5 (or the full 21-point sweep) is the artifact that should be handed to whoever makes that decision.
 
