@@ -277,7 +277,7 @@ Same as V2 (FastAPI + CTranslate2 if using a transformer). Addition: need to cho
 
 ## 14. Progress-tracking file and how it's updated automatically
 
-The detailed plan (13 days × 4 people, 13 Jul-25 Jul, with deliverables) lives in `ke_hoach_2_tuan.csv` — each row is one task with columns: `Ngay, NgayThang, Thu, NguoiPhuTrach, VaiTro, CongViec, PhuThuoc, SanPham, TrangThai`. Use the command in `Prompt_Claude_Code_Cap_Nhat_Ke_Hoach.md` to have Claude Code ask for your role, determine the current date, check which deliverables already exist in the repo, and automatically update the `TrangThai` column + sync a summary into this proposal file.
+The detailed plan (13 days × 4 people, 13 Jul-25 Jul, with deliverables) lives in `ke_hoach_2_tuan.csv` — each row is one task with columns: `Day, Date, Weekday, Owner, Role, Task, Dependency, Deliverable, Status`. Use the command in `Prompt_Claude_Code_Cap_Nhat_Ke_Hoach.md` to have Claude Code ask for your role, determine the current date, check which deliverables already exist in the repo, and automatically update the `Status` column + sync a summary into this proposal file.
 
 ---
 
