@@ -127,6 +127,18 @@ data/  models/           # DO NOT commit contents (only .gitkeep)
 
 ---
 
+## Branch 3 (session-level) — how to build this data correctly
+
+Session-level attacks (boolean-blind / time-blind) have a real, executable algorithm behind them — bisection search, ~7 requests per character (full mechanism: `report/plan/data_contract.md` Section 4.0). Learned the hard way, more than once, building this branch:
+
+1. **Don't sample or template it — execute it for real.** Each request's payload depends on every prior response in that session (the comparison bound only makes sense given the search range narrowed so far). Sampling unrelated real attack payloads i.i.d., or hand-writing a plausible-looking sequence, does not reproduce that dependency. Run the actual bisection algorithm (`train/attack_simulator.py`) against a real, disposable target (`deploy/demo_db.py`) and record what genuinely happens — real row counts, real measured timing (SQLite needed `ASCII()`/`SLEEP()` added since it lacks them natively).
+2. **Watch for the memorization trap.** A deterministic algorithm run against a small fixed ground-truth set (e.g. 5 seeded users) produces that many distinct traces, repeated — not real diversity, and a model trained on it memorizes rather than generalizes. Before trusting any result, extract the target/ground-truth from each generated session and count distinct traces. Use a large randomized pool for training-data generation specifically (`generate_synthetic_user_pool`) — never repurpose a live demo's small fixed seed data for this.
+3. **A session type only matters if it can actually reach Branch 3 in the live decision engine.** Branch 1 blocks immediately on any per-query attack detection — a session type Branch 1 already recognizes on every single step (confirmed case: `time_blind`'s literal `SLEEP()` syntax gets caught ~100% of the time) never reaches Branch 3 in production, no matter how good Branch 3's score on it looks. Check real per-query Branch 1 predictions across a session before treating results on that class as meaningful.
+4. **Never trust a suspiciously perfect score without ablations.** This project has hit "100%/near-100% for the wrong reason" more than once (Branch 1's `stacked` class; Branch 3's first two data-generation attempts). Before reporting any Branch 3 result: drop the timing feature and re-check, drop the content features and re-check, re-verify ground-truth diversity. If removing an entire feature group barely changes the score, or diversity turns out to be near-zero, the score doesn't mean what it looks like.
+5. Full methodology, mechanism walkthrough, and current results: `report/plan/data_contract.md` Sections 4.0–4.1 (4.1.1 keeps the superseded first attempt on record — read it too, it's the fastest way to see what NOT to do).
+
+---
+
 ## "Definition of done" for a change
 
 - [ ] Code has type hints + docstrings, uses logging (no `print`).

@@ -147,7 +147,7 @@ Priority order when a payload matches multiple signals: **stacked > time_blind >
 
 ## 4. Target schema — Branch 3 (Session-level)
 
-File: `data/processed/branch3_sessions_labeled.csv` (Day 8 deliverable, once D1 is labeled + sqlmap capture is done).
+Target schema below; actual file is `data/processed/branch3_sessions_cach_a.csv` (built 26/7 — see Section 4.1 for the real methodology and how it differs from this original target).
 
 | Column | Type | Description |
 |---|---|---|
@@ -157,8 +157,8 @@ File: `data/processed/branch3_sessions_labeled.csv` (Day 8 deliverable, once D1 
 | `branch1_label` | int (0-5) | Per-query label inherited from Branch 1 (not re-inferred) |
 | `branch2_anomaly_score` | float | Continuous anomaly score from Branch 2 (benign-only trained) |
 | `timestamp` | float/ISO8601 | Request time — used to compute the session window |
-| `session_label` | int (0-3) | **Session-level** label — only set on the session's last row, or repeated on every row (decided at implementation time) |
-| `session_source` | str | `A_simulated` (simulation script) or `B_sqlmap_docker` (real traffic) |
+| `session_label` | int (0-3) | **Session-level** label — repeated on every row of the session (decided at implementation time; see Section 4.1) |
+| `session_source` | str | `A_real_db` (real bisection attack against a real DB, Section 4.1), `A_simulated` (heuristic fragmentation, `query_splitting` only), or `B_sqlmap_docker` (real captured traffic, not done) |
 
 **Session definition:** an existing `session_id` (CSIC cookie) OR `(client_ip, idle_gap <= 1800s)` — per `configs/config.yaml: branch3_session.session_idle_gap_seconds`.
 
@@ -170,6 +170,36 @@ File: `data/processed/branch3_sessions_labeled.csv` (Day 8 deliverable, once D1 
 | `1` | `boolean_blind` | Sequence of queries probing true/false (binary search across multiple requests) |
 | `2` | `time_blind` | Sequence of queries probing via response delay |
 | `3` | `query_splitting` | Attack payload split across multiple consecutive requests |
+
+### 4.0 Attack mechanism — why this data is scientifically grounded, not templated
+
+This section documents the actual mechanics of boolean-blind and time-blind SQLi, since the dataset (Section 4.1) is built by literally executing this mechanism against a real database rather than approximating it. Useful as the methodology basis for the final report.
+
+**How the vulnerability is created.** Consider a single UI input field (e.g. a "username" lookup box). A vulnerable backend builds its SQL statement by directly concatenating the raw user input into a query template:
+
+```
+SELECT * FROM users WHERE username = '<user input>'
+```
+
+The DBMS itself does nothing wrong here — it has no concept of "user input" versus "original code"; it simply executes whatever complete SQL string it receives. The vulnerability is entirely in the backend's string-concatenation step, which happens *before* the DBMS ever sees the query. A normal input like `admin` produces `WHERE username = 'admin'` and returns exactly one row. An attacker input like `zzz' OR (1=1)--` produces `WHERE username = 'zzz' OR (1=1)--'`, and because `1=1` is unconditionally true, the `OR` makes the WHERE clause true for *every* row — the DBMS faithfully returns the entire table, which is exactly the behavior `deploy/demo_db.py`'s own `leaked` flag (row_count > 1) is built to catch.
+
+**How boolean-blind extraction works.** An attacker who cannot see the `password` column directly (the page never displays it) can still extract it one bit at a time by asking yes/no questions through the same injection point:
+
+```
+zzz' OR (ASCII(SUBSTR(password,1,1)) > 79) --
+```
+
+This asks the DBMS: "is the first character's ASCII code greater than 79?" If true, the OR leaks rows (a full page response); if false, zero rows (a "not found" response). The attacker observes only *whether rows came back* — never the actual password — but that single true/false bit is enough. Repeating with a **bisection (binary search)** on the comparison bound narrows the true value in roughly `log2(94) ≈ 7` requests per character (94 ≈ the printable ASCII range), converging to the exact character. The process repeats per character position until enough of the string is recovered. A password of even a few characters therefore requires several dozen sequential, systematically-related requests — this is the "session" Branch 3 is trying to recognize.
+
+**Time-blind is the same algorithm with a different oracle.** When the response page gives no visible difference between true and false, the attacker instead makes the DBMS *delay* on a true condition and measures wall-clock response time:
+
+```
+zzz' OR (SELECT CASE WHEN (ASCII(SUBSTR(password,1,1))>79) THEN SLEEP(5) ELSE 0 END) --
+```
+
+A ~5-second response means true; a near-instant response means false. The bisection logic is identical — only the oracle (row count vs. elapsed time) differs.
+
+**Why this can't be approximated with templates.** Each request's payload is a function of *every prior request's outcome* in that same session (the comparison bound only makes sense in light of the narrowing search range so far). A dataset built by sampling unrelated real attack payloads i.i.d. — or by hand-writing a plausible-looking template — does not reproduce this dependency structure, and a session-level model trained on it would not be learning the actual pattern a real attack produces. The only way to get a scientifically valid trace is to run the real algorithm against a real (if disposable) database and record what actually happens. See Section 4.1 for how this is implemented (`train/attack_simulator.py` against `deploy/demo_db.py`).
 
 ## 4.1. Actual build results — Cách A (revised 26/7: real bisection attack against a real DB)
 
