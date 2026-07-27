@@ -84,18 +84,18 @@
 ### 4.1 Model architecture choice for Branch 1 (per-query)
 Unchanged from V2: compares DistilBERT vs. TF-IDF/char n-gram + Gradient Boosting vs. a lightweight CNN with a custom SQL tokenizer (referencing a lightweight architecture from the Related Work survey — ~69K parameters, tens of times faster than DistilBERT). Chosen based on measured F1/latency, not defaulting to a transformer.
 
-**Experimental result (16 Jul) — locked in: TF-IDF + Logistic Regression.** Compared 4 candidates on a 13,632-row test set, **6 classes including `stacked`** (`train/compare_branch1_architectures.py`, full results in `report/metrics/branch1_architecture_comparison.json` + `train/notebooks/model_comparison_branch1.ipynb`):
+**Experimental result — locked in: TF-IDF + Logistic Regression.** Compared 4 candidates on the final **5-class, 13,560-row test set** (the too-easy `stacked` class was dropped — see the finding below), all re-trained on the same 5 classes with data-driven head sizes (`train/compare_branch1_architectures.py`, full results in `report/metrics/branch1_architecture_comparison.json` + `train/notebooks/model_comparison_branch1.ipynb`):
 
 | Model | F1-macro | p50 latency | Size | Train time |
 |---|---|---|---|---|
-| **TF-IDF + LogReg** (chosen) | 0.985 | **0.5 ms** | 3.9 MB | 10 s |
-| TF-IDF + LightGBM | **0.993** | 60 ms | 6.0 MB | 264 s |
-| DistilBERT | 0.992 | 2.8 ms (GPU) | 256 MB | 1443 s |
-| CNN + SQL-tokenizer | 0.987 | **0.3 ms** | **116 KB** (28K params) | 10 s |
+| **TF-IDF + LogReg** (chosen) | 0.982 | **0.8 ms** | 3.5 MB | 17 s |
+| TF-IDF + LightGBM | **0.991** | 92 ms | 5.7 MB | 328 s |
+| DistilBERT | 0.989 | 2.9 ms (GPU) | 256 MB | 1574 s |
+| CNN + SQL-tokenizer | 0.984 | **0.3 ms** | **0.11 MB** (28.5K params) | 10 s |
 
-Reason for choosing LogReg: the F1 gap between the 4 models is negligible (0.985–0.993), while LightGBM is ~120x slower (60 ms — too high for a real-time proxy), and DistilBERT costs 256 MB + needs a GPU + 24 minutes to train without beating F1. CNN is a good fallback candidate (fastest/smallest) if stronger feature learning is needed later.
+Reason for choosing LogReg: the F1 gap between the 4 models is negligible (0.982–0.991), while LightGBM is ~115x slower (~92 ms — too high for a real-time proxy), and DistilBERT costs 256 MB + needs a GPU + ~26 minutes to train without beating F1. CNN is a good fallback candidate (fastest/smallest) if stronger feature learning is needed later. The CNN + DistilBERT weights (5-class) are published on HF (`Jason-42195/VNU-SQLi-Detection-Models`, folder `branch1_comparison/`).
 
-**⚠️ Finding after training (16 Jul) — `stacked` dropped from the dataset:** all 4 models hit F1 ~0.99 and the `stacked` class (363 synthetic samples) hit **100% recall on all 4** → a sign the data is **too easy to distinguish** (repeated template structure), NOT a genuine quality signal. Decision: **exclude `stacked` from training** (`branch1_supervised.balance.exclude_labels: [5]` in `config.yaml`), keep the generation code (`synthetic_stacked.py`) for reuse once real data exists from the Docker lab/sqlmap (Day 5-6). Dataset now **5 classes, 67,796 rows**.
+**⚠️ Finding — `stacked` dropped from the dataset:** in the initial run (which still included `stacked`) all 4 models hit F1 ~0.99 and the `stacked` class (363 synthetic samples) hit **100% recall on all 4** → a sign the data is **too easy to distinguish** (repeated template structure), NOT a genuine quality signal. Decision: **exclude `stacked` from training** (`branch1_supervised.balance.exclude_labels: [5]` in `config.yaml`), keep the generation code (`synthetic_stacked.py`) for reuse once real data exists from the Docker lab/sqlmap (Day 5-6). Dataset now **5 classes, 67,796 rows**.
 
 **Correct F1-macro after dropping `stacked`: 0.9822** (`models/branch1_v1/`, architecture unchanged — TF-IDF+LogReg). Note: the first retrain incorrectly reported F1=0.8185 due to a `classification_report` bug (hardcoded all 6 labels even though `stacked` was no longer in the data → sklearn scored the missing label 0, skewing the macro-average) — fixed in both `train_branch1.py` and `compare_branch1_architectures.py` (details: `data_contract.md` Section 3.3). The confusion matrix shows the only notable confusion is `normal ↔ boolean_blind` (matches the ~13% label noise measured in the `boolean_blind` bucket) — this F1 figure still shouldn't be read as "near-perfect", the real test is the adversarial set (Day 7).
 

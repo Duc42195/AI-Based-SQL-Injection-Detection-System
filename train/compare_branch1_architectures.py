@@ -37,6 +37,18 @@ LABEL_ORDER = sorted(LABEL_NAMES.keys())
 LABEL_NAMES_ORDERED = [LABEL_NAMES[i] for i in LABEL_ORDER]
 
 
+def _num_classes(train_df: pd.DataFrame, test_df: pd.DataFrame) -> int:
+    """Number of output classes to size the model head from the data itself.
+
+    Labels are 0-indexed and contiguous, so this is ``max(label) + 1``. Deriving
+    it from the data (not ``len(LABEL_NAMES)``) keeps the head honest when a class
+    is dropped from the schema - e.g. ``stacked`` (label 5) was removed, leaving 5
+    classes - so we don't ship a neural model with a dead output neuron. The
+    tree/linear candidates already infer their class count from the labels.
+    """
+    return int(max(train_df["label"].max(), test_df["label"].max())) + 1
+
+
 def load_data(processed_dir: Path) -> tuple[pd.DataFrame, pd.DataFrame]:
     """Load the Nhanh 1 train/test split.
 
@@ -163,7 +175,7 @@ def run_tfidf_lightgbm(
 
     clf = lgb.LGBMClassifier(
         objective="multiclass",
-        num_class=len(LABEL_ORDER),
+        num_class=_num_classes(train_df, test_df),
         n_estimators=200,
         random_state=cfg.get_path("project.random_seed", 42),
         verbose=-1,
@@ -208,7 +220,7 @@ def run_distilbert(
 
     tokenizer = AutoTokenizer.from_pretrained(bert_cfg["pretrained"])
     model = AutoModelForSequenceClassification.from_pretrained(
-        bert_cfg["pretrained"], num_labels=len(LABEL_ORDER)
+        bert_cfg["pretrained"], num_labels=_num_classes(train_df, test_df)
     ).to(device)
 
     class QueryDataset(Dataset):
@@ -378,7 +390,7 @@ def run_cnn_sqltok(
         embedding_dim=cnn_cfg["embedding_dim"],
         num_filters=cnn_cfg["num_filters"],
         kernel_sizes=cnn_cfg["kernel_sizes"],
-        num_classes=len(LABEL_ORDER),
+        num_classes=_num_classes(train_df, test_df),
     ).to(device)
     n_params = sum(p.numel() for p in model.parameters())
     logger.info("Model parameter count: %d", n_params)

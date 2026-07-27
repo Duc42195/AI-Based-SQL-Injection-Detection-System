@@ -43,10 +43,10 @@ labels:
 branch1_supervised:
   # CHOSEN (16/7) after comparing 4 candidates on F1-macro vs latency vs size
   # (see report/metrics/branch1_architecture_comparison.json + notebook). All 4 scored
-  # F1-macro 0.985-0.993 (differences negligible); tfidf_logreg picked for the
-  # best latency/size/simplicity trade-off. LightGBM had the top F1 but ~60ms
+  # F1-macro 0.982-0.991 on 5 classes (differences negligible); tfidf_logreg picked
+  # for the best latency/size/simplicity trade-off. LightGBM had the top F1 but ~92ms
   # p50 latency (too slow for a real-time proxy); DistilBERT gave no F1 gain
-  # for 256MB + GPU + 24-min training; cnn_sqltok is the fast/tiny fallback.
+  # for 256MB + GPU + ~26-min training; cnn_sqltok is the fast/tiny fallback.
   #   "tfidf_logreg"  |  "tfidf_lightgbm"  |  "distilbert"  |  "cnn_sqltok"
   architecture: "tfidf_logreg"
   multiclass: true
