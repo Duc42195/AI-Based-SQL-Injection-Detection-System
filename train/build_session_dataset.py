@@ -1,20 +1,23 @@
-"""Build the Branch 3 (session-level) training dataset — Cách A (simulated).
+"""Build the Branch 3 (session-level) training dataset — Cách A.
 
-Cách A builds sessions from EXISTING Branch 1 labeled queries rather than
-real captured traffic (that's Cách B: sqlmap against a Docker lab, not done
-yet — see data_contract.md). Four session types, matching
-`branch3_session.session_classes` in configs/config.yaml:
+Four session types, matching `branch3_session.session_classes` in
+configs/config.yaml:
 
-  - benign (0): a run of unrelated `normal`-labeled queries.
-  - boolean_blind (1) / time_blind (2): a run of real per-query attack
-    payloads of that type, simulating a scripted probing sequence (e.g.
-    sqlmap's binary-search boolean-blind extraction, or repeated
-    SLEEP()-based timing probes).
+  - benign (0): real legitimate lookups against the real demo DB.
+  - boolean_blind (1) / time_blind (2): a REAL bisection extraction attack
+    (see train/attack_simulator.py) run against `deploy/demo_db.py` — actual
+    SQL executed by SQLite, real row-count/timing oracle, not a guessed
+    approximation. This replaced an earlier version that sampled unrelated
+    real attack payloads i.i.d., which produced a misleadingly easy dataset
+    (Branch 1 already recognizes those payloads per-query, so the session
+    model's job reduced to "aggregate an already-correct signal" — not a
+    test of anything). See data_contract.md Section 4.1 for the full story.
   - query_splitting (3): synthesized by fragmenting ONE real attack payload
-    into 2-4 pieces, each sent as a separate step. No per-query
-    "query_splitting" label exists anywhere in the source data (splitting is
-    inherently a multi-request pattern), so this is the one session type
-    that can't be built by sampling — it has to be constructed.
+    into 2-4 pieces at token boundaries, each sent as a separate step. No
+    per-query "query_splitting" label exists anywhere in the source data
+    (splitting is inherently a multi-request pattern), and the demo DB has
+    only one injectable parameter (nothing to realistically probe across),
+    so this one session type stays on the heuristic fragmentation approach.
 
 Per-step model input = Branch 1's 5-class probability vector concatenated
 with Branch 2's anomaly score. Both are computed here by loading the actual
@@ -36,15 +39,17 @@ import numpy as np
 import pandas as pd
 
 from src.models.branch2_anomaly import AnomalyDetector
-from src.preprocessing.multiclass_tagger import LABEL_NAMES
+from src.models.branch3_features import BRANCH1_LABEL_ORDER, branch1_prob_columns, branch1_probabilities
 from src.preprocessing.statistical_features import extract_statistical_features
 from src.utils import Config, get_logger, load_config
+from attack_simulator import (
+    generate_synthetic_user_pool,
+    run_benign_session,
+    run_boolean_blind_session,
+    run_time_blind_session,
+)
 
 logger = get_logger(__name__)
-
-# Branch 1 label ids (from configs/config.yaml: labels.classes), fixed order
-# for the probability-vector columns written to the output CSV.
-_BRANCH1_LABEL_ORDER = [0, 1, 2, 3, 4]  # normal, union_based, error_based, boolean_blind, time_blind
 
 
 def _load_branch1(models_dir: Path, version: str) -> tuple:
@@ -61,24 +66,6 @@ def _load_branch2(models_dir: Path, version: str) -> AnomalyDetector:
     detector = AnomalyDetector.load(models_dir / version)
     logger.info("Loaded Branch 2 model from %s", models_dir / version)
     return detector
-
-
-def _branch1_probabilities(
-    texts: list[str], vectorizer, clf
-) -> np.ndarray:
-    """Run Branch 1 inference, returning a (n, 5) probability matrix.
-
-    Columns follow ``_BRANCH1_LABEL_ORDER``. The classifier only knows the
-    classes present at its own training time (`stacked` was excluded), so we
-    map from ``clf.classes_`` rather than assuming a fixed column order.
-    """
-    probs = clf.predict_proba(vectorizer.transform(texts))
-    classes = [int(c) for c in clf.classes_]
-    out = np.zeros((len(texts), len(_BRANCH1_LABEL_ORDER)), dtype=np.float64)
-    for col, label in enumerate(_BRANCH1_LABEL_ORDER):
-        if label in classes:
-            out[:, col] = probs[:, classes.index(label)]
-    return out
 
 
 def _branch2_scores(texts: list[str], detector: AnomalyDetector, feature_names: list[str]) -> np.ndarray:
@@ -132,41 +119,31 @@ def _fragment_text(text: str, n_fragments: int, rng: random.Random) -> list[str]
     return [p for p in pieces if p]
 
 
-def _build_session_rows(
-    session_id: str,
-    session_label: int,
-    texts: list[str],
-    start_ts: float,
-    gap_range: tuple[float, float],
-    session_source: str,
-    rng: random.Random,
-) -> list[dict]:
-    """Assemble the row dicts for one session (probabilities/scores filled in later).
+def _assemble_rows(session_id: str, session_label: int, session_source: str, steps: list[dict]) -> list[dict]:
+    """Turn a raw step list (query_raw/query_canonical/timestamp) into full rows.
 
-    ``gap_seconds`` (0.0 for the first step) is a real temporal signal that
-    per-query classifiers structurally cannot see — scripted attack probing
-    (boolean/time-blind, query-splitting) uses tight, uniform gaps while
-    benign browsing is slower and more irregular. It's a first-class feature
-    for the sequence model, not just metadata.
+    ``gap_seconds`` (0.0 for the first step) is computed from REAL consecutive
+    timestamps for real-DB-driven sessions — for time-blind sessions this
+    directly reflects genuine measured SLEEP delays, not a guessed range.
     """
     rows = []
-    ts = start_ts
-    gap = 0.0
-    for step, text in enumerate(texts):
+    prev_ts = None
+    for step_index, step in enumerate(steps):
+        ts = step["timestamp"]
+        gap = 0.0 if prev_ts is None else ts - prev_ts
         rows.append(
             {
                 "session_id": session_id,
-                "step_index": step,
-                "query_raw": text,
-                "query_canonical": text,  # source queries are already canonicalized
+                "step_index": step_index,
+                "query_raw": step["query_raw"],
+                "query_canonical": step["query_canonical"],
                 "timestamp": ts,
-                "gap_seconds": round(gap, 3),
+                "gap_seconds": round(gap, 6),
                 "session_label": session_label,
                 "session_source": session_source,
             }
         )
-        gap = rng.uniform(*gap_range)
-        ts += gap
+        prev_ts = ts
     return rows
 
 
@@ -174,53 +151,80 @@ def build_sessions(cfg: Config, df_train: pd.DataFrame, rng: random.Random) -> l
     """Generate all Cách A session rows (without Branch 1/2 scores yet)."""
     cach_a = cfg.get_path("branch3_session.cach_a")
     n_per_class = int(cach_a["sessions_per_class"])
-    min_len, max_len = int(cach_a["min_len"]), int(cach_a["max_len"])
-    benign_gap = tuple(cach_a["benign_step_gap_seconds"])
     attack_gap = tuple(cach_a["attack_step_gap_seconds"])
     frag_min, frag_max = cach_a["splitting_fragments"]
+    benign_min_steps, benign_max_steps = int(cach_a["min_len"]), int(cach_a["max_len"])
+    benign_gap = tuple(cach_a["benign_step_gap_seconds"])
 
-    by_label = {
-        name: df_train.loc[df_train["label_name"] == name, "query_canonical"].tolist()
-        for name in ("normal", "union_based", "error_based", "boolean_blind", "time_blind")
-    }
-    all_attack_texts = by_label["union_based"] + by_label["error_based"] + by_label["boolean_blind"] + by_label["time_blind"]
+    real_db_cfg = cach_a["real_db"]
+    target_column = real_db_cfg["target_column"]
+    max_extract_chars = int(real_db_cfg["max_extract_chars"])
+    time_blind_sleep = float(real_db_cfg["time_blind_sleep_seconds"])
+    n_synthetic_users = int(real_db_cfg["synthetic_user_pool_size"])
 
-    base_ts = time.time() - 86400 * 30  # spread sessions over the last ~30 days
+    # A larger, randomized user pool for training-data generation ONLY — the
+    # bisection algorithm is deterministic given a target value, so attacking
+    # the live demo's fixed 5 users would produce only 5 distinct traces no
+    # matter how many "sessions" are requested (confirmed: 350 sessions over
+    # 5 users repeated every trace ~70x — the model was memorizing, not
+    # generalizing). deploy/demo_db.py's own 5-row table is untouched.
+    user_pool = generate_synthetic_user_pool(n_synthetic_users, rng)
+    pool_usernames = [row[1] for row in user_pool]
+    logger.info("Generated a %d-user synthetic pool for training-data diversity", n_synthetic_users)
+
     rows: list[dict] = []
 
-    # benign (0)
+    # benign (0) — real lookups against the larger real DB pool.
+    logger.info("Generating %d benign sessions (real DB lookups) ...", n_per_class)
     for i in range(n_per_class):
-        n_steps = rng.randint(min_len, max_len)
-        texts = rng.sample(by_label["normal"], n_steps)
-        rows += _build_session_rows(
-            f"cachA_benign_{i:04d}", 0, texts,
-            base_ts + rng.uniform(0, 86400 * 30), benign_gap, "A_simulated", rng,
+        n_steps = rng.randint(benign_min_steps, benign_max_steps)
+        steps = run_benign_session(rng, n_steps, benign_gap, seed_rows=user_pool)
+        rows += _assemble_rows(f"cachA_benign_{i:04d}", 0, "A_real_db", steps)
+
+    # boolean_blind (1) — real bisection attack against the larger real DB pool.
+    logger.info("Generating %d boolean_blind sessions (real bisection attack) ...", n_per_class)
+    usernames = rng.sample(pool_usernames, min(n_per_class, len(pool_usernames)))
+    if len(usernames) < n_per_class:
+        usernames += rng.choices(pool_usernames, k=n_per_class - len(usernames))
+    for i, username in enumerate(usernames):
+        steps, extracted = run_boolean_blind_session(
+            username, target_column, rng, max_extract_chars, seed_rows=user_pool
         )
+        rows += _assemble_rows(f"cachA_boolean_blind_{i:04d}", 1, "A_real_db", steps)
 
-    # boolean_blind (1) / time_blind (2): a run of real per-query attacks of
-    # that type, simulating scripted probing. Optionally prefixed with 0-2
-    # benign "recon" queries, which is realistic and also stresses the model
-    # to not just key off "first query is an attack".
-    for label_name, session_label in (("boolean_blind", 1), ("time_blind", 2)):
-        for i in range(n_per_class):
-            n_steps = rng.randint(min_len, max_len)
-            n_lead_in = rng.randint(0, min(2, n_steps - 1))
-            texts = rng.sample(by_label["normal"], n_lead_in)
-            texts += rng.sample(by_label[label_name], n_steps - n_lead_in)
-            rows += _build_session_rows(
-                f"cachA_{label_name}_{i:04d}", session_label, texts,
-                base_ts + rng.uniform(0, 86400 * 30), attack_gap, "A_simulated", rng,
-            )
+    # time_blind (2) — same real bisection, oracle = real measured timing.
+    logger.info("Generating %d time_blind sessions (real timing attack) ...", n_per_class)
+    usernames = rng.sample(pool_usernames, min(n_per_class, len(pool_usernames)))
+    if len(usernames) < n_per_class:
+        usernames += rng.choices(pool_usernames, k=n_per_class - len(usernames))
+    for i, username in enumerate(usernames):
+        steps, extracted = run_time_blind_session(
+            username, target_column, rng, max_extract_chars,
+            sleep_seconds=time_blind_sleep, seed_rows=user_pool,
+        )
+        rows += _assemble_rows(f"cachA_time_blind_{i:04d}", 2, "A_real_db", steps)
 
-    # query_splitting (3): fragment one real attack payload into pieces.
+    # query_splitting (3) — unchanged: fragment one real attack payload.
+    # No second vulnerable parameter exists in the demo DB to realistically
+    # probe across, and no per-query "splitting" label exists in any source
+    # data, so this stays on the heuristic approach (see data_contract.md).
+    logger.info("Generating %d query_splitting sessions (fragmentation heuristic) ...", n_per_class)
+    by_label = {
+        name: df_train.loc[df_train["label_name"] == name, "query_canonical"].tolist()
+        for name in ("union_based", "error_based", "boolean_blind", "time_blind")
+    }
+    all_attack_texts = by_label["union_based"] + by_label["error_based"] + by_label["boolean_blind"] + by_label["time_blind"]
+    base_ts = time.time() - 86400 * 30
     for i in range(n_per_class):
         source_text = rng.choice(all_attack_texts)
         n_frag = rng.randint(int(frag_min), int(frag_max))
         texts = _fragment_text(source_text, n_frag, rng)
-        rows += _build_session_rows(
-            f"cachA_query_splitting_{i:04d}", 3, texts,
-            base_ts + rng.uniform(0, 86400 * 30), attack_gap, "A_simulated", rng,
-        )
+        steps = []
+        ts = base_ts + rng.uniform(0, 86400 * 30)
+        for text in texts:
+            steps.append({"query_raw": text, "query_canonical": text, "timestamp": ts})
+            ts += rng.uniform(*attack_gap)
+        rows += _assemble_rows(f"cachA_query_splitting_{i:04d}", 3, "A_simulated", steps)
 
     return rows
 
@@ -238,7 +242,7 @@ def main() -> None:
         raise FileNotFoundError(f"{branch1_path} not found. Run train/build_branch1_dataset.py first.")
     df = pd.read_csv(branch1_path)
     df_train = df[df["split"] == "train"].reset_index(drop=True)
-    logger.info("Loaded %d Branch-1 train rows to sample sessions from", len(df_train))
+    logger.info("Loaded %d Branch-1 train rows (used only for query_splitting fragments)", len(df_train))
 
     logger.info("Generating Cách A sessions ...")
     rows = build_sessions(cfg, df_train, rng)
@@ -252,12 +256,12 @@ def main() -> None:
 
     logger.info("Running Branch 1 + Branch 2 inference on every step ...")
     texts = [r["query_canonical"] for r in rows]
-    probs = _branch1_probabilities(texts, vectorizer, clf)
+    probs = branch1_probabilities(texts, vectorizer, clf)
     scores = _branch2_scores(texts, detector, feature_names)
 
-    prob_cols = [f"branch1_prob_{LABEL_NAMES[label]}" for label in _BRANCH1_LABEL_ORDER]
+    prob_cols = branch1_prob_columns()
     for i, r in enumerate(rows):
-        r["branch1_label"] = int(_BRANCH1_LABEL_ORDER[int(np.argmax(probs[i]))])
+        r["branch1_label"] = int(BRANCH1_LABEL_ORDER[int(np.argmax(probs[i]))])
         for col, name in enumerate(prob_cols):
             r[name] = round(float(probs[i, col]), 6)
         r["branch2_anomaly_score"] = round(float(scores[i]), 6)
