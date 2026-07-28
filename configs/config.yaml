@@ -236,6 +236,66 @@ monitoring:
   retrain_schedule: "weekly"
   metrics_log_path: "data/processed/drift_metrics.jsonl"
 
+# Continual-learning / MLOps loop. Full specification (schemas, invariants, the
+# major-bump rule, what the demonstration may and may not claim):
+#   report/plan/mlops_contract.md
+mlops:
+  # Where the data-version registry, archived models and experiment artifacts live.
+  data_versions_dir: "data/versions"
+  archive_dir: "models/_archive"
+  artifacts_dir: "report/metrics/continual_learning"
+  # The protected starting point. A demo reset restores exactly this and may
+  # never modify or archive it.
+  baseline:
+    model_version: "branch1_v1"
+    data_version: "1.0"
+  split:
+    # 40 train / 10 golden / 50 stream. `golden` is the frozen benchmark: it is
+    # never trained on and never changes within a major version, which is what
+    # makes champion/challenger comparisons apples-to-apples.
+    train_fraction: 0.4
+    golden_fraction: 0.1
+    stream_fraction: 0.5
+    # Carved out of the train partition, for threshold/early-stopping choices.
+    # `golden` is NOT used for this — it stays untouched.
+    valid_fraction: 0.15
+    seed: 42
+  stream:
+    # Real SQL traffic is <1% attack; a stream built only from the balanced
+    # training file would be ~78% attack and useless for measuring FPR or drift.
+    # Benign is therefore padded from the Branch-2 benign pool, excluding rows
+    # Branch 2 itself trained on (that would leak into its anomaly scores).
+    attack_rate: 0.05
+    benign_source: "data/processed/branch2_normal.csv"
+    benign_exclude: "data/processed/branch2_data.csv"
+    window_size: 1000
+    # Fraction of the stream before the new class appears. Phase A must be
+    # verified quiet before phase B can be claimed as drift.
+    phase_a_fraction: 0.4
+    # Class introduced mid-stream to trigger the major bump. NOTE: `stacked` is
+    # 100% synthetic (363 templated payloads) - it demonstrates the mechanism
+    # only, and its accuracy must not be reported as a detection result.
+    new_class: "stacked"
+  drift:
+    psi_bins: 10
+    # Consecutive windows that must breach the threshold before retraining is
+    # triggered - a single-window spike is noise.
+    sustained_windows: 2
+    # Computed side by side. A new class at a 5% attack rate is ~1% of traffic,
+    # so `global` may never breach the threshold while `attack_subpop` does;
+    # that contrast is a result worth reporting, not a bug.
+    populations: ["global", "attack_subpop", "prediction"]
+  queue:
+    # Which verdicts put a query in front of a human. Defaults to the cases
+    # where the model is uncertain - where review pays for itself.
+    sources: ["overkill", "anomaly", "low_confidence"]
+    # Branch-1 confidence below which a query is queued even if allowed.
+    low_confidence_below: 0.6
+  gate:
+    # Promotion is refused if any known class regresses by more than this.
+    max_per_class_recall_drop: 0.02
+    min_new_class_recall: 0.80
+
 api:
   host: "0.0.0.0"
   port: 8000
