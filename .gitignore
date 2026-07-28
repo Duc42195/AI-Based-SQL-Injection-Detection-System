@@ -39,3 +39,5 @@ models/**/*.txt
 # review-queue database and confirmed-label ledger (regenerated per round).
 !data/versions/**/*.json
 data/*.db
+report/metrics/continual_learning/experiment_queue.db
+report/metrics/continual_learning/experiment_confirmed_labels.jsonl

@@ -211,6 +211,11 @@ def build_stream(
 
     stream = pd.concat([phase_a, phase_b], ignore_index=True)
     stream["position"] = np.arange(len(stream))
+    # The new-class pool is sampled with replacement, so source ids repeat.
+    # Suffix every row with its position to make each *occurrence* uniquely
+    # addressable (the review queue is keyed on id), while keeping the source
+    # id as a readable prefix.
+    stream["id"] = stream["id"].astype(str) + "#" + stream["position"].astype(str)
     return stream
 
 

@@ -283,6 +283,13 @@ mlops:
     new_class_share_in_phase_b: 0.3
   drift:
     psi_bins: 10
+    # Number of leading stream windows used as the drift REFERENCE. The
+    # reference must be production traffic, not the training set: the training
+    # file is class-balanced (~78% attack) while real traffic is ~95% benign,
+    # so scoring the stream against it measures that construction difference
+    # and reports drift from window 0. Baselining on an initial stable period
+    # is also what a real deployment does.
+    baseline_windows: 10
     # Consecutive windows that must breach the threshold before retraining is
     # triggered - a single-window spike is noise.
     sustained_windows: 2
