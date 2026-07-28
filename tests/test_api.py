@@ -14,6 +14,10 @@ def _branch1_ready() -> bool:
     return client.get("/health").json()["branches"]["branch1"] == "ready"
 
 
+def _branch2_ready() -> bool:
+    return client.get("/health").json()["branches"]["branch2"] == "ready"
+
+
 def test_health_lists_all_branches() -> None:
     resp = client.get("/health")
     assert resp.status_code == 200
@@ -54,11 +58,19 @@ def test_predict_missing_query_is_422() -> None:
     assert resp.status_code == 422
 
 
-def test_branch2_and_branch3_are_not_ready_stubs() -> None:
-    r2 = client.post("/api/v1/branch2/score", json={"query": "anything"})
-    assert r2.status_code == 200
-    assert r2.json()["status"] == "not_ready"
+def test_branch2_scores_anomaly() -> None:
+    resp = client.post("/api/v1/branch2/score", json={"query": "SELECT 1"})
+    assert resp.status_code == 200
+    body = resp.json()
+    if not _branch2_ready():
+        assert body["status"] == "not_ready"
+        return
+    assert body["status"] == "ready"
+    assert isinstance(body["anomaly_score"], float)
+    assert isinstance(body["is_anomaly"], bool)
 
+
+def test_branch3_is_not_ready_stub() -> None:
     r3 = client.post("/api/v1/branch3/session", json={"queries": ["a", "b"]})
     assert r3.status_code == 200
     assert r3.json()["status"] == "not_ready"
@@ -83,10 +95,15 @@ def test_detect_blocks_obvious_sqli() -> None:
     assert resp.json()["decision"]["action"] == "BLOCK"
 
 
-def test_metrics_endpoint_responds() -> None:
-    resp = client.get("/api/v1/metrics/branch1")
+@pytest.mark.parametrize("task", ["branch1", "branch2", "branch3"])
+def test_metrics_endpoint_responds(task: str) -> None:
+    resp = client.get(f"/api/v1/metrics/{task}")
     assert resp.status_code == 200
     assert resp.json()["status"] in {"ready", "not_ready"}
+
+
+def test_metrics_unknown_task_404() -> None:
+    assert client.get("/api/v1/metrics/nope").status_code == 404
 
 
 def test_admin_overkill_queue_stub() -> None:

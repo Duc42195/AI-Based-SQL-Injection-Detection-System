@@ -36,6 +36,12 @@ transformer = [
 inference = [
     "ctranslate2>=4.3",
 ]
+# Streamlit demo UI (app/). Talks to the FastAPI service over HTTP only, so the
+# API/train stacks stay installable without it.
+frontend = [
+    "streamlit>=1.36",
+    "requests>=2.32",
+]
 dev = [
     "pytest>=8.2",
     "matplotlib>=3.9",
@@ -51,4 +57,4 @@ requires = ["setuptools>=68"]
 build-backend = "setuptools.build_meta"
 
 [tool.setuptools.packages.find]
-include = ["src*", "deploy*"]
+include = ["src*", "deploy*", "app*"]

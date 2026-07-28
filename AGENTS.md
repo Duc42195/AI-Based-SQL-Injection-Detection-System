@@ -45,6 +45,7 @@ uv run python main.py    # health check: load config + log banner
 uv run pytest            # run the full test suite (must be green before committing)
 uv run pytest tests/test_config.py -q   # run a single file
 uv run uvicorn deploy.main:app --reload    # run the API backend (docs: /docs)
+uv run streamlit run app/streamlit_app.py  # run the demo UI (needs the API up; --extra frontend)
 ```
 
 **API backend** (`deploy/`) already has a real app: `deploy/main.py` (app + CORS), `deploy/registry.py`
@@ -71,6 +72,7 @@ src/                     # CORE SHARED LIBRARY (imported by both train/ and depl
 train/                   # offline pipeline: build dataset, train, compare, generate metrics
   train/notebooks/       #   experiments (branch prefix: exp/...)
 deploy/                  # FastAPI service (formerly api/) — main.py, registry.py, routers/
+app/                     # Streamlit demo UI — talks to deploy/ over HTTP only (api_client.py)
 report/                  # documentation & results
   report/plan/           #   proposal, plan, data_contract, scope
   report/midterm/        #   mid-term report (25 Jul, Branch 1+2 only) + manifest + template

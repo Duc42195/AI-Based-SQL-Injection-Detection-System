@@ -5,10 +5,10 @@ production model lives under ``models/<active_version>/`` (see the per-branch
 ``active_version`` keys in ``configs/config.yaml``), so switching or rolling back
 a model is a one-line config change — no code edit.
 
-Only Branch 1 (``tfidf_logreg``) is trained today; Branch 2/3 have no weights
-yet. The registry loads whatever is present and reports the rest as
-*not ready* instead of crashing the app, so the frontend can be built against a
-stable contract before those models land.
+Branch 1 (``tfidf_logreg``) and Branch 2 (One-Class SVM) are served from their
+trained weights; Branch 3 is not wired up yet. The registry loads whatever is
+present and reports the rest as *not ready* instead of crashing the app, so the
+frontend can be built against a stable contract before those models land.
 """
 
 from __future__ import annotations
@@ -19,9 +19,12 @@ from threading import Lock
 from typing import Any
 
 import joblib
+import numpy as np
 
+from src.models.branch2_anomaly import AnomalyDetector
 from src.preprocessing.canonicalize import canonicalize
 from src.preprocessing.multiclass_tagger import LABEL_NAMES
+from src.preprocessing.statistical_features import extract_statistical_features
 from src.utils import get_logger, load_config
 
 logger = get_logger(__name__)
@@ -110,6 +113,51 @@ class Branch1Model:
         )
 
 
+@dataclass
+class Branch2Prediction:
+    """Structured output of a single Branch-2 (anomaly) inference."""
+
+    query_canonical: str
+    anomaly_score: float
+    is_anomaly: bool
+
+
+class Branch2Model:
+    """Loaded Branch-2 anomaly detector (One-Class SVM / Isolation Forest).
+
+    Replicates the training feature path (``train/build_branch2_dataset.py``):
+    ``canonicalize(text).query_canonical`` -> ``extract_statistical_features``
+    -> ``AnomalyDetector`` (which applies log1p/scaling internally). Higher
+    ``anomaly_score`` = more anomalous; ``is_anomaly`` uses the model's own
+    inlier/outlier decision.
+    """
+
+    def __init__(self, detector: AnomalyDetector, max_decode_iterations: int) -> None:
+        self._detector = detector
+        self._max_decode_iterations = max_decode_iterations
+
+    def predict(self, query: str) -> Branch2Prediction:
+        """Score one raw query for anomalousness.
+
+        Args:
+            query: Raw query/parameter string (canonicalized internally, exactly
+                as done when the Branch-2 training data was built).
+
+        Returns:
+            A :class:`Branch2Prediction` with the continuous score and flag.
+        """
+        canonical = canonicalize(query, self._max_decode_iterations).query_canonical
+        features = extract_statistical_features(canonical).as_list()
+        X = np.array([features], dtype=float)
+        score = float(self._detector.score(X)[0])
+        is_anomaly = bool(self._detector.anomaly_flags(X)[0])
+        return Branch2Prediction(
+            query_canonical=canonical,
+            anomaly_score=score,
+            is_anomaly=is_anomaly,
+        )
+
+
 class ModelRegistry:
     """Lazy, thread-safe holder of per-branch model handles.
 
@@ -123,6 +171,8 @@ class ModelRegistry:
         self._lock = Lock()
         self._branch1: Branch1Model | None = None
         self._branch1_loaded = False  # True once a load has been attempted
+        self._branch2: Branch2Model | None = None
+        self._branch2_loaded = False
 
     def _models_dir(self) -> Path:
         return Path(self._cfg.get_path("paths.models_dir", "models"))
@@ -172,6 +222,35 @@ class ModelRegistry:
         logger.info("Loaded Branch-1 model from %s (threshold=%.2f)", model_dir, threshold)
         return Branch1Model(vectorizer, clf, metadata, threshold, max_decode)
 
+    def branch2(self) -> Branch2Model | None:
+        """Return the loaded Branch-2 model, or ``None`` if unavailable."""
+        if self._branch2_loaded:
+            return self._branch2
+        with self._lock:
+            if self._branch2_loaded:  # re-check inside the lock
+                return self._branch2
+            self._branch2 = self._load_branch2()
+            self._branch2_loaded = True
+        return self._branch2
+
+    def _load_branch2(self) -> Branch2Model | None:
+        model_dir = self._branch_version_dir(
+            "branch2_anomaly.active_version", "branch2_v1"
+        )
+        if not (model_dir / "model.joblib").exists():
+            logger.warning(
+                "Branch-2 model not found under %s — reporting not_ready", model_dir
+            )
+            return None
+        try:
+            detector = AnomalyDetector.load(model_dir)
+        except Exception:  # pragma: no cover - corrupt artifact is unexpected
+            logger.exception("Failed to load Branch-2 model from %s", model_dir)
+            return None
+        max_decode = int(self._cfg.get_path("preprocessing.max_decode_iterations", 3))
+        logger.info("Loaded Branch-2 model from %s", model_dir)
+        return Branch2Model(detector, max_decode)
+
     @staticmethod
     def _read_metadata(model_dir: Path) -> dict[str, Any]:
         import json
@@ -197,12 +276,12 @@ class ModelRegistry:
         Values are ``"ready"`` or ``"not_trained"``.
         """
         branch1_ready = self.branch1() is not None
-        branch2_ready = self._branch_ready(
-            "branch2_anomaly.active_version", "branch2_v1", "model.joblib"
-        )
-        branch3_ready = self._branch_ready(
-            "branch3_session.active_version", "branch3_v1", "model.pt"
-        )
+        branch2_ready = self.branch2() is not None
+        # Branch-3 weights exist (models/branch3_v1/model.pt) but the router is
+        # not wired to serve them yet — report not_trained so /health stays
+        # consistent with the branch3 endpoint. Switch to a branch3() loader
+        # (like branch1/branch2) when Branch 3 is integrated.
+        branch3_ready = False
         as_status = lambda ready: "ready" if ready else "not_trained"
         return {
             "branch1": as_status(branch1_ready),

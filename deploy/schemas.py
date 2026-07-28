@@ -55,9 +55,10 @@ class Branch1Response(BaseModel):
 
 
 class Branch2Response(BaseModel):
-    """Branch-2 anomaly result (stub until the model is trained)."""
+    """Branch-2 anomaly result."""
 
     status: BranchStatus = "not_ready"
+    query_canonical: str | None = None
     anomaly_score: float | None = None
     is_anomaly: bool | None = None
     detail: str | None = None
