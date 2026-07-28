@@ -186,16 +186,40 @@ CREATE TABLE review_queue (
 Stratified and seeded, written as a `partition` column. **40 train / 10 golden / 50 stream**;
 `valid` is 15 % carved out of `train`.
 
-**Verified** — `data/processed/branch1_train.csv` = **67,796** rows:
+### 4.0 Deduplication — required before partitioning
 
-| Class | Rows | train (40 %) | golden (10 %) | stream (50 %) |
-|---|---:|---:|---:|---:|
-| normal | 15,000 | 6,000 | 1,500 | 7,500 |
-| union_based | 15,000 | 6,000 | 1,500 | 7,500 |
-| error_based | 7,796 | 3,118 | 779 | 3,898 |
-| boolean_blind | 15,000 | 6,000 | 1,500 | 7,500 |
-| time_blind | 15,000 | 6,000 | 1,500 | 7,500 |
-| **total** | **67,796** | **27,118** | **6,779** | **33,898** |
+`branch1_train.csv` contains **4,277 repeated `query_canonical` texts**, and **69 texts carry
+conflicting labels**. Partitioning by row id would scatter copies of one query across `train`
+and `golden`: the model would then be scored on text it had trained on. The first build did
+exactly this and the invariants caught it (306 texts shared between golden and train, 54
+between golden and stream).
+
+So the split deduplicates on `query_canonical` first, and drops conflicting texts outright
+rather than resolving them arbitrarily — they are genuine label noise and would silently cap
+the achievable score.
+
+**Verified** (`train/build_mlops_split.py`, run 28 Jul):
+
+| Step | Rows |
+|---|---:|
+| input | 67,796 |
+| dropped — 69 conflicting texts | −1,202 |
+| dropped — duplicate texts | −3,144 |
+| **kept → data version 1.0** | **63,450** |
+
+> ⚠️ **Consequence: `branch1_v1` cannot be the champion.** It was trained on 54,236 rows from
+> the old split, which overlap this golden partition — its golden scores would be inflated by
+> data it had already seen. The experiment therefore **trains its own champion on `train@1.0`**.
+> `branch1_v1` remains the model the service serves; it plays no part in the comparison.
+
+**Verified partitions** (data version 1.0, 63,450 rows):
+
+| Partition | Rows |
+|---|---:|
+| train | 21,573 |
+| valid | 3,807 |
+| golden | 6,345 |
+| stream (Branch-1 share) | 31,725 |
 
 `stacked` has **0 rows** in this file (excluded by `branch1_supervised.balance.exclude_labels:
 [5]`). It is generated on demand by `src/preprocessing/synthetic_stacked.py` → **363** unique
@@ -213,12 +237,25 @@ measuring FPR or drift. Benign is therefore padded from `data/processed/branch2_
 |---|---:|
 | `branch2_normal.csv` total | 91,935 |
 | — unique by `query_canonical` | 90,650 |
-| — used to train Branch 2 (`branch2_data.csv`) | 15,000 |
-| **available for the stream** | **≈ 75,650** *(projected)* |
-| plus branch-1 `normal` stream share | 7,500 |
+| — excluded: Branch-2's own training rows | 11,152 |
+| — excluded: every text already in Branch 1 | 13,856 |
+| **available for the stream** | **76,768** |
 
-*(projected)* stream ≈ **87,500** queries ≈ **87 windows** of 1,000, of which ≈ 4,375 attack
-(5 %) drawn from the 26,398 attack rows in the stream partition.
+Branch 1's `normal` class turns out to be drawn from this same CSIC pool (all 13,856 of its
+canonical texts appear in it), so it must be excluded too — otherwise stream benign would
+duplicate golden benign.
+
+**Verified stream** (`data/processed/mlops_stream.csv`):
+
+| Property | Value |
+|---|---|
+| rows | **80,808** (81 windows of 1,000) |
+| attack rate | **5.00 %** (target 5 %) |
+| phase A / phase B | 32,323 / 48,485 |
+| class mix | normal 76,768 · boolean_blind 952 · time_blind 941 · union_based 896 · **stacked 727** · error_based 524 |
+
+The new class is **727 of 80,808 queries = 0.9 % of traffic**, which is precisely the regime
+§5 warns about: a global feature-drift monitor may never register it.
 
 Phase-ordered: **phase A** contains no new class (establishes a quiet baseline); **phase B**
 introduces it. Drift must be *observed* in B after being *verified absent* in A.

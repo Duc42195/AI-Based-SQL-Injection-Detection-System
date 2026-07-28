@@ -1,0 +1,115 @@
+{
+  "deduplication": {
+    "input_rows": 67796,
+    "conflicting_texts_dropped": 69,
+    "rows_dropped_for_conflict": 1202,
+    "duplicate_rows_dropped": 3144,
+    "rows_kept": 63450
+  },
+  "partitions": {
+    "stream": 31725,
+    "train": 21573,
+    "golden": 6345,
+    "valid": 3807
+  },
+  "per_class": {
+    "boolean_blind": {
+      "stream": 6999,
+      "train": 4779,
+      "golden": 1399,
+      "valid": 820
+    },
+    "error_based": {
+      "stream": 3898,
+      "train": 2631,
+      "golden": 780,
+      "valid": 487
+    },
+    "normal": {
+      "stream": 6893,
+      "train": 4679,
+      "golden": 1379,
+      "valid": 836
+    },
+    "time_blind": {
+      "stream": 7067,
+      "train": 4808,
+      "golden": 1413,
+      "valid": 846
+    },
+    "union_based": {
+      "stream": 6868,
+      "train": 4676,
+      "golden": 1374,
+      "valid": 818
+    }
+  },
+  "stream": {
+    "rows": 80808,
+    "windows": 81,
+    "window_size": 1000,
+    "target_attack_rate": 0.05,
+    "actual_attack_rate": 0.05,
+    "phase_a_rows": 32323,
+    "phase_b_rows": 48485,
+    "benign_source": "data/processed/branch2_normal.csv",
+    "benign_available_after_exclusions": 76768,
+    "class_mix": {
+      "normal": 76768,
+      "boolean_blind": 952,
+      "time_blind": 941,
+      "union_based": 896,
+      "stacked": 727,
+      "error_based": 524
+    }
+  },
+  "new_class": {
+    "name": "stacked",
+    "unique_payloads": 363,
+    "golden_rows": 73,
+    "stream_unique": 290,
+    "stream_occurrences": 727,
+    "sampled_with_replacement": true,
+    "caveat": "100% synthetic templated payloads; demonstrates the major-bump mechanism only - accuracy on this class is not a detection result."
+  },
+  "invariants": [
+    {
+      "name": "golden_disjoint_from_train",
+      "passed": true,
+      "detail": "overlap=0"
+    },
+    {
+      "name": "golden_disjoint_from_stream",
+      "passed": true,
+      "detail": "overlap=0"
+    },
+    {
+      "name": "stream_benign_excludes_branch2_training",
+      "passed": true,
+      "detail": "overlap=0"
+    },
+    {
+      "name": "stream_benign_deduplicated",
+      "passed": true,
+      "detail": "duplicates=0"
+    },
+    {
+      "name": "phase_a_has_no_new_class",
+      "passed": true,
+      "detail": "phase A must be quiet so phase-B drift is attributable"
+    },
+    {
+      "name": "attack_rate_within_tolerance",
+      "passed": true,
+      "detail": "actual=0.0500 target=0.05"
+    },
+    {
+      "name": "every_row_assigned_one_partition",
+      "passed": true,
+      "detail": "unassigned=0"
+    }
+  ],
+  "content_hash": "sha256:0ff31cacebf84c245d5a4d9b6f35db17e4f88078ce890f642915a9ef1450843b",
+  "golden_hash": "sha256:db59ba876cadcd7d81fea343cd19dd6e08eeea12c4321c9b8336777052c9a6fa",
+  "all_invariants_passed": true
+}

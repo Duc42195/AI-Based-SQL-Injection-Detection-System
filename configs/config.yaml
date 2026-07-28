@@ -276,6 +276,11 @@ mlops:
     # 100% synthetic (363 templated payloads) - it demonstrates the mechanism
     # only, and its accuracy must not be reported as a detection result.
     new_class: "stacked"
+    # Share of phase-B ATTACK traffic that is the new class. The synthetic pool
+    # is only a few hundred templates, so it is sampled with replacement to
+    # reach this share - realistic (attackers reuse payloads) but recorded in
+    # the split manifest, since it inflates the class's apparent volume.
+    new_class_share_in_phase_b: 0.3
   drift:
     psi_bins: 10
     # Consecutive windows that must breach the threshold before retraining is

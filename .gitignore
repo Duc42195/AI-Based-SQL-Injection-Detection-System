@@ -34,3 +34,8 @@ models/**/*.txt
 
 # Notebook checkpoints
 .ipynb_checkpoints/
+
+# MLOps: keep the data-version registry (small, lineage-critical), ignore the
+# review-queue database and confirmed-label ledger (regenerated per round).
+!data/versions/**/*.json
+data/*.db
