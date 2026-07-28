@@ -5,7 +5,7 @@ from __future__ import annotations
 import pandas as pd
 import streamlit as st
 
-from app import api_client, ui
+from app import api_client, cache, state, ui
 
 st.set_page_config(page_title="SQLi Detection — Monitor", page_icon="📊", layout="wide")
 
@@ -13,19 +13,28 @@ st.set_page_config(page_title="SQLi Detection — Monitor", page_icon="📊", la
 def render_task(task: str) -> None:
     """Render the drift chart + retrain control + logs for one task."""
     try:
-        data = api_client.drift(task)
+        data = cache.drift(task)
     except api_client.ApiError as exc:
         ui.show_api_error(exc)
         return
 
     chart_col, action_col = st.columns([4, 1])
     with action_col:
-        if st.button("🔁 Retrain", key=f"retrain_{task}", width="stretch"):
+        if st.button(
+            "🔁 Retrain", key=state.widget_key("monitor", task, "retrain"), width="stretch"
+        ):
             try:
                 result = api_client.retrain(task)
-                st.success(f"Queued: `{result['job_id']}`")
             except api_client.ApiError as exc:
-                ui.show_api_error(exc)
+                state.set_feedback("monitor", task, kind="error", message=str(exc))
+            else:
+                state.set_feedback(
+                    "monitor",
+                    task,
+                    kind="success",
+                    message=f"Retrain queued: `{result['job_id']}`",
+                )
+            st.rerun()
         if data["alert"]:
             st.error("⚠️ Drift above threshold")
 
@@ -40,10 +49,11 @@ def render_task(task: str) -> None:
             f"threshold = {data['threshold']}"
         )
 
+    ui.render_feedback("monitor", task)
+
     with st.expander("📜 Logs"):
         try:
-            lines = api_client.logs(task)["lines"]
-            st.code("\n".join(lines))
+            st.code("\n".join(cache.logs(task)["lines"]))
         except api_client.ApiError as exc:
             ui.show_api_error(exc)
 

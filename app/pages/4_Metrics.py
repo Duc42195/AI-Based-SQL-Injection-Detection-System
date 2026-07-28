@@ -5,7 +5,7 @@ from __future__ import annotations
 import pandas as pd
 import streamlit as st
 
-from app import api_client, ui
+from app import api_client, cache, ui
 
 st.set_page_config(page_title="SQLi Detection — Metrics", page_icon="📈", layout="wide")
 
@@ -16,7 +16,7 @@ _HEADLINE_KEYS = ("f1_macro", "accuracy", "roc_auc", "auc", "fpr", "train_rows")
 def render_task(task: str) -> None:
     """Render the evaluation report for one task."""
     try:
-        report = api_client.metrics(task)
+        report = cache.metrics(task)
     except api_client.ApiError as exc:
         ui.show_api_error(exc)
         return

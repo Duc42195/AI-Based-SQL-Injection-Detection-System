@@ -7,7 +7,7 @@ from typing import Any
 import pandas as pd
 import streamlit as st
 
-from app import api_client
+from app import api_client, cache, state
 
 TASKS = ("branch1", "branch2", "branch3")
 TASK_LABELS = {
@@ -33,19 +33,35 @@ def page_header(title: str, subtitle: str) -> None:
 
 
 def sidebar_status() -> None:
-    """Show backend reachability and per-branch readiness in the sidebar."""
+    """Show backend reachability, per-branch readiness and a refresh control."""
     with st.sidebar:
         st.markdown("### Backend")
         st.caption(api_client.base_url())
         try:
-            branches = api_client.health()["branches"]
+            branches = cache.health()["branches"]
         except api_client.ApiError as exc:
             st.error("API unreachable")
             st.caption(str(exc).split("\n")[0])
+            if st.button("Retry", key=state.widget_key("sidebar", "retry")):
+                cache.invalidate_all()
+                st.rerun()
             return
         for task, status in branches.items():
             icon = "🟢" if status == "ready" else "⚪"
             st.write(f"{icon} {task}: `{status}`")
+        if st.button("↻ Refresh data", key=state.widget_key("sidebar", "refresh")):
+            cache.invalidate_all()
+            st.rerun()
+
+
+def render_feedback(*scope: str) -> None:
+    """Render and consume a pending feedback message for a scope, if any."""
+    feedback = state.pop_feedback(*scope)
+    if feedback is None:
+        return
+    {"success": st.success, "info": st.info, "warning": st.warning, "error": st.error}[
+        feedback.kind
+    ](feedback.message)
 
 
 def render_decision(decision: dict[str, Any] | None) -> None:

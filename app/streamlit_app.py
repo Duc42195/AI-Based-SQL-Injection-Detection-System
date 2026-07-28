@@ -2,6 +2,10 @@
 
 Entry point of the Streamlit app:
     uv run streamlit run app/streamlit_app.py
+
+Results are stored in :mod:`app.state`, so a verdict stays on screen when an
+unrelated widget triggers a re-run (a bare ``if st.button(...)`` block would
+disappear on the very next interaction).
 """
 
 from __future__ import annotations
@@ -9,7 +13,7 @@ from __future__ import annotations
 import pandas as pd
 import streamlit as st
 
-from app import api_client, ui
+from app import api_client, cache, state, ui
 
 st.set_page_config(page_title="SQLi Detection — Test", page_icon="🛡️", layout="wide")
 
@@ -35,24 +39,79 @@ SAMPLE_SESSIONS = {
 }
 
 
-def _render_leak(step: dict) -> None:
+def _render_step(step: dict, protected: bool) -> None:
     """Render one execution step: the SQL built and what came back."""
     st.code(step["constructed_sql"], language="sql")
     if step.get("error"):
         st.warning(f"SQL error: {step['error']}")
-        return
-    if not step["executed"]:
+    elif not step["executed"]:
         st.success("🛡️ Query was **blocked** — never reached the database.")
-        return
-    if step["leaked"]:
+    elif step["leaked"]:
         st.error(
             f"⚠️ Executed and returned **{step['row_count']} rows** — "
             "the WHERE clause was subverted and data leaked."
         )
     else:
         st.info(f"Executed normally — {step['row_count']} row(s).")
+
     if step["rows"]:
         st.dataframe(pd.DataFrame(step["rows"]), width="stretch")
+
+    if protected:
+        left, right = st.columns(2)
+        with left:
+            ui.render_branch1(step.get("branch1"))
+        with right:
+            ui.render_branch2(step.get("branch2"))
+
+
+def _render_run(run: state.DemoRun) -> None:
+    """Render a stored run: verdict, then each step."""
+    st.divider()
+    mode_label = "WITH model" if run.protected else "WITHOUT model"
+    st.caption(f"Last run: **{mode_label}**")
+    if run.protected:
+        ui.render_decision(run.response.get("decision"))
+
+    steps = run.response["results"]
+    for index, step in enumerate(steps, start=1):
+        if len(steps) > 1:
+            st.markdown(f"**Step {index}** — `{step['input']}`")
+        _render_step(step, run.protected)
+        if len(steps) > 1:
+            st.divider()
+
+    if run.protected and len(steps) > 1:
+        ui.render_branch3(run.response.get("branch3"))
+
+
+def _execute(mode: str, inputs: list[str], protected: bool) -> None:
+    """Call the backend and persist the result for this mode."""
+    try:
+        response = api_client.demo_execute(inputs, protected=protected)
+    except api_client.ApiError as exc:
+        state.set_feedback("test", mode, kind="error", message=str(exc))
+        return
+    state.set_demo_run(mode, state.DemoRun(protected, inputs, response))
+
+
+def _run_buttons(mode: str) -> tuple[bool, bool]:
+    """Render the two run buttons; return (unprotected, protected) clicks."""
+    left, right = st.columns(2)
+    unprotected = left.button(
+        "▶ Run WITHOUT model",
+        width="stretch",
+        key=state.widget_key("test", mode, "unprotected"),
+        help="Send the query straight to the database, with no detection.",
+    )
+    protected = right.button(
+        "🛡️ Run WITH model",
+        type="primary",
+        width="stretch",
+        key=state.widget_key("test", mode, "protected"),
+        help="Run detection first; the query only executes if allowed.",
+    )
+    return unprotected, protected
 
 
 def tab_database() -> None:
@@ -63,7 +122,7 @@ def tab_database() -> None:
         "builds SQL by string concatenation on purpose, so real injection works."
     )
     try:
-        data = api_client.demo_database()
+        data = cache.demo_database()
     except api_client.ApiError as exc:
         ui.show_api_error(exc)
         return
@@ -74,101 +133,68 @@ def tab_database() -> None:
 
 def tab_single_query() -> None:
     """Tab 2 — Branch 1 + 2 on a single input."""
+    mode = "single"
     st.subheader("Test Branch 1 + Branch 2")
-    choice = st.selectbox("Example payload", list(SAMPLE_INPUTS), key="single_sample")
+    choice = st.selectbox(
+        "Example payload", list(SAMPLE_INPUTS), key=state.widget_key("test", mode, "sample")
+    )
     query = st.text_area(
         "Input value (goes into the WHERE clause)",
         value=SAMPLE_INPUTS[choice],
-        key=f"single_query_{choice}",
+        key=state.widget_key("test", mode, "query", choice),
         height=80,
     )
 
-    col_unprotected, col_protected = st.columns(2)
-    run_unprotected = col_unprotected.button(
-        "▶ Run WITHOUT model", width="stretch", key="btn_unprotected"
-    )
-    run_protected = col_protected.button(
-        "🛡️ Run WITH model", type="primary", width="stretch", key="btn_protected"
-    )
+    unprotected, protected = _run_buttons(mode)
+    if unprotected or protected:
+        if query.strip():
+            _execute(mode, [query], protected=protected)
+        else:
+            state.set_feedback(
+                "test", mode, kind="warning", message="Enter an input value first."
+            )
 
-    if not (run_unprotected or run_protected):
-        return
-    if not query.strip():
-        st.warning("Enter an input value first.")
-        return
-
-    protected = bool(run_protected)
-    try:
-        result = api_client.demo_execute([query], protected=protected)
-    except api_client.ApiError as exc:
-        ui.show_api_error(exc)
-        return
-
-    st.divider()
-    if protected:
-        ui.render_decision(result.get("decision"))
-    step = result["results"][0]
-    _render_leak(step)
-
-    if protected:
-        st.divider()
-        left, right = st.columns(2)
-        with left:
-            ui.render_branch1(step.get("branch1"))
-        with right:
-            ui.render_branch2(step.get("branch2"))
+    ui.render_feedback("test", mode)
+    run = state.get_demo_run(mode)
+    if run:
+        _render_run(run)
 
 
 def tab_session() -> None:
     """Tab 3 — Branch 3 session-level test (two queries)."""
+    mode = "session"
     st.subheader("Test Branch 3 (session)")
     st.caption(
         "Two queries from the same session. Branch 3 catches attacks that only "
         "become visible across multiple steps (blind probing, query splitting)."
     )
-    choice = st.selectbox("Example session", list(SAMPLE_SESSIONS), key="session_sample")
+    choice = st.selectbox(
+        "Example session",
+        list(SAMPLE_SESSIONS),
+        key=state.widget_key("test", mode, "sample"),
+    )
     default_first, default_second = SAMPLE_SESSIONS[choice]
-    first = st.text_input("Query 1", value=default_first, key=f"s1_{choice}")
-    second = st.text_input("Query 2", value=default_second, key=f"s2_{choice}")
-
-    col_unprotected, col_protected = st.columns(2)
-    run_unprotected = col_unprotected.button(
-        "▶ Run WITHOUT model", width="stretch", key="btn_sess_unprotected"
+    first = st.text_input(
+        "Query 1", value=default_first, key=state.widget_key("test", mode, "q1", choice)
     )
-    run_protected = col_protected.button(
-        "🛡️ Run WITH model", type="primary", width="stretch", key="btn_sess_protected"
+    second = st.text_input(
+        "Query 2", value=default_second, key=state.widget_key("test", mode, "q2", choice)
     )
 
-    if not (run_unprotected or run_protected):
-        return
-    inputs = [q for q in (first, second) if q.strip()]
-    if len(inputs) < 2:
-        st.warning("Enter both queries first.")
-        return
+    unprotected, protected = _run_buttons(mode)
+    if unprotected or protected:
+        inputs = [q for q in (first, second) if q.strip()]
+        if len(inputs) == 2:
+            _execute(mode, inputs, protected=protected)
+        else:
+            state.set_feedback(
+                "test", mode, kind="warning", message="Enter both queries first."
+            )
 
-    protected = bool(run_protected)
-    try:
-        result = api_client.demo_execute(inputs, protected=protected)
-    except api_client.ApiError as exc:
-        ui.show_api_error(exc)
-        return
-
-    st.divider()
-    if protected:
-        ui.render_decision(result.get("decision"))
-    for i, step in enumerate(result["results"], start=1):
-        st.markdown(f"**Step {i}** — `{step['input']}`")
-        _render_leak(step)
-        if protected:
-            left, right = st.columns(2)
-            with left:
-                ui.render_branch1(step.get("branch1"))
-            with right:
-                ui.render_branch2(step.get("branch2"))
-        st.divider()
-
-    if protected:
-        ui.render_branch3(result.get("branch3"))
+    ui.render_feedback("test", mode)
+    run = state.get_demo_run(mode)
+    if run:
+        _render_run(run)
 
 
 ui.page_header(
