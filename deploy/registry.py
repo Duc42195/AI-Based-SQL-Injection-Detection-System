@@ -22,6 +22,7 @@ import joblib
 import numpy as np
 
 from src.models.branch2_anomaly import AnomalyDetector
+from src.models.branch3_session import SessionSequenceDetector
 from src.preprocessing.canonicalize import canonicalize
 from src.preprocessing.multiclass_tagger import LABEL_NAMES
 from src.preprocessing.statistical_features import extract_statistical_features
@@ -114,6 +115,74 @@ class Branch1Model:
 
 
 @dataclass
+class Branch3Prediction:
+    """Structured output of a Branch-3 session-level inference."""
+
+    session_label: str
+    is_attack: bool
+    label_id: int
+    probabilities: dict[str, float]
+
+
+class Branch3Model:
+    """Loaded Branch-3 GRU session sequence detector."""
+
+    def __init__(
+        self,
+        detector: SessionSequenceDetector,
+        feature_cols: list[str],
+        class_names: list[str],
+    ) -> None:
+        self._detector = detector
+        self._feature_cols = feature_cols
+        self._class_names = class_names
+
+    def predict(
+        self,
+        queries: list[str],
+        branch1_model: Any,
+        branch2_model: Any,
+    ) -> Branch3Prediction:
+        """Classify a session from raw query strings.
+
+        Args:
+            queries: Ordered raw query strings forming one session.
+            branch1_model: Loaded Branch1Model for per-step inference.
+            branch2_model: Loaded Branch2Model for per-step inference.
+
+        Returns:
+            A :class:`Branch3Prediction` with session-level label.
+        """
+        from deploy.registry import Branch1Model, Branch2Model
+
+        steps = []
+        for q in queries:
+            b1 = branch1_model.predict(q) if branch1_model else None
+            b2 = branch2_model.predict(q) if branch2_model else None
+            p = b1.probabilities if b1 else {}
+            step_feat = [
+                p.get("normal", 0.0),
+                p.get("union_based", 0.0),
+                p.get("error_based", 0.0),
+                p.get("boolean_blind", 0.0),
+                p.get("time_blind", 0.0),
+                b2.anomaly_score if b2 else 0.0,
+                0.0,  # gap_seconds_log1p — unknown for single request
+            ]
+            steps.append(np.array(step_feat, dtype=np.float32))
+
+        probs = self._detector.predict_proba([np.array(steps)])[0]
+        label_id = int(np.argmax(probs))
+        label_name = self._class_names[label_id]
+        return Branch3Prediction(
+            session_label=label_name,
+            is_attack=label_id != 0,
+            label_id=label_id,
+            probabilities={self._class_names[i]: float(p) for i, p in enumerate(probs)},
+        )
+
+
+@dataclass
 class Branch2Prediction:
     """Structured output of a single Branch-2 (anomaly) inference."""
 
@@ -173,6 +242,8 @@ class ModelRegistry:
         self._branch1_loaded = False  # True once a load has been attempted
         self._branch2: Branch2Model | None = None
         self._branch2_loaded = False
+        self._branch3: Branch3Model | None = None
+        self._branch3_loaded = False
 
     def _models_dir(self) -> Path:
         return Path(self._cfg.get_path("paths.models_dir", "models"))
@@ -270,6 +341,37 @@ class ModelRegistry:
         model_dir = self._branch_version_dir(active_version_key, default)
         return (model_dir / marker).exists()
 
+    def branch3(self) -> Branch3Model | None:
+        """Return the loaded Branch-3 model, or ``None`` if unavailable."""
+        if self._branch3_loaded:
+            return self._branch3
+        with self._lock:
+            if self._branch3_loaded:
+                return self._branch3
+            self._branch3 = self._load_branch3()
+            self._branch3_loaded = True
+        return self._branch3
+
+    def _load_branch3(self) -> Branch3Model | None:
+        model_dir = self._branch_version_dir(
+            "branch3_session.active_version", "branch3_v1"
+        )
+        if not (model_dir / "model.pt").exists():
+            logger.warning(
+                "Branch-3 model not found under %s — reporting not_ready", model_dir
+            )
+            return None
+        try:
+            detector = SessionSequenceDetector.load(model_dir)
+        except Exception:
+            logger.exception("Failed to load Branch-3 model from %s", model_dir)
+            return None
+        class_names = list(
+            self._cfg.get_path("branch3_session.session_classes", {}).keys()
+        )
+        logger.info("Loaded Branch-3 model from %s", model_dir)
+        return Branch3Model(detector, [], class_names)
+
     def status(self) -> dict[str, str]:
         """Return per-branch readiness for the health endpoint.
 
@@ -277,11 +379,7 @@ class ModelRegistry:
         """
         branch1_ready = self.branch1() is not None
         branch2_ready = self.branch2() is not None
-        # Branch-3 weights exist (models/branch3_v1/model.pt) but the router is
-        # not wired to serve them yet — report not_trained so /health stays
-        # consistent with the branch3 endpoint. Switch to a branch3() loader
-        # (like branch1/branch2) when Branch 3 is integrated.
-        branch3_ready = False
+        branch3_ready = self.branch3() is not None
         as_status = lambda ready: "ready" if ready else "not_trained"
         return {
             "branch1": as_status(branch1_ready),

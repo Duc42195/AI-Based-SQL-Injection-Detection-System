@@ -70,10 +70,14 @@ def test_branch2_scores_anomaly() -> None:
     assert isinstance(body["is_anomaly"], bool)
 
 
-def test_branch3_is_not_ready_stub() -> None:
+def test_branch3_session_ready() -> None:
+    """Branch 3 returns ready now that the GRU model is wired in."""
     r3 = client.post("/api/v1/branch3/session", json={"queries": ["a", "b"]})
     assert r3.status_code == 200
-    assert r3.json()["status"] == "not_ready"
+    body = r3.json()
+    assert body["status"] == "ready"
+    assert isinstance(body["session_label"], str)
+    assert isinstance(body["is_attack"], bool)
 
 
 def test_detect_returns_all_branches_and_decision() -> None:

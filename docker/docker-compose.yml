@@ -1,0 +1,9 @@
+services:
+  dvwa:
+    image: vulnerables/web-dvwa:latest
+    container_name: dvwa_sqli
+    ports:
+      - "4280:80"
+    environment:
+      - DVWA_RECAPTCHA=disabled
+    restart: unless-stopped

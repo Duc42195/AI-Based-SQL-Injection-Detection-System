@@ -1,0 +1,66 @@
+{
+  "version": "3",
+  "trained_at": "2026-07-29T05:34:00Z",
+  "experiments": {
+    "cachB_4class": {
+      "description": "Train on Cách B (92 sessions, 4-class: benign+boolean+time), test on split",
+      "f1_macro": 0.75,
+      "accuracy": 1.0,
+      "fpr_benign": 0.0,
+      "detection_rate": {"boolean_blind": 1.0, "time_blind": 1.0, "query_splitting": 0.0},
+      "ablation": {
+        "drop_B1_probs": 0.2565,
+        "drop_B2_score": 0.75,
+        "drop_gap_time": 0.75,
+        "only_B2_gap": 0.75
+      },
+      "note": "limited data (92 sessions), but FPR=0.0 for benign class"
+    },
+    "hybrid_AB_v2": {
+      "description": "Train on A+B combined (1492 sessions), test on held-out (299 sessions)",
+      "f1_macro": 1.0,
+      "accuracy": 1.0,
+      "fpr_benign": 0.0,
+      "detection_rate": {"boolean_blind": 1.0, "time_blind": 1.0, "query_splitting": 1.0},
+      "ablation": {
+        "drop_B1_probs": 0.9773,
+        "drop_B2_score": 0.9965,
+        "drop_gap_time": 0.9965,
+        "only_B2_gap": 0.9931
+      },
+      "note": "slightly better ablation than v1 (drop_B1=0.9773 vs 0.9606) — B2+gap helpful"
+    },
+    "cross_A2B_v2": {
+      "description": "Train on ALL A (1400 sessions), test on ALL B (92 sessions)",
+      "f1_macro": 0.0,
+      "accuracy": 0.0,
+      "fpr_benign": 1.0,
+      "detection_rate": {"boolean_blind": 0.0, "time_blind": 0.0, "query_splitting": 0.0},
+      "finding": "Complete cross-domain failure. B2 score polarity reversed (+2.31→-2.49 for boolean, +10.98→-2.43 for time). Query format differs: Cách A stores full SQL, Cách B stores injection payload only.",
+      "ablation": {
+        "drop_B1_probs": 0.0,
+        "drop_B2_score": 0.4249,
+        "drop_gap_time": 0.25,
+        "only_B2_gap": 0.25
+      },
+      "root_cause_b2": "Cách A attack B2=+2.31/10.98 (anomalous), Cách B attack B2=-2.49/-2.43 (normal). URL encoding + HTTP framing changes statistical features."
+    },
+    "cross_B2A_v2": {
+      "description": "Train on ALL B (92 sessions), test on ALL A (1400 sessions)",
+      "f1_macro": 0.3181,
+      "accuracy": 0.305,
+      "fpr_benign": 0.7886,
+      "detection_rate": {"boolean_blind": 1.0, "time_blind": 0.0, "query_splitting": 0.0086},
+      "finding": "Cách B boolean_blind generalizes perfectly to Cách A bool (DR=1.0). time_blind does not (DR=0.0) — SLEEP-based timing patterns differ."
+    }
+  },
+  "b2_score_distributions": {
+    "cachA_benign_mean": -4.51,
+    "cachA_boolean_blind_mean": 2.31,
+    "cachA_time_blind_mean": 10.98,
+    "cachB_benign_mean": -3.6,
+    "cachB_boolean_blind_mean": -2.49,
+    "cachB_time_blind_mean": -2.43
+  },
+  "key_insight": "B2 score is the PRIMARY domain mismatch. Cách B attack queries bypass B2's anomaly detector (negative score = 'normal') because HTTP-level framing changes statistical features vs bare SQL. To deploy in production, MUST train on real HTTP traffic (Cách B) — synthetic SQL-only data (Cách A) does not generalize."
+}

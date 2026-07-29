@@ -147,6 +147,71 @@ def _assemble_rows(session_id: str, session_label: int, session_source: str, ste
     return rows
 
 
+def _inject_noise(rows: list[dict], cfg: Config, rng: random.Random) -> list[dict]:
+    """Add synthetic noise to raw step features (Plan A expansion).
+
+    Three noise types controlled by ``cach_a.noise`` config:
+    - **step_order**: swap two adjacent steps with probability p.
+    - **feature**: add Gaussian noise to B1 probs + B2 score.
+    - **gap time**: replace constant gap with exponential sample.
+
+    Noise is applied *after* Branch 1+2 inference (to avoid affecting the
+    model scoring) but *before* saving — the stored CSV will have the
+    noisy features, and training/ablation on it will reflect real-world
+    variance rather than deterministic patterns.
+    """
+    noise_cfg = cfg.get_path("branch3_session.cach_a.noise", {})
+    step_order_p = float(noise_cfg.get("step_order_p", 0.0))
+    feature_noise_std = float(noise_cfg.get("feature_noise_std", 0.0))
+    gap_time_lambda = float(noise_cfg.get("gap_time_lambda", 0.0))
+
+    if not any([step_order_p, feature_noise_std, gap_time_lambda]):
+        return rows
+
+    # Group rows by session_id
+    sessions: dict[str, list[dict]] = {}
+    for r in rows:
+        sessions.setdefault(r["session_id"], []).append(r)
+
+    noisy_rows: list[dict] = []
+    for sid, steps in sessions.items():
+        # --- Step-order noise ---
+        if step_order_p > 0 and len(steps) > 1:
+            for i in range(len(steps) - 1):
+                if rng.random() < step_order_p:
+                    steps[i], steps[i + 1] = steps[i + 1], steps[i]
+
+        # Reindex every pass since swaps can cascade
+        for idx, s in enumerate(steps):
+            s["step_index"] = idx
+
+        # --- Feature noise (applied to B1 probs + B2 score) ---
+        prob_cols = branch1_prob_columns()
+        if feature_noise_std > 0:
+            for s in steps:
+                for col in prob_cols:
+                    if col in s:
+                        s[col] = round(s[col] + rng.gauss(0, feature_noise_std), 6)
+                        s[col] = max(0.0, min(1.0, s[col]))
+                if "branch2_anomaly_score" in s:
+                    s["branch2_anomaly_score"] = round(
+                        s["branch2_anomaly_score"] + rng.gauss(0, feature_noise_std), 6
+                    )
+
+        # --- Gap-time noise (replace timestamps) ---
+        if gap_time_lambda > 0 and len(steps) > 1:
+            base_ts = steps[0]["timestamp"]
+            steps[0]["gap_seconds"] = 0.0
+            for i in range(1, len(steps)):
+                gap = rng.expovariate(1.0 / gap_time_lambda)
+                steps[i]["timestamp"] = steps[i - 1]["timestamp"] + gap
+                steps[i]["gap_seconds"] = round(gap, 6)
+
+        noisy_rows.extend(steps)
+
+    return noisy_rows
+
+
 def build_sessions(cfg: Config, df_train: pd.DataFrame, rng: random.Random) -> list[dict]:
     """Generate all Cách A session rows (without Branch 1/2 scores yet)."""
     cach_a = cfg.get_path("branch3_session.cach_a")
@@ -265,6 +330,8 @@ def main() -> None:
         for col, name in enumerate(prob_cols):
             r[name] = round(float(probs[i, col]), 6)
         r["branch2_anomaly_score"] = round(float(scores[i]), 6)
+
+    rows = _inject_noise(rows, cfg, rng)
 
     out_df = pd.DataFrame(rows)
 

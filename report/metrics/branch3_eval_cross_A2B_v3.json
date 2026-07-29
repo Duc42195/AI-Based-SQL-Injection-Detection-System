@@ -1,0 +1,84 @@
+{
+  "version": "branch3_v1_cross_A2B_v3",
+  "trained_at": "2026-07-29T06:08:13Z",
+  "dataset": "cross_A2B_v3",
+  "model": {
+    "architecture": "gru",
+    "input_dim": 7,
+    "hidden_dim": 32,
+    "epochs": 30,
+    "learning_rate": 0.001,
+    "batch_size": 16
+  },
+  "train_sessions": 1400,
+  "test_sessions": 92,
+  "metrics": {
+    "n_test_sessions": 92,
+    "confusion_matrix": [
+      [
+        20,
+        0,
+        0,
+        0
+      ],
+      [
+        0,
+        0,
+        0,
+        36
+      ],
+      [
+        0,
+        0,
+        0,
+        36
+      ],
+      [
+        0,
+        0,
+        0,
+        0
+      ]
+    ],
+    "labels": [
+      "benign",
+      "boolean_blind",
+      "time_blind",
+      "query_splitting"
+    ],
+    "f1_macro": 0.25,
+    "accuracy": 0.217391,
+    "per_class": {
+      "benign": {
+        "precision": 1.0,
+        "recall": 1.0,
+        "f1": 1.0,
+        "support": 20
+      },
+      "boolean_blind": {
+        "precision": 0.0,
+        "recall": 0.0,
+        "f1": 0.0,
+        "support": 36
+      },
+      "time_blind": {
+        "precision": 0.0,
+        "recall": 0.0,
+        "f1": 0.0,
+        "support": 36
+      },
+      "query_splitting": {
+        "precision": 0.0,
+        "recall": 0.0,
+        "f1": 0.0,
+        "support": 0
+      }
+    },
+    "fpr_benign": 0.0,
+    "detection_rate": {
+      "boolean_blind": 0.0,
+      "time_blind": 0.0,
+      "query_splitting": 0.0
+    }
+  }
+}

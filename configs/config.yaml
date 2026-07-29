@@ -157,7 +157,7 @@ branch3_session:
   enabled: true
   # Model folder under models_dir (created once Branch 3 is trained). Until then
   # the API reports this branch as "not_ready" instead of crashing.
-  active_version: "branch3_v1"
+  active_version: "branch3_v1_hybrid_AB_v3"
   session_idle_gap_seconds: 1800   # 30-min inactivity ends a session
   sequence_model: "gru"            # "gru" | "transformer"
   max_session_len: 64
@@ -208,7 +208,29 @@ branch3_session:
       # many "sessions" are generated (confirmed empirically: 5 users -> 5
       # traces repeated ~70x each -> the model memorized instead of
       # generalizing). 100 keeps most of the 350 sessions/class unique.
-      synthetic_user_pool_size: 100
+      synthetic_user_pool_size: 5000
+      # Noise injection (Plan A expansion) — added to combat memorization.
+      # Each noise type has a small probability/scale so trace diversity
+      # increases without destroying the underlying bisection pattern.
+      noise:
+        step_order_p: 0.05       # prob of swapping two adjacent steps
+        feature_noise_std: 0.01  # Gaussian σ added to B1 probs + B2 score
+        gap_time_lambda: 2.0     # exponential distribution λ for gap seconds
+  # Cách B (sqlmap + Docker) — see train/capture_sqlmap_sessions.py.
+  cach_b:
+    dvwa_url: "http://localhost:4280"
+    dvwa_login: "admin"
+    dvwa_password: "password"
+    dvwa_security_level: "low"
+    sessions_per_technique: 10
+    max_extract_chars: 10  # extract full password (max 8 chars) + buffer
+    sqlmap_techniques: ["B", "T"]
+    sqlmap_level: 3
+    sqlmap_threads: 1
+    benign_sessions: 20
+    benign_min_steps: 5
+    benign_max_steps: 15
+    benign_step_gap_seconds: [2.0, 10.0]
   # GRU training hyperparameters — see train/train_branch3.py.
   train:
     hidden_dim: 32

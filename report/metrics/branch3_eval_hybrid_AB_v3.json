@@ -1,12 +1,7 @@
 {
-  "version": "branch3_v1",
-  "branch": "branch3_session",
-  "trained_at": "2026-07-29T05:11:43Z",
-  "dataset": "data\\processed\\branch3_sessions_cach_a.csv",
-  "dataset_source": {
-    "A_real_db": 1050,
-    "A_simulated": 350
-  },
+  "version": "branch3_v1_hybrid_AB_v3",
+  "trained_at": "2026-07-29T06:07:23Z",
+  "dataset": "hybrid_AB_v3",
   "model": {
     "architecture": "gru",
     "input_dim": 7,
@@ -15,58 +10,27 @@
     "learning_rate": 0.001,
     "batch_size": 16
   },
-  "train_sessions": 1120,
-  "loss_curve": [
-    0.958946,
-    0.347831,
-    0.157653,
-    0.081435,
-    0.048197,
-    0.032097,
-    0.023264,
-    0.017507,
-    0.013568,
-    0.01133,
-    0.009207,
-    0.007897,
-    0.006623,
-    0.005704,
-    0.004968,
-    0.004344,
-    0.003885,
-    0.003456,
-    0.003087,
-    0.002793,
-    0.002512,
-    0.002289,
-    0.002093,
-    0.001906,
-    0.001754,
-    0.001622,
-    0.001495,
-    0.001378,
-    0.001275,
-    0.001186
-  ],
+  "train_sessions": 1193,
+  "test_sessions": 299,
   "metrics": {
-    "n_test_sessions": 280,
+    "n_test_sessions": 299,
     "confusion_matrix": [
       [
-        70,
+        75,
         0,
         0,
         0
       ],
       [
         0,
-        70,
+        79,
         0,
         0
       ],
       [
         0,
         0,
-        70,
+        75,
         0
       ],
       [
@@ -89,19 +53,19 @@
         "precision": 1.0,
         "recall": 1.0,
         "f1": 1.0,
-        "support": 70
+        "support": 75
       },
       "boolean_blind": {
         "precision": 1.0,
         "recall": 1.0,
         "f1": 1.0,
-        "support": 70
+        "support": 79
       },
       "time_blind": {
         "precision": 1.0,
         "recall": 1.0,
         "f1": 1.0,
-        "support": 70
+        "support": 75
       },
       "query_splitting": {
         "precision": 1.0,
