@@ -1,0 +1,118 @@
+{
+  "comparison": {
+    "GRU": {
+      "f1_macro": 1.0,
+      "accuracy": 1.0,
+      "fpr_benign": 0.0,
+      "latency_ms": 2.1817
+    },
+    "LR_16feat": {
+      "f1_macro": 1.0,
+      "accuracy": 1.0,
+      "fpr_benign": 0.0,
+      "latency_ms": 0.9328
+    },
+    "LR_28feat": {
+      "f1_macro": 1.0,
+      "accuracy": 1.0
+    },
+    "LR_cross_A2B": {
+      "f1_macro": 0.4722222222222222,
+      "accuracy": 0.47368421052631576,
+      "fpr_benign": 0.0
+    }
+  },
+  "feature_names": [
+    "branch1_prob_boolean_blind_mean",
+    "branch1_prob_error_based_mean",
+    "branch1_prob_normal_mean",
+    "branch1_prob_time_blind_mean",
+    "branch1_prob_union_based_mean",
+    "branch2_anomaly_score_mean",
+    "gap_seconds_log1p_mean",
+    "branch1_prob_boolean_blind_std",
+    "branch1_prob_error_based_std",
+    "branch1_prob_normal_std",
+    "branch1_prob_time_blind_std",
+    "branch1_prob_union_based_std",
+    "branch2_anomaly_score_std",
+    "gap_seconds_log1p_std",
+    "gap_seconds_log1p_max",
+    "gap_seconds_log1p_slope"
+  ],
+  "coefficients": {
+    "benign": {
+      "branch1_prob_boolean_blind_mean": -0.700967,
+      "branch1_prob_error_based_mean": -0.169236,
+      "branch1_prob_normal_mean": 1.286418,
+      "branch1_prob_time_blind_mean": -0.214116,
+      "branch1_prob_union_based_mean": -0.801615,
+      "branch2_anomaly_score_mean": -0.38579,
+      "gap_seconds_log1p_mean": 0.968492,
+      "branch1_prob_boolean_blind_std": -0.344737,
+      "branch1_prob_error_based_std": -0.088382,
+      "branch1_prob_normal_std": -0.498649,
+      "branch1_prob_time_blind_std": -0.213862,
+      "branch1_prob_union_based_std": -0.099628,
+      "branch2_anomaly_score_std": -0.317583,
+      "gap_seconds_log1p_std": 0.990739,
+      "gap_seconds_log1p_max": 1.011296,
+      "gap_seconds_log1p_slope": 0.701808
+    },
+    "boolean_blind": {
+      "branch1_prob_boolean_blind_mean": 0.443886,
+      "branch1_prob_error_based_mean": 0.794485,
+      "branch1_prob_normal_mean": -0.268119,
+      "branch1_prob_time_blind_mean": -0.51935,
+      "branch1_prob_union_based_mean": 0.523882,
+      "branch2_anomaly_score_mean": 0.567526,
+      "gap_seconds_log1p_mean": -0.880911,
+      "branch1_prob_boolean_blind_std": -0.07099,
+      "branch1_prob_error_based_std": -0.584971,
+      "branch1_prob_normal_std": 1.296196,
+      "branch1_prob_time_blind_std": -0.668752,
+      "branch1_prob_union_based_std": -0.1654,
+      "branch2_anomaly_score_std": -0.369298,
+      "gap_seconds_log1p_std": -1.344598,
+      "gap_seconds_log1p_max": -1.095118,
+      "gap_seconds_log1p_slope": -1.189262
+    },
+    "time_blind": {
+      "branch1_prob_boolean_blind_mean": -1.104238,
+      "branch1_prob_error_based_mean": -0.052945,
+      "branch1_prob_normal_mean": -1.171761,
+      "branch1_prob_time_blind_mean": 2.25643,
+      "branch1_prob_union_based_mean": -0.474552,
+      "branch2_anomaly_score_mean": 0.801094,
+      "gap_seconds_log1p_mean": -0.175428,
+      "branch1_prob_boolean_blind_std": -0.18004,
+      "branch1_prob_error_based_std": -0.02373,
+      "branch1_prob_normal_std": -0.834207,
+      "branch1_prob_time_blind_std": 0.61965,
+      "branch1_prob_union_based_std": -0.010647,
+      "branch2_anomaly_score_std": -0.409068,
+      "gap_seconds_log1p_std": -0.299854,
+      "gap_seconds_log1p_max": -0.253759,
+      "gap_seconds_log1p_slope": -0.400947
+    },
+    "query_splitting": {
+      "branch1_prob_boolean_blind_mean": 1.361313,
+      "branch1_prob_error_based_mean": -0.572302,
+      "branch1_prob_normal_mean": 0.153463,
+      "branch1_prob_time_blind_mean": -1.522966,
+      "branch1_prob_union_based_mean": 0.752283,
+      "branch2_anomaly_score_mean": -0.98283,
+      "gap_seconds_log1p_mean": 0.087846,
+      "branch1_prob_boolean_blind_std": 0.595769,
+      "branch1_prob_error_based_std": 0.697085,
+      "branch1_prob_normal_std": 0.036663,
+      "branch1_prob_time_blind_std": 0.262963,
+      "branch1_prob_union_based_std": 0.275674,
+      "branch2_anomaly_score_std": 1.09595,
+      "gap_seconds_log1p_std": 0.653713,
+      "gap_seconds_log1p_max": 0.337583,
+      "gap_seconds_log1p_slope": 0.888402
+    }
+  },
+  "conclusion": "LR matches or beats GRU on F1. Swap GRU -> LR recommended (faster, simpler, interpretable)."
+}

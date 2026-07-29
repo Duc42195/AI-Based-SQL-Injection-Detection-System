@@ -46,6 +46,15 @@
     }
   },
   "deployment": {"active_model": "branch3_v1_hybrid_AB_v3", "tests": "112/112 green"},
+  "gru_vs_lr_comparison": {
+    "description": "Compare GRU vs LogisticRegression on 16 session-level features (mean/std/max/slope)",
+    "GRU": {"f1_macro": 1.0, "accuracy": 1.0, "fpr_benign": 0.0, "latency_ms": 2.18},
+    "LR_16feat": {"f1_macro": 1.0, "accuracy": 1.0, "fpr_benign": 0.0, "latency_ms": 0.93},
+    "LR_28feat": {"f1_macro": 1.0, "accuracy": 1.0},
+    "LR_cross_A2B": {"f1_macro": 0.4722, "fpr_benign": 0.0},
+    "speedup": "2.3x",
+    "conclusion": "LR matches GRU on F1, faster, interpretable, better cross-domain (0.4722 vs 0.25). Swap GRU -> LR recommended."
+  },
   "shuffle_test": {
     "description": "Shuffle step order within each test session -> GRU should fail if learning sequence patterns",
     "gru_original": {"f1_macro": 1.0, "accuracy": 1.0},
