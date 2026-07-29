@@ -92,19 +92,50 @@ Ngày 29/07, chạy shuffle test để kiểm tra GRU có thực sự học sequ
 - GRU là overkill — RF/XGBoost trên 7 averaged features cho performance tương đương
 - Giá trị thật của Branch 3 là kết hợp 3 nguồn tín hiệu: B1 probs + B2 anomaly + gap timing
 
-## 5. Kế hoạch đề xuất
+## 5. Architecture Comparison — 5 Models Benchmark
+
+Ngày 29/07, chạy so sánh 5 architectures trên 16 session-level features:
+
+| Model | F1 | Cross A→B | p50(ms) | Size |
+|---|---|---|---|---|
+| GRU | 1.0000 | 0.2500 | 1.20ms | 18KB |
+| **LogisticRegression** | **1.0000** | **0.4722** | **0.08ms** | **~0KB** |
+| RandomForest | 1.0000 | 0.2500 | 31.24ms | large |
+| LightGBM | 1.0000 | 0.2500 | 1.15ms | moderate |
+| XGBoost | 1.0000 | 0.2500 | 0.79ms | moderate |
+
+Winner: **LogisticRegression** — cross-domain cao nhất (0.47), nhanh nhất (0.08ms), đơn giản nhất.
+
+## 6. F1=1.0 Diagnostic — Dataset quá dễ, không phải lỗi
+
+Chạy 7 checks để verify F1=1.0:
+
+| Check | Kết quả |
+|---|---|
+| Train/test overlap | 0 sessions — clean |
+| Shuffle labels | F1=0.28 (~random baseline) ✅ |
+| Random baseline | F1=0.25 ✅ |
+| Majority baseline | F1=0.10 ✅ |
+| Single-feature best | `gap_mean` F1=0.9461 ⚠️ dataset dễ |
+| Single-feature worst | `gap_slope` F1=0.3987 ✅ không dominance |
+| Per-class F1 | 1.0000/1.0000/1.0000/1.0000 ✅ |
+
+**Kết luận:** F1=1.0 legitimate — không có data leakage hay eval bug. Nhưng dataset (Cách A) quá dễ vì gap_time và B2_score đã phân biệt rất rõ. **Bài toán thực sự là cross-domain generalization**, nơi LR đạt 0.47 còn các model khác chỉ 0.25.
+
+## 7. Kế hoạch đề xuất
 
 ### Prioritization
 
 | Priority | Task | Effort | Impact |
 |----------|------|--------|--------|
-| P0 | Shuffle test → paper reframing | Immediate | Cao — ảnh hưởng claims trong paper |
-| P1 | Deploy API (load model) | 30 phút | Cao — unblock frontend integration |
-| P2 | Cách B dataset | 2-3 ngày | Cao — real traffic validation |
-| P3 | Threshold calibration | 1 ngày | Trung bình — cần Cách B trước |
-| P4 | Real traffic test | 2-3 ngày | Thấp — phụ thuộc production |
+| P0 | Architecture decision (GRU vs LR) | Hôm nay | Cao — ảnh hưởng architecture + paper |
+| P1 | Refactor Branch 3 → LogisticRegression | 2h | Cao — F1=1.0, 0.08ms, interpretable |
+| P2 | Push models lên HF (blocked: network) | — | Cao — cần VPN/proxy |
+| P3 | Cách B dataset expansion | 2-3 ngày | Cao — real traffic validation |
+| P4 | Threshold calibration | 1 ngày | Trung bình — cần Cách B trước |
+| P5 | Real traffic test | 2-3 ngày | Thấp — phụ thuộc production |
 
-### Deploy API status (29/07 PM)
+### Deploy API status (29/07 PM) — superseded by LR recommendation
 ✅ **Done.** `Branch3Model` + `Branch3Prediction` added to `deploy/registry.py`, router updated in `deploy/routers/branch3.py`. Model loads from `models/branch3_v1/`, runs inference by chaining B1 + B2 per step, returns `status:"ready"` with `session_label` / `is_attack`. 112/112 tests green.
 
 Next step: frontend (Minh) now calls `/api/v1/branch3/session` instead of getting `not_ready`.
@@ -120,4 +151,11 @@ Next step: frontend (Minh) now calls `/api/v1/branch3/session` instead of gettin
 | `train/notebooks/branch3_shuffle_test.ipynb` | Shuffle test notebook |
 | `train/run_ablation_branch3.py` | Ablation experiment script |
 | `report/plan/nhanh3_plan.md` | Original plan |
-| `report/metrics/branch3_final_report.json` | Final report v6 (includes shuffle test) |
+| `report/metrics/branch3_final_report.json` | Final report v7 (shuffle test + architecture comparison + F1 diagnostic) |
+| `report/metrics/branch3_gru_vs_lr.json` | GRU vs LR prototype results |
+| `report/metrics/branch3_architecture_comparison.json` | 5-architecture comparison (GRU, LR, RF, LGBM, XGB) |
+| `train/branch3_lr_features.py` | Session-level 16-dim feature extraction |
+| `train/compare_branch3_architectures.py` | Architecture comparison script |
+| `train/compare_gru_vs_lr.py` | GRU vs LR prototype script |
+| `train/diagnose_f1_100.py` | F1=1.0 diagnostic script |
+| `report/plan/nhanh3_prototype_compare.md` | Prototype comparison plan |

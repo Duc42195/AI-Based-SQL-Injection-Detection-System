@@ -1,0 +1,212 @@
+{
+  "GRU": {
+    "f1_macro": 1.0,
+    "accuracy": 1.0,
+    "fpr_benign": 0.0,
+    "detection_rate": {
+      "boolean_blind": 1.0,
+      "time_blind": 1.0,
+      "query_splitting": 1.0
+    },
+    "confusion_matrix": [
+      [
+        75,
+        0,
+        0,
+        0
+      ],
+      [
+        0,
+        79,
+        0,
+        0
+      ],
+      [
+        0,
+        0,
+        75,
+        0
+      ],
+      [
+        0,
+        0,
+        0,
+        70
+      ]
+    ],
+    "latency": {
+      "p50_ms": 1.1993,
+      "p95_ms": 1.5506
+    },
+    "size_bytes": 19086,
+    "cross_A2B_f1": 0.25
+  },
+  "LogisticRegression": {
+    "f1_macro": 1.0,
+    "accuracy": 1.0,
+    "fpr_benign": 0.0,
+    "detection_rate": {
+      "boolean_blind": 1.0,
+      "time_blind": 1.0,
+      "query_splitting": 1.0
+    },
+    "confusion_matrix": [
+      [
+        75,
+        0,
+        0,
+        0
+      ],
+      [
+        0,
+        79,
+        0,
+        0
+      ],
+      [
+        0,
+        0,
+        75,
+        0
+      ],
+      [
+        0,
+        0,
+        0,
+        70
+      ]
+    ],
+    "latency": {
+      "p50_ms": 0.0821,
+      "p95_ms": 0.0904
+    },
+    "size_bytes": 0,
+    "cross_A2B_f1": 0.472222
+  },
+  "RandomForest": {
+    "f1_macro": 1.0,
+    "accuracy": 1.0,
+    "fpr_benign": 0.0,
+    "detection_rate": {
+      "boolean_blind": 1.0,
+      "time_blind": 1.0,
+      "query_splitting": 1.0
+    },
+    "confusion_matrix": [
+      [
+        75,
+        0,
+        0,
+        0
+      ],
+      [
+        0,
+        79,
+        0,
+        0
+      ],
+      [
+        0,
+        0,
+        75,
+        0
+      ],
+      [
+        0,
+        0,
+        0,
+        70
+      ]
+    ],
+    "latency": {
+      "p50_ms": 31.241,
+      "p95_ms": 59.9821
+    },
+    "size_bytes": 0,
+    "cross_A2B_f1": 0.25
+  },
+  "LightGBM": {
+    "f1_macro": 1.0,
+    "accuracy": 1.0,
+    "fpr_benign": 0.0,
+    "detection_rate": {
+      "boolean_blind": 1.0,
+      "time_blind": 1.0,
+      "query_splitting": 1.0
+    },
+    "confusion_matrix": [
+      [
+        75,
+        0,
+        0,
+        0
+      ],
+      [
+        0,
+        79,
+        0,
+        0
+      ],
+      [
+        0,
+        0,
+        75,
+        0
+      ],
+      [
+        0,
+        0,
+        0,
+        70
+      ]
+    ],
+    "latency": {
+      "p50_ms": 1.1537,
+      "p95_ms": 1.3429
+    },
+    "size_bytes": 0,
+    "cross_A2B_f1": 0.25
+  },
+  "XGBoost": {
+    "f1_macro": 1.0,
+    "accuracy": 1.0,
+    "fpr_benign": 0.0,
+    "detection_rate": {
+      "boolean_blind": 1.0,
+      "time_blind": 1.0,
+      "query_splitting": 1.0
+    },
+    "confusion_matrix": [
+      [
+        75,
+        0,
+        0,
+        0
+      ],
+      [
+        0,
+        79,
+        0,
+        0
+      ],
+      [
+        0,
+        0,
+        75,
+        0
+      ],
+      [
+        0,
+        0,
+        0,
+        70
+      ]
+    ],
+    "latency": {
+      "p50_ms": 0.7882,
+      "p95_ms": 1.2558
+    },
+    "size_bytes": 0,
+    "cross_A2B_f1": 0.25
+  }
+}

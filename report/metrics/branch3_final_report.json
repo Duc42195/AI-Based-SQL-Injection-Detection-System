@@ -1,5 +1,5 @@
 {
-  "version": "5",
+  "version": "7",
   "trained_at": "2026-07-29T06:14:00Z",
   "bug_fix": "Cách B benign gap_time was 0.0 for all steps — fixed. Now ~7s mean gap.",
   "experiments": {
@@ -54,6 +54,28 @@
     "LR_cross_A2B": {"f1_macro": 0.4722, "fpr_benign": 0.0},
     "speedup": "2.3x",
     "conclusion": "LR matches GRU on F1, faster, interpretable, better cross-domain (0.4722 vs 0.25). Swap GRU -> LR recommended."
+  },
+  "architecture_comparison": {
+    "description": "5 architectures on 16 session-level features (mean/std/max/slope of 7 per-step features)",
+    "models": {
+      "GRU": {"f1_macro": 1.0, "cross_A2B_f1": 0.2500, "latency_p50_ms": 1.20, "size_kb": 18},
+      "LogisticRegression": {"f1_macro": 1.0, "cross_A2B_f1": 0.4722, "latency_p50_ms": 0.08, "size_kb": 0},
+      "RandomForest": {"f1_macro": 1.0, "cross_A2B_f1": 0.2500, "latency_p50_ms": 31.24, "size_kb": 0},
+      "LightGBM": {"f1_macro": 1.0, "cross_A2B_f1": 0.2500, "latency_p50_ms": 1.15, "size_kb": 0},
+      "XGBoost": {"f1_macro": 1.0, "cross_A2B_f1": 0.2500, "latency_p50_ms": 0.79, "size_kb": 0}
+    },
+    "winner": "LogisticRegression — best cross-domain (0.4722), fastest (0.08ms), simplest"
+  },
+  "f1_diagnostic": {
+    "description": "Verify F1=1.0 is legitimate (not data leakage / eval bug)",
+    "train_test_overlap": "0 sessions — clean split",
+    "per_class_f1": {"benign": 1.0, "boolean_blind": 1.0, "time_blind": 1.0, "query_splitting": 1.0},
+    "single_feature_best": "gap_seconds_log1p_mean F1=0.9461",
+    "single_feature_worst": "gap_seconds_log1p_slope F1=0.3987",
+    "shuffle_labels_mean_f1": 0.2757,
+    "random_baseline_f1": "~0.25",
+    "majority_baseline_f1": 0.1003,
+    "conclusion": "F1=1.0 is legitimate — no data leakage, no eval bug, shuffle labels drop to 0.28. However, dataset is too easy: gap_mean alone gives F1=0.95, B2_score_mean gives 0.87. The real challenge is cross-domain generalization (A->B F1=0.47)."
   },
   "shuffle_test": {
     "description": "Shuffle step order within each test session -> GRU should fail if learning sequence patterns",
