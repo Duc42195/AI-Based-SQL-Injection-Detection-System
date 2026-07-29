@@ -1,0 +1,59 @@
+{
+  "version": "5",
+  "trained_at": "2026-07-29T06:14:00Z",
+  "bug_fix": "Cách B benign gap_time was 0.0 for all steps — fixed. Now ~7s mean gap.",
+  "experiments": {
+    "cachB_4class_v3": {
+      "fixed_gaps": true,
+      "f1_macro": 0.75,
+      "accuracy": 1.0,
+      "fpr_benign": 0.0,
+      "detection_rate": {"boolean_blind": 1.0, "time_blind": 1.0}
+    },
+    "hybrid_AB_v3": {
+      "fixed_gaps": true,
+      "f1_macro": 1.0,
+      "accuracy": 1.0,
+      "fpr_benign": 0.0,
+      "detection_rate": {"boolean_blind": 1.0, "time_blind": 1.0, "query_splitting": 1.0}
+    },
+    "cross_A2B_v3": {
+      "description": "Train on ALL A, test on ALL B (with fixed gaps)",
+      "f1_macro": 0.25,
+      "note": "Improved from 0.0 after gap fix, but still fundamentally broken"
+    },
+    "cross_B2A_v3": {
+      "f1_macro": 0.4456,
+      "note": "Improved from 0.3181 after gap fix"
+    },
+    "cross_A2B_wrapped": {
+      "description": "Train on A, test on B with SQL-wrapped queries",
+      "f1_macro": 0.0652,
+      "fpr_benign": 0.85,
+      "note": "Wrapping alone insufficient — B2 still misaligned"
+    },
+    "hybrid_AB_wrapped": {
+      "f1_macro": 1.0,
+      "note": "Wrapped B + A works fine (F1=1.0), same as unwrapped hybrid"
+    },
+    "per_session_traces": {
+      "CachA_benign": {"B1_normal": 0.839, "B1_bool": 0.096, "B2": -4.51, "gap_s": 61.0},
+      "CachB_benign": {"B1_normal": 0.887, "B1_bool": 0.074, "B2": -3.6, "gap_s": 6.9},
+      "CachA_boolean": {"B1_normal": 0.384, "B1_bool": 0.354, "B2": 2.3, "gap_s": 0.009},
+      "CachB_boolean": {"B1_normal": 0.079, "B1_bool": 0.87, "B2": -2.51, "gap_s": 0.007},
+      "CachA_time": {"B1_normal": 0.028, "B1_bool": 0.117, "B2": 10.97, "gap_s": 0.034},
+      "CachB_time": {"B1_normal": 0.013, "B1_bool": 0.395, "B2": -2.44, "gap_s": 0.005}
+    }
+  },
+  "deployment": {"active_model": "branch3_v1_hybrid_AB_v3", "tests": "112/112 green"},
+  "shuffle_test": {
+    "description": "Shuffle step order within each test session -> GRU should fail if learning sequence patterns",
+    "gru_original": {"f1_macro": 1.0, "accuracy": 1.0},
+    "gru_shuffled": {"f1_macro": 1.0, "accuracy": 1.0},
+    "gru_train_orig_test_shuffled": {"f1_macro": 1.0, "accuracy": 1.0},
+    "rf_step_average_baseline": {"f1_macro": 0.9965, "accuracy": 0.9967},
+    "rf_on_shuffled": {"f1_macro": 0.9965},
+    "conclusion": "GRU does NOT learn sequence patterns. Shuffling changes nothing. RF on session averages (7 features) matches GRU performance (0.9965 vs 1.0). Branch 3 value is hybrid feature fusion, not sequence modeling.",
+    "implication": "Replace GRU with simpler classifier (RF/XGBoost). Reframe paper: session-level hybrid feature fusion, not sequence anomaly detection."
+  }
+}
