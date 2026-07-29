@@ -23,7 +23,7 @@ def test_health_lists_all_branches() -> None:
     assert resp.status_code == 200
     body = resp.json()
     assert body["status"] == "ok"
-    assert set(body["branches"]) == {"branch1", "branch2", "branch3"}
+    assert set(body["branches"]) == {"branch1", "branch2"}
 
 
 def test_predict_benign_query() -> None:
@@ -70,21 +70,11 @@ def test_branch2_scores_anomaly() -> None:
     assert isinstance(body["is_anomaly"], bool)
 
 
-def test_branch3_session_ready() -> None:
-    """Branch 3 returns ready now that the GRU model is wired in."""
-    r3 = client.post("/api/v1/branch3/session", json={"queries": ["a", "b"]})
-    assert r3.status_code == 200
-    body = r3.json()
-    assert body["status"] == "ready"
-    assert isinstance(body["session_label"], str)
-    assert isinstance(body["is_attack"], bool)
-
-
 def test_detect_returns_all_branches_and_decision() -> None:
     resp = client.post("/api/v1/detect", json={"query": "SELECT 1"})
     assert resp.status_code == 200
     body = resp.json()
-    assert set(body) >= {"branch1", "branch2", "branch3", "decision"}
+    assert set(body) >= {"branch1", "branch2", "decision"}
     assert body["decision"]["action"] in {"BLOCK", "OVERKILL", "ALLOW", "UNKNOWN"}
     assert "reason" in body["decision"]
 
@@ -99,7 +89,7 @@ def test_detect_blocks_obvious_sqli() -> None:
     assert resp.json()["decision"]["action"] == "BLOCK"
 
 
-@pytest.mark.parametrize("task", ["branch1", "branch2", "branch3"])
+@pytest.mark.parametrize("task", ["branch1", "branch2"])
 def test_metrics_endpoint_responds(task: str) -> None:
     resp = client.get(f"/api/v1/metrics/{task}")
     assert resp.status_code == 200
@@ -182,7 +172,7 @@ def test_monitor_unknown_task_404() -> None:
 def test_monitor_retrain_and_logs() -> None:
     r = client.post("/api/v1/monitor/retrain/branch2")
     assert r.status_code == 200 and r.json()["ok"] is True
-    logs = client.get("/api/v1/monitor/logs/branch3")
+    logs = client.get("/api/v1/monitor/logs/branch2")
     assert logs.status_code == 200 and len(logs.json()["lines"]) > 0
 
 

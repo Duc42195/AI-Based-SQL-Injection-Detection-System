@@ -33,12 +33,9 @@ _UNANNOTATED: dict[str, list[dict]] = {
         {"id": "u_n2_001", "query": "GET /admin/../../etc/passwd", "source": "high_anomaly"},
         {"id": "u_n2_002", "query": "SELECT * FROM orders JOIN users USING(uid)", "source": "high_anomaly"},
     ],
-    "branch3": [
-        {"id": "u_n3_001", "query": "step1: id=1 AND 1=1 | step2: id=1 AND 1=2", "source": "session_replay"},
-    ],
 }
 
-_ANNOTATED_COUNT: dict[str, int] = {"branch1": 12480, "branch2": 9130, "branch3": 640}
+_ANNOTATED_COUNT: dict[str, int] = {    "branch1": 12480, "branch2": 9130}
 
 
 @router.get("/{task}/unannotated", response_model=UnannotatedResponse)

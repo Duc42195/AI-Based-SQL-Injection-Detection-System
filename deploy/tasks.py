@@ -9,9 +9,8 @@ from __future__ import annotations
 from fastapi import HTTPException
 
 from src.preprocessing.multiclass_tagger import LABEL_NAMES
-from src.utils import load_config
 
-VALID_TASKS = ("branch1", "branch2", "branch3")
+VALID_TASKS = ("branch1", "branch2")
 
 
 def validate_task(task: str) -> str:
@@ -31,12 +30,7 @@ def label_options(task: str) -> list[str]:
     if task == "branch2":
         # Branch 2 is benign-only anomaly detection: label is binary.
         return ["normal", "anomaly"]
-    # Branch 3 session labels come from config (fallback to a sensible default).
-    cfg = load_config()
-    session_classes = cfg.get_path("branch3_session.session_classes") or {
-        "benign": 0,
-        "boolean_blind": 1,
-        "time_blind": 2,
-        "query_splitting": 3,
-    }
-    return list(session_classes.keys())
+    raise HTTPException(
+        status_code=404,
+        detail=f"Unknown task '{task}'. Expected one of {VALID_TASKS}.",
+    )

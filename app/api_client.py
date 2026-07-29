@@ -102,11 +102,6 @@ def demo_execute(inputs: list[str], protected: bool) -> dict:
     return post("/demo/execute", {"inputs": inputs, "protected": protected})
 
 
-def branch3_session(queries: list[str]) -> dict:
-    """Classify a whole session (Branch 3)."""
-    return post("/branch3/session", {"queries": queries})
-
-
 def metrics(task: str) -> dict:
     """Return evaluation metrics for a task."""
     return get(f"/metrics/{task}")

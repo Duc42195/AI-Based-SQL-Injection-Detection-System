@@ -81,8 +81,6 @@ def _render_run(run: state.DemoRun) -> None:
         if len(steps) > 1:
             st.divider()
 
-    if run.protected and len(steps) > 1:
-        ui.render_branch3(run.response.get("branch3"))
 
 
 def _execute(mode: str, inputs: list[str], protected: bool) -> None:

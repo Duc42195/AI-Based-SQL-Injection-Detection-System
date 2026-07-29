@@ -64,15 +64,6 @@ class Branch2Response(BaseModel):
     detail: str | None = None
 
 
-class Branch3Response(BaseModel):
-    """Branch-3 session-level result (stub until the model is trained)."""
-
-    status: BranchStatus = "not_ready"
-    session_label: str | None = None
-    is_attack: bool | None = None
-    detail: str | None = None
-
-
 # --------------------------------------------------------------------------- #
 # Fusion / decision
 # --------------------------------------------------------------------------- #
@@ -89,7 +80,6 @@ class DetectResponse(BaseModel):
     query_canonical: str | None = None
     branch1: Branch1Response
     branch2: Branch2Response
-    branch3: Branch3Response
     decision: Decision
 
 
@@ -179,7 +169,6 @@ class DemoExecuteResponse(BaseModel):
 
     protected: bool
     results: list[DemoStepResult]
-    branch3: Branch3Response | None = None
     decision: Decision | None = None
 
 

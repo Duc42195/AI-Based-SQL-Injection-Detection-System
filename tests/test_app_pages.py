@@ -28,7 +28,7 @@ PAYLOAD_SAMPLE = "Classic tautology"  # a non-empty entry in SAMPLE_INPUTS
 _HEALTH = {
     "status": "ok",
     "api_version": "v1",
-    "branches": {"branch1": "ready", "branch2": "ready", "branch3": "not_trained"},
+    "branches": {"branch1": "ready", "branch2": "ready"},
 }
 _DEMO_DB = {
     "table": "users",
@@ -69,7 +69,6 @@ _BLOCKED = {
             "branch2": _BRANCH2,
         }
     ],
-    "branch3": {"status": "not_ready", "detail": "not wired"},
     "decision": {"action": "BLOCK", "reason": "Branch-1 detected attack class"},
 }
 

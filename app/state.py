@@ -29,7 +29,7 @@ import streamlit as st
 # belonging to third-party components in the same session_state dict.
 _PREFIX = "sqli"
 
-Task = str  # "branch1" | "branch2" | "branch3"
+Task = str  # "branch1" | "branch2"
 
 
 # --------------------------------------------------------------------------- #

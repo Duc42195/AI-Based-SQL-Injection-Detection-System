@@ -14,7 +14,6 @@ from deploy import demo_db
 from deploy.routers.detect import fuse_decision
 from deploy.routers.branch1 import run_branch1
 from deploy.routers.branch2 import run_branch2
-from deploy.routers.branch3 import run_branch3
 from deploy.schemas import (
     DemoDatabaseResponse,
     DemoExecuteRequest,
@@ -83,13 +82,11 @@ def execute(request: DemoExecuteRequest) -> DemoExecuteResponse:
     if not request.protected:
         return DemoExecuteResponse(protected=False, results=results)
 
-    # Fuse one decision over the session (Branch 3 sees the whole input list).
-    branch3 = run_branch3(request.inputs)
     # Escalate to the worst per-step Branch-1 verdict for the fused decision.
     worst_n1 = _worst_branch1(branch1_responses)
-    decision = fuse_decision(worst_n1, run_branch2(request.inputs[-1]), branch3)
+    decision = fuse_decision(worst_n1, run_branch2(request.inputs[-1]))
     return DemoExecuteResponse(
-        protected=True, results=results, branch3=branch3, decision=decision
+        protected=True, results=results, decision=decision
     )
 
 

@@ -9,11 +9,10 @@ import streamlit as st
 
 from app import api_client, cache, state
 
-TASKS = ("branch1", "branch2", "branch3")
+TASKS = ("branch1", "branch2")
 TASK_LABELS = {
     "branch1": "Branch 1 — Supervised",
     "branch2": "Branch 2 — Anomaly",
-    "branch3": "Branch 3 — Session",
 }
 
 # Decision action → (emoji, Streamlit alert function).
@@ -107,17 +106,6 @@ def render_branch2(result: dict[str, Any] | None) -> None:
         "(length, entropy, special chars), not attack content — it targets "
         "zero-days, not known payloads."
     )
-
-
-def render_branch3(result: dict[str, Any] | None) -> None:
-    """Render Branch-3 output, or a placeholder when it isn't ready."""
-    st.markdown("**Branch 3 — Session-level**")
-    if not result or result.get("status") != "ready":
-        st.info(_not_ready_text(result, "Branch 3"))
-        return
-    left, right = st.columns(2)
-    left.metric("Session label", result.get("session_label") or "—")
-    right.metric("Is attack", "YES" if result.get("is_attack") else "NO")
 
 
 def _not_ready_text(result: dict[str, Any] | None, name: str) -> str:

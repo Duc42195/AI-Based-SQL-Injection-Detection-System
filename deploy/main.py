@@ -23,7 +23,6 @@ from deploy.routers import (
     monitor,
     branch1,
     branch2,
-    branch3,
     train,
 )
 from src.utils import get_logger, load_config
@@ -64,7 +63,6 @@ def create_app() -> FastAPI:
     app.include_router(detect.router, prefix=prefix)
     app.include_router(branch1.router, prefix=prefix)
     app.include_router(branch2.router, prefix=prefix)
-    app.include_router(branch3.router, prefix=prefix)
     app.include_router(metrics.router, prefix=prefix)
     app.include_router(admin.router, prefix=prefix)
     # MLOps + Test-page routers.

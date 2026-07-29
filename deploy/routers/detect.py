@@ -1,10 +1,10 @@
 """Unified detection endpoint — runs all branches and fuses one verdict.
 
-This is the end-to-end system flow: canonicalize -> Branch 1/2/3 -> apply the
+This is the end-to-end system flow: canonicalize -> Branch 1/2 -> apply the
 decision matrix from the README (Position B proxy policy). Branches not yet
 trained contribute ``not_ready``; the decision degrades gracefully to whatever
 signal is available, so the frontend gets a real verdict today and a richer one
-as Branch 2/3 come online — with no client change.
+as Branch 2 comes online — with no client change.
 """
 
 from __future__ import annotations
@@ -13,13 +13,11 @@ from fastapi import APIRouter
 
 from deploy.routers.branch1 import run_branch1
 from deploy.routers.branch2 import run_branch2
-from deploy.routers.branch3 import run_branch3
 from deploy.schemas import (
     Decision,
     DetectResponse,
     Branch1Response,
     Branch2Response,
-    Branch3Response,
     QueryRequest,
 )
 
@@ -27,22 +25,14 @@ router = APIRouter(tags=["detect"])
 
 
 def fuse_decision(
-    branch1: Branch1Response, branch2: Branch2Response, branch3: Branch3Response
+    branch1: Branch1Response, branch2: Branch2Response
 ) -> Decision:
     """Apply the per-query decision matrix over the available branches.
 
     Matrix (README): attack class -> BLOCK; Normal + anomaly=1 -> OVERKILL;
-    Normal + anomaly=0 -> ALLOW. Branch 3 can escalate a benign query to
-    BLOCK if the session is an attack. Missing branches degrade the verdict
-    rather than block it.
+    Normal + anomaly=0 -> ALLOW. Missing branches degrade the verdict rather
+    than block it.
     """
-    # Branch 3 escalation (session-level) takes precedence when available.
-    if branch3.status == "ready" and branch3.is_attack:
-        return Decision(
-            action="BLOCK",
-            reason=f"Branch-3 flagged session as attack ({branch3.session_label}).",
-        )
-
     if branch1.status != "ready":
         return Decision(
             action="UNKNOWN",
@@ -76,12 +66,10 @@ def detect(request: QueryRequest) -> DetectResponse:
     """Run the full pipeline on one query and return branches + fused decision."""
     branch1 = run_branch1(request.query)
     branch2 = run_branch2(request.query)
-    branch3 = run_branch3([request.query])
-    decision = fuse_decision(branch1, branch2, branch3)
+    decision = fuse_decision(branch1, branch2)
     return DetectResponse(
         query_canonical=branch1.query_canonical,
         branch1=branch1,
         branch2=branch2,
-        branch3=branch3,
         decision=decision,
     )
