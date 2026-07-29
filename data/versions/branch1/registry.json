@@ -25,30 +25,6 @@
         "valid": 3807
       },
       "golden_hash": "sha256:db59ba876cadcd7d81fea343cd19dd6e08eeea12c4321c9b8336777052c9a6fa"
-    },
-    {
-      "version": "2.0",
-      "state": "sealed",
-      "protected": false,
-      "parent": "1.0",
-      "bump": "major",
-      "created_at": "2026-07-28T09:47:21+00:00",
-      "reason": "new class 'stacked' confirmed from the stream",
-      "label_space": [
-        "boolean_blind",
-        "error_based",
-        "normal",
-        "stacked",
-        "time_blind",
-        "union_based"
-      ],
-      "n_rows": 21671,
-      "content_hash": "sha256:71f269334db587777f038a52c03b5b7a07691e3b0a3fb2ed9f5dc504f8196e70",
-      "partitions": {
-        "train": 21671,
-        "golden": 6418
-      },
-      "golden_hash": "sha256:ab72208c46bd40b41b9b1d7909aa2b46f3d20db60376a305a96ba68a3c238a95"
     }
   ]
 }

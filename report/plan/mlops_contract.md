@@ -396,6 +396,34 @@ rather than from learning the new class, and the headline claim does not stand.
 5. Stream benign originates from CSIC 2010 HTTP traffic, not from the same source as the
    Branch-1 attack rows — a distribution seam that exists by construction.
 
+## 9b. Implementation notes (found while wiring the service)
+
+Three constraints emerged that the design did not anticipate. They are recorded here
+because each one silently breaks the loop if reintroduced.
+
+**Label representation.** `train/train_branch1.py` fits on integer label *ids*, while
+`src/continual_learning/trainer.py` fits on label *names*. A model promoted from the
+continual-learning path therefore broke `deploy/registry.py`, which assumed integers
+(`int(c) for c in clf.classes_` → `ValueError`). The registry now normalises either
+representation to names, and `compute_evaluation` coerces both sides — mixing them makes the
+label set unsortable and the comparison meaningless.
+
+**Two registries, not one.** The offline experiment originally sealed its versions into
+`data/versions/branch1/registry.json`, the same registry the service reads. The gate then
+compared a deployed model against a version no deployed model had ever been trained on, and
+invented a spurious major-version gap (`1.0 → 2.1`) that made it refuse a comparison it should
+have made. The experiment now keeps its lineage in
+`report/metrics/continual_learning/version_registry.json`; only the service writes to the
+service registry.
+
+**Champion lineage comes from metadata.** A champion's data version is read from its own
+`metadata.json`, not from `mlops.baseline.data_version` — reading it from config attributes the
+baseline version to whatever happens to be deployed.
+
+**Replay must exceed the baseline.** A replay shorter than
+`mlops.drift.baseline_windows × window_size` produces only reference windows, so the chart
+compares the baseline against itself. The UI now refuses to interpret such a run.
+
 ## 10. Out of scope
 
 Traffic-split A/B with enforcement · scheduled retrain daemon · authentication on admin

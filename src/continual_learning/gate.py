@@ -132,6 +132,10 @@ def compute_evaluation(
     if not y_true:
         raise ValueError("Cannot evaluate on an empty golden set")
 
+    # Coerce to str: models trained at different times may emit integer label
+    # ids or label names, and mixing the two makes the label set unsortable.
+    y_true = [str(label) for label in y_true]
+    y_pred = [str(label) for label in y_pred]
     labels = sorted(set(y_true) | set(y_pred))
     per_class_recall: dict[str, float] = {}
     f1s: list[float] = []

@@ -29,6 +29,14 @@ from src.utils import get_logger, load_config
 
 logger = get_logger(__name__)
 
+NORMAL_LABEL = "normal"
+_LABEL_IDS = {name: label for label, name in LABEL_NAMES.items()}
+
+
+def _is_int_like(value: Any) -> bool:
+    """True if a class label is an integer id rather than a name."""
+    return str(value).lstrip("-").isdigit()
+
 
 @dataclass
 class Branch1Prediction:
@@ -67,7 +75,14 @@ class Branch1Model:
         self._max_decode_iterations = max_decode_iterations
         # The model only predicts the classes present at train time (e.g. the
         # synthetic `stacked` class was excluded), so map from clf.classes_.
-        self._classes: list[int] = [int(c) for c in clf.classes_]
+        #
+        # Models are trained two ways in this repo: train/train_branch1.py fits
+        # on integer label ids, while the continual-learning trainer fits on
+        # label names. Normalise both to names here so either can be served.
+        self._class_names: list[str] = [
+            LABEL_NAMES.get(int(c), str(c)) if _is_int_like(c) else str(c)
+            for c in clf.classes_
+        ]
 
     def predict(self, query: str) -> Branch1Prediction:
         """Classify one raw query string.
@@ -82,29 +97,25 @@ class Branch1Model:
         """
         canonical = canonicalize(query, self._max_decode_iterations).query_canonical
         probs = self._clf.predict_proba(self._vectorizer.transform([canonical]))[0]
-        prob_by_label = {
-            self._classes[i]: float(probs[i]) for i in range(len(self._classes))
-        }
         probabilities = {
-            LABEL_NAMES.get(label, str(label)): prob
-            for label, prob in prob_by_label.items()
+            self._class_names[i]: float(probs[i]) for i in range(len(self._class_names))
         }
 
-        best_label = max(prob_by_label, key=prob_by_label.get)
-        best_prob = prob_by_label[best_label]
-        # Any attack class = "not normal" (label 0). Flag as SQLi when the
-        # combined attack probability clears the configured threshold. Note this
-        # differs from `confidence` (the single top-class probability): a query
-        # can be confidently an attack overall while the probability mass is
-        # split across attack sub-classes.
-        normal_prob = prob_by_label.get(0, 0.0)
+        best_name = max(probabilities, key=probabilities.get)
+        best_prob = probabilities[best_name]
+        # Any attack class = "not normal". Flag as SQLi when the combined attack
+        # probability clears the configured threshold. Note this differs from
+        # `confidence` (the single top-class probability): a query can be
+        # confidently an attack overall while the probability mass is split
+        # across attack sub-classes.
+        normal_prob = probabilities.get(NORMAL_LABEL, 0.0)
         attack_prob = 1.0 - normal_prob
         is_sqli = attack_prob >= self._threshold
 
         return Branch1Prediction(
             query_canonical=canonical,
-            label=int(best_label),
-            label_name=LABEL_NAMES.get(best_label, str(best_label)),
+            label=_LABEL_IDS.get(best_name, -1),
+            label_name=best_name,
             is_sqli=is_sqli,
             confidence=best_prob,
             attack_probability=attack_prob,
@@ -221,6 +232,21 @@ class ModelRegistry:
         max_decode = int(self._cfg.get_path("preprocessing.max_decode_iterations", 3))
         logger.info("Loaded Branch-1 model from %s (threshold=%.2f)", model_dir, threshold)
         return Branch1Model(vectorizer, clf, metadata, threshold, max_decode)
+
+    def reload(self) -> None:
+        """Re-read config and drop cached models.
+
+        Promotion and rollback change ``<branch>.active_version`` in config, so
+        the process must forget what it loaded or it would keep serving the
+        previous model until restarted.
+        """
+        with self._lock:
+            self._cfg = load_config()
+            self._branch1 = None
+            self._branch1_loaded = False
+            self._branch2 = None
+            self._branch2_loaded = False
+        logger.info("Model registry reloaded (active versions re-read from config)")
 
     def branch2(self) -> Branch2Model | None:
         """Return the loaded Branch-2 model, or ``None`` if unavailable."""

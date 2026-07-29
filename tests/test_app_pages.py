@@ -95,7 +95,29 @@ def _mock_backend(monkeypatch: pytest.MonkeyPatch) -> None:
                 "metric": "psi",
                 "threshold": 0.2,
                 "alert": task == "branch1",
-                "points": [{"date": "2026-07-01", "value": 0.1}],
+                "status": "ready" if task == "branch1" else "not_ready",
+                "detail": None if task == "branch1" else "No drift pipeline yet.",
+                "signals": ["global", "prediction"],
+                "reference": "stream baseline: first 10 windows",
+                "generated_at": "2026-07-29T00:00:00+00:00",
+                "trigger": {
+                    "fired": False,
+                    "window_index": None,
+                    "signal": None,
+                    "sustained_windows": 0,
+                },
+                "points": [
+                    {
+                        "date": f"w{i}",
+                        "value": 0.05,
+                        "index": i,
+                        "phase": "A" if i < 2 else "B",
+                        "is_reference": i == 0,
+                        "psi": {"global": 0.01 * i, "prediction": 0.02},
+                        "rates": {"block": 0.05},
+                    }
+                    for i in range(4)
+                ],
             }
         ),
     )
@@ -110,9 +132,17 @@ def _mock_backend(monkeypatch: pytest.MonkeyPatch) -> None:
                 "task": task,
                 "count": 1,
                 "items": [
-                    {"id": "u1", "query": "1' OR 1=1--", "source": "overkill_queue"}
+                    {
+                        "id": "u1",
+                        "query": "1' OR 1=1--",
+                        "source": "low_confidence",
+                        "ai_label": "union_based",
+                        "ai_confidence": 0.55,
+                        "anomaly_score": None,
+                    }
                 ],
                 "label_options": ["normal", "union_based"],
+                "acceptance_rate": 0.5,
             }
         ),
     )
@@ -129,8 +159,11 @@ def _mock_backend(monkeypatch: pytest.MonkeyPatch) -> None:
                         "query": "SELECT 1",
                         "label": "normal",
                         "annotated_at": "t",
+                        "ai_label": "normal",
+                        "was_corrected": False,
                     }
                 ],
+                "corrected": 0,
             }
         ),
     )
@@ -140,13 +173,20 @@ def _mock_backend(monkeypatch: pytest.MonkeyPatch) -> None:
     monkeypatch.setattr(
         api_client,
         "annotate",
-        lambda task, item_id, label: {
+        lambda task, item_id, action, label=None: {
             "ok": True,
             "id": item_id,
-            "label": label,
-            "persisted": False,
+            "label": label or "union_based",
+            "status": {"approve": "approved", "correct": "corrected", "reject": "rejected"}[
+                action
+            ],
+            "was_corrected": action == "correct",
+            "persisted": action != "reject",
+            "acceptance_rate": 0.5,
         },
     )
+    monkeypatch.setattr(cache, "invalidate_annotations", lambda: None)
+    monkeypatch.setattr(cache, "invalidate_lifecycle", lambda: None)
     monkeypatch.setattr(
         api_client,
         "train_start",
@@ -258,15 +298,28 @@ def test_train_start_creates_job_in_state() -> None:
     assert "sqli.train.branch2.job" not in app.session_state
 
 
-def test_data_annotation_feedback_is_show_once() -> None:
+def test_pending_item_shows_the_ai_prelabel() -> None:
     app = _run_app(DATA)
-    app.button(key="sqli.w.data.branch1.save.u1").click().run()
+    labels = [str(m.value) for m in app.metric]
+    assert "union_based" in labels, "the AI pre-label must be visible before review"
+
+
+def test_approving_shows_show_once_feedback() -> None:
+    app = _run_app(DATA)
+    app.button(key="sqli.w.data.branch1.approve.u1").click().run()
     assert not app.exception, app.exception
-    assert any("Accepted" in str(el.value) for el in app.info)
+    assert any("Approved" in str(el.value) for el in app.success)
 
     # Feedback is consumed on render: an unrelated re-run must not repeat it.
     app.run()
-    assert not any("Accepted" in str(el.value) for el in app.info)
+    assert not any("Approved" in str(el.value) for el in app.success)
+
+
+def test_rejecting_is_reported_differently_from_approving() -> None:
+    app = _run_app(DATA)
+    app.button(key="sqli.w.data.branch1.reject.u1").click().run()
+    assert not app.exception, app.exception
+    assert any("Rejected" in str(el.value) for el in app.success)
 
 
 def test_data_pagination_offset_advances() -> None:

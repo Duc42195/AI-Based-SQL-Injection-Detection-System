@@ -397,7 +397,26 @@ def main() -> None:
         [golden_v1, stacked_pool[stacked_pool["partition"] == "golden"]], ignore_index=True
     )
 
-    registry = load_registry("branch1", cfg)
+    # The experiment keeps its own lineage under the artifacts directory. Writing
+    # into the service's registry would mix offline experiment versions with the
+    # versions actually deployed, and the gate would then compare a live model
+    # against a version no deployed model was ever trained on.
+    from src.continual_learning.versioning import VersionRegistry
+
+    registry = VersionRegistry(artifacts / "version_registry.json", dataset="branch1")
+    if registry.get("1.0") is None:
+        service_registry = load_registry("branch1", cfg)
+        baseline = service_registry.get("1.0")
+        if baseline is not None:
+            registry.seal(
+                label_space=baseline.label_space,
+                n_rows=baseline.n_rows,
+                content_hash_value=baseline.content_hash,
+                reason="baseline copied from the service registry",
+                partitions=baseline.partitions,
+                golden_hash=baseline.golden_hash,
+                protected=True,
+            )
     results: dict[str, Any] = {"acts": {}, "controls": {}}
 
     # ── Champion: trained on train@1.0 ─────────────────────────────────────
