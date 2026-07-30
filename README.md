@@ -6,35 +6,23 @@ An AI-based SQL Injection detection system, deployed at the **Database Proxy —
 - **Branch 2 (Anomaly Detection):** learns the "safe zone" from **100% benign traffic**, outputs a **continuous anomaly score** (zero-day flag + feature for Branch 3) via **Isolation Forest / One-Class SVM**.
 - **Branch 3 (Session-level — main contribution):** a sequence model (GRU / lightweight Transformer) over the whole **session**; each step = `[content embedding (Branch 1) ⊕ anomaly score (Branch 2)]`. Catches **Blind SQLi** and **query-splitting** that a per-query classifier misses.
 
-## Current status (updated 30 Jul 2026)
-
-- **Branch 1** (multi-class) — ✅ done, F1-macro 0.9822.
-- **Branch 2** (anomaly) — ✅ done, AUC 0.90, FPR 0.3%.
-- **Branch 3** (session-level) — ✅ implemented and evaluated (F1-macro 1.0 on a small held-out set); the eval is being strengthened (larger, less synthetic test set) before the RIVF paper cites it.
-- **Continual learning + drift monitoring** — ✅ implemented and run as a full offline experiment (drift negative result, gate-based promotion, ablation, shadow validation); not yet wired into the live API.
-- Live plan / sprint tracker: [`report/plan/ke_hoach_2_tuan.csv`](report/plan/ke_hoach_2_tuan.csv). Full status detail: [`report/conf/research_proposal.md`](report/conf/research_proposal.md).
-
-## Project roles
-
-| Person | Role |
-|---|---|
-| Duc | Solution Architect, Project Manager, Writer, Researcher |
-| Bach | Researcher (owns Branch 3 data/model work) |
-| Diep | Writer |
-| Minh | Writer |
-| Dr. Linh Dinh-Van, Dr. Thai Kim-Dinh | Reviewer (advisors, RIVF co-authors) |
-
----
-
 ## Decision Logic (branch fusion)
 
-Base per-query matrix (Branch 3 can **escalate** a benign-looking query to BLOCK/OVERKILL if the session is classified as a Blind/query-splitting attack):
+Branch 3 (session-level) takes precedence when available — it can escalate a benign-looking
+query straight to `BLOCK` if the *session* is classified as an attack (blind SQLi /
+query-splitting), overriding what Branch 1/2 say about that individual query. Below that,
+the per-query matrix from Branch 1 + Branch 2 applies. Implemented in
+[`deploy/routers/detect.py:fuse_decision`](deploy/routers/detect.py).
 
-| Branch 1 | Branch 2 (Anomaly) | Action |
-|:---:|:---:|:---|
-| attack class | any | **BLOCK** immediately + log |
-| `Normal` | `1` | **OVERKILL** — not executed, queued for Admin confirmation. Past `timeout` → **deny by default** |
-| `Normal` | `0` | **ALLOW** — execute |
+| Branch 3 (session) | Branch 1 | Branch 2 (Anomaly) | Action |
+|:---:|:---:|:---:|:---|
+| attack | — | — | **BLOCK** immediately (session-level escalation) + log |
+| not attack / not ready | attack class | any | **BLOCK** immediately + log |
+| not attack / not ready | `Normal` | `1` | **OVERKILL** — not executed, queued for Admin confirmation. Past `timeout` → **deny by default** |
+| not attack / not ready | `Normal` | `0` | **ALLOW** — execute |
+
+A branch that isn't trained/ready yet degrades the verdict rather than blocking it (e.g.
+Branch 2 not ready → `ALLOW` on a Normal query, since OVERKILL can't be decided without it).
 
 ---
 
@@ -99,9 +87,9 @@ uv run pytest            # smoke test for the config loader
 ## API service (FastAPI) — for Streamlit
 
 The backend already has a running app. Branch 1 and Branch 2 run **for real** and are wired end
-to end. Branch 3 is trained and evaluated offline (see Current Status above) but the live
-`deploy/routers/branch3.py` route still returns `not_ready` — it hasn't been wired to the real
-model yet.
+to end. Branch 3 is trained and evaluated offline (see [`report/plan/ke_hoach_2_tuan.csv`](report/plan/ke_hoach_2_tuan.csv)
+for current status) but the live `deploy/routers/branch3.py` route still returns `not_ready` —
+it hasn't been wired to the real model yet.
 
 ```bash
 uv run uvicorn deploy.main:app --reload --port 8000   # docs: http://localhost:8000/docs
