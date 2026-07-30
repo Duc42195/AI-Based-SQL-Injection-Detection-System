@@ -150,6 +150,27 @@ branch2_anomaly:
       gamma: ["scale", "auto", 0.1, 0.01]
       contamination: [0.001, 0.005, 0.01, 0.05]
 
+branch3_session:
+  data_generation:
+    user_pool_size: 5000
+    password_min_len: 6
+    password_max_len: 12
+    boolean_blind:
+      sessions_per_split: 200
+      max_extract_chars: 8
+    time_blind:
+      sessions_per_split: 200
+      # SLEEP(n) seconds for time-blind data generation.  Must be large enough
+      # for the bisection oracle to reliably distinguish SLEEP vs no-SLEEP
+      # (≥0.05 on most systems; Windows default timer ~15ms).  Increase to
+      # 5.0 for production eval where realistic timing matters.
+      sleep_seconds: 0.05
+    benign:
+      sessions_per_split: 200
+      min_steps: 5
+      max_steps: 15
+      gap_seconds: [10, 120]
+
 decision:
   # Overkill policy: SQLi=0 & Anomaly=1 -> hold for Admin review.
   overkill_timeout_seconds: 300   # deny-by-default after this
