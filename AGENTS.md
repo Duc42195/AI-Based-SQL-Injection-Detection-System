@@ -27,6 +27,18 @@ Tight deadline (14 days) → **prioritize an end-to-end MVP** over perfecting ev
 
 ---
 
+## Project roles
+
+| Person | Role |
+|---|---|
+| Duc | Solution Architect, Project Manager, Writer, Researcher (lead — coordinates, makes architecture/framing calls, writes, and does research as needed) |
+| Bach | Researcher (owns Branch 3 data/model work end-to-end) |
+| Diep | Writer |
+| Minh | Writer |
+| Dr. Linh Dinh-Van, Dr. Thai Kim-Dinh | Reviewer (advisors, RIVF paper co-authors) |
+
+---
+
 ## Environment setup
 
 The project uses [`uv`](https://docs.astral.sh/uv/) (no manual pip/venv). Python **3.12**.

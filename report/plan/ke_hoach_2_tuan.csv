@@ -1,4 +1,4 @@
-Day,Date,Weekday,Owner,Role,Task,Dependency,Deliverable,Status
+﻿Day,Date,Weekday,Owner,Role,Task,Dependency,Deliverable,Status
 1,13/7,Mon,Duc,Data + Train Branch 1 & 3,"Lock in the data contract (Branch 1 CSV schema, Branch 3 session schema) with the whole team; download raw D1 (SQLiV3); quick-test Branch 1 architectures: DistilBERT vs TF-IDF+GBM vs lightweight CNN on a small subset",None,data_contract.md; data/raw/d1_sqliv3_raw.csv; train/notebooks/model_comparison_branch1.ipynb,Overdue
 1,13/7,Mon,Bach,Branch 2 (Anomaly) - independent,Download raw D3 (CSIC2010); quick-test feature-extraction options for Branch 2 (TF-IDF/embedding),None,data/raw/d3_csic2010_raw.csv,Done
 1,13/7,Mon,Minh,Streamlit Web App - independent,"Build the Streamlit app scaffold (query test input page, mock results display)",None,app/streamlit_app.py,Not started
@@ -47,7 +47,7 @@ Day,Date,Weekday,Owner,Role,Task,Dependency,Deliverable,Status
 12,24/7,Fri,Bach,Train - fix the zero-day bug,"The combined_coverage bug in train/run_zeroday_experiment.py has been fixed (the B1 catch/miss condition was inverted). RERUN the script to: (1) regenerate the 5 missing model weights (branch1_no_*, branch2_zeroday), (2) produce the correct combined_coverage figures. Then push all 7 models (2 production + 5 zero-day) to HF (Jason-42195/VNU-SQLi-Detection-Models)",Day 11 - Bach,models/branch1_no_*/model.joblib; models/branch2_zeroday/model.joblib; report/metrics/zeroday_experiment/summary.json (updated),Not started
 12,24/7,Fri,Minh,Midterm report,Help Diep write the midterm report (report/midterm/),Day 11 - Minh,report/midterm/AI-Based_SQLi_Detection_Midterm_Report.docx,In progress
 12,24/7,Fri,Diep,Midterm report,"Write/finish the midterm report (report/midterm/) - HIGHEST PRIORITY, due 25 Jul",Day 11 - Diep,report/midterm/AI-Based_SQLi_Detection_Midterm_Report.docx,In progress
-13,25/7,Sat,Duc,MILESTONE: Submit the midterm report,"Midterm report deadline 25 Jul 23:59. Once done: start DESIGNING Branch 3 (GRU/small-Transformer class model over [B1 embedding + B2 score] per step) + design the Cách A session-dataset generation script",Day 12 - Duc,src/models/branch3_*.py (design),Not started
+13,25/7,Sat,Duc,MILESTONE: Submit the midterm report,Midterm report deadline 25 Jul 23:59. Once done: start DESIGNING Branch 3 (GRU/small-Transformer class model over [B1 embedding + B2 score] per step) + design the Cách A session-dataset generation script,Day 12 - Duc,src/models/branch3_*.py (design),Not started
 13,25/7,Sat,Bach,Train,Continue rerunning/verifying zero-day if not done by Day 12; start cleaning up to prepare a demo for the 28 Jul presentation,Day 12 - Bach,None,Not started
 13,25/7,Sat,Minh,MILESTONE: Submit the midterm report,Help Diep finish + submit the midterm report,Day 12 - Minh,None,Not started
 13,25/7,Sat,Diep,MILESTONE: Submit the midterm report,DEADLINE 23:59 Sat 25 Jul: report/midterm/AI-Based_SQLi_Detection_Midterm_Report.docx,Day 12 - Diep,report/midterm/AI-Based_SQLi_Detection_Midterm_Report.docx,Not started
@@ -67,11 +67,44 @@ Day,Date,Weekday,Owner,Role,Task,Dependency,Deliverable,Status
 17,29/7,Wed,Bach,RIVF paper,Follow the GO/NO-GO decision; finish the latency table covering both cases,Day 16 - Bach,None,Not started
 17,29/7,Wed,Minh,RIVF paper,Incorporate advisor feedback; update the contributions sentence per the GO/NO-GO outcome,Day 16 - Minh,None,Not started
 17,29/7,Wed,Diep,RIVF paper,"Send the draft to the advisors (Linh Dinh-Van, Thai Kim-Dinh) for review; update the contributions per the GO/NO-GO outcome",Day 16 - Diep,None,Not started
-18,30/7,Thu,Duc,RIVF paper,"Buffer: final review, check no [TODO:] placeholders remain, check the page count is within the RIVF limit",Day 17 - Duc,None,Not started
-18,30/7,Thu,Bach,RIVF paper,Buffer: help with the review,Day 17 - Bach,None,Not started
-18,30/7,Thu,Minh,RIVF paper,Buffer: help with the review,Day 17 - Minh,None,Not started
-18,30/7,Thu,Diep,RIVF paper,Test-compile the final submission PDF (check the required package files are correct),Day 17 - Diep,report/conf/rivf2026_paper.tex (final),Not started
-19,31/7,Fri,Duc,MILESTONE: SUBMIT RIVF,"RIVF submission deadline 31 Jul (check the timezone/AoE first, don't assume)",Day 18 - Duc,None,Not started
-19,31/7,Fri,Bach,MILESTONE: SUBMIT RIVF,Help with submission,Day 18 - Bach,None,Not started
-19,31/7,Fri,Minh,MILESTONE: SUBMIT RIVF,Help with submission,Day 18 - Minh,None,Not started
-19,31/7,Fri,Diep,MILESTONE: SUBMIT RIVF,Submit via EDAS (https://edas.info/N35414) before 23:59 on 31 Jul,Day 18 - Diep,report/conf/rivf2026_paper.tex,Not started
+18,30/7,Thu,Duc,SA/PM/Writer/Researcher,"RIVF deadline extended 31/7 -> 30 Aug. Re-plan: lock in roles (Duc=SA/PM/Writer/Researcher, Bach=Researcher, Diep/Minh=Writer, Dr. Linh/Dr. Thai=Reviewer) and the Sprint 1-4 + buffer schedule below",Day 17 - Duc,report/plan/ke_hoach_2_tuan.csv (this re-plan),In progress
+18,30/7,Thu,Bach,Researcher,Re-plan sync: prepare to strengthen the Branch 3 dataset/model starting tomorrow (Sprint 1),Day 17 - Bach,None,Not started
+18,30/7,Thu,Minh,Writer,Re-plan sync: review Sprint 1 tasks (architecture diagram + figure re-export),Day 17 - Minh,None,Not started
+18,30/7,Thu,Diep,Writer,Re-plan sync: review Sprint 1 tasks (Continual-Learning section),Day 17 - Diep,None,Not started
+19,31/7,Fri,Duc,SA/PM/Writer/Researcher,Sprint 1 (31/7-6/8) start: read continual_learning/RESULTS.md + mlops_contract.md in full to prep for paper integration; draft Abstract/Intro contribution-bullet updates for framing (B) + continual learning; unblock Bach on Branch 3 dataset strategy,Day 18 - Duc,None (draft notes),Not started
+19,31/7,Fri,Bach,Researcher,"Sprint 1 (31/7-6/8): strengthen the Branch 3 dataset - add more real-DB sessions / reduce the simulated share, enlarge the test set past n=280 so F1 isn't reported off a tiny balanced sample. Retrain the GRU. Produce a more rigorous eval (standard + hard-mode) and document what changed vs. the original branch3_eval.json",Day 18 - Bach,data/processed/branch3_sessions_cach_a.csv (expanded); report/metrics/branch3_eval.json (updated); report/metrics/branch3_eval_hard.json (updated),Not started
+19,31/7,Fri,Minh,Writer,Sprint 1 (31/7-6/8): draw the real architecture diagram (replacing the placeholder box) - 3 branches + decision engine + continual-learning loop; re-export/verify existing Branch 1/2 figures at IEEE column width,Day 18 - Minh,report/conf/figures/architecture_diagram.png; figures/*.png (re-export),Not started
+19,31/7,Fri,Diep,Writer,"Sprint 1 (31/7-6/8): write the new Continual-Learning Results subsection from report/metrics/continual_learning/RESULTS.md + report/plan/mlops_contract.md (drift negative result, gate promotion of stacked, balancing ablation, shadow validation)",Day 18 - Diep,report/conf/rivf2026_paper.tex (CL subsection draft),Not started
+25,6/8,Thu,Bach,Researcher,MILESTONE Sprint 1 end: hand off finalized (strengthened) Branch 3 numbers and figures to Duc,Day 19 - Bach,report/metrics/branch3_eval.json (final for Sprint 2),Not started
+25,6/8,Thu,Diep,Writer,MILESTONE Sprint 1 end: Continual-Learning section draft done,Day 19 - Diep,report/conf/rivf2026_paper.tex (CL subsection draft),Not started
+25,6/8,Thu,Minh,Writer,MILESTONE Sprint 1 end: architecture diagram + figure re-export done,Day 19 - Minh,report/conf/figures/architecture_diagram.png,Not started
+25,6/8,Thu,Duc,SA/PM/Writer/Researcher,"MILESTONE Sprint 1 end: review status of all 3 workstreams, confirm ready for Sprint 2",Day 19 - Duc,None,Not started
+26,7/8,Fri,Duc,SA/PM/Writer/Researcher,"Sprint 2 (7/8-13/8) start: write Branch 3 Results subsection (V-D) using Bach's finalized numbers (standard + hard-mode); write Discussion/Limitations caveat (dataset composition, sample size); integrate Diep's CL section into the paper flow; track page count vs. the 6-page IEEE limit","Day 25 - Bach, Diep",report/conf/rivf2026_paper.tex (V-D + integrated CL section),Not started
+26,7/8,Fri,Bach,Researcher,Sprint 2: finalize any remaining Branch 3 metrics/figures if Sprint 1 work is not fully wrapped,Day 25 - Bach,None,Not started
+26,7/8,Fri,Diep,Writer,"Sprint 2: polish the CL section per Duc's integration feedback; check whether it needs 1-2 new references (drift/PSI, continual-learning literature) beyond the existing 11",Day 25 - Diep,"report/conf/rivf2026_paper.tex (references, if added)",Not started
+26,7/8,Fri,Minh,Writer,Sprint 2: select the final figure set for the new sections (1-2 of the 4 cl_*.png; any Branch 3 figure worth including),Day 25 - Minh,report/conf/figures/ (final selection),Not started
+32,13/8,Thu,Duc,SA/PM/Writer/Researcher,MILESTONE Sprint 2 end: full draft complete with all real results (Branch 1/2/3 + zero-day + continual learning); page count checked against the 6-page IEEE limit,Day 26 - Duc,report/conf/rivf2026_paper.tex (full draft),Not started
+32,13/8,Thu,Bach,Researcher,MILESTONE Sprint 2 end: available to support any last Branch 3 clarifications,Day 26 - Bach,None,Not started
+32,13/8,Thu,Diep,Writer,MILESTONE Sprint 2 end: CL section finalized in the full draft,Day 26 - Diep,None,Not started
+32,13/8,Thu,Minh,Writer,MILESTONE Sprint 2 end: all figures finalized in the full draft,Day 26 - Minh,None,Not started
+33,14/8,Fri,Duc,SA/PM/Writer/Researcher,"Sprint 3 (14/8-20/8) start: own the page-budget trim decision if over 6 pages (likely candidates: shorten Related Work, compress Discussion); send draft to Dr. Linh and Dr. Thai for review",Day 32 - Duc,"report/conf/rivf2026_paper.tex (trimmed, sent for review)",Not started
+33,14/8,Fri,Dr. Linh Dinh-Van,Reviewer,Review the full draft; give feedback on technical content + framing,Day 32 - Duc (draft sent),Review comments,Not started
+33,14/8,Fri,Dr. Thai Kim-Dinh,Reviewer,Review the full draft; give feedback on technical content + framing,Day 32 - Duc (draft sent),Review comments,Not started
+33,14/8,Fri,Bach,Researcher,"Sprint 3: nice-to-have, time-permitting - replace the current *estimated* latency budget with a real end-to-end measurement",Day 32 - Bach,report/metrics/latency_benchmark.json (if done),Not started
+33,14/8,Fri,Diep,Writer,Sprint 3: standby for reviewer feedback on the CL section,Day 32 - Diep,None,Not started
+33,14/8,Fri,Minh,Writer,Sprint 3: standby for reviewer feedback on figures/diagram,Day 32 - Minh,None,Not started
+39,20/8,Thu,Duc,SA/PM/Writer/Researcher,MILESTONE Sprint 3 end: confirm all reviewer feedback from Dr. Linh/Dr. Thai has been addressed,"Day 33 - Dr. Linh, Dr. Thai",report/conf/rivf2026_paper.tex (feedback incorporated),Not started
+39,20/8,Thu,Diep,Writer,MILESTONE Sprint 3 end: incorporate reviewer feedback into the CL section,"Day 33 - Dr. Linh, Dr. Thai",None,Not started
+39,20/8,Thu,Minh,Writer,MILESTONE Sprint 3 end: incorporate reviewer feedback into figures/diagram,"Day 33 - Dr. Linh, Dr. Thai",None,Not started
+39,20/8,Thu,Bach,Researcher,MILESTONE Sprint 3 end: latency benchmark done if time allowed,Day 33 - Bach,None,Not started
+40,21/8,Fri,Duc,SA/PM/Writer/Researcher,Sprint 4 (21/8-27/8) start: coordinate final proofread; confirm no leftover [TODO:] placeholders except author metadata (Duc supplies separately); verify IEEE template compliance,Day 39 - Duc,None,Not started
+40,21/8,Fri,Bach,Researcher,"Sprint 4: help proofread technical sections (Branch 1/2/3, zero-day, CL)",Day 39 - Bach,None,Not started
+40,21/8,Fri,Diep,Writer,Sprint 4: proofread; test-compile the exact submission package,Day 39 - Diep,None,Not started
+40,21/8,Fri,Minh,Writer,Sprint 4: proofread; final figure legibility check,Day 39 - Minh,None,Not started
+46,27/8,Thu,Duc,SA/PM/Writer/Researcher,MILESTONE Sprint 4 end: internal-final draft ready; final sign-off,Day 40 - Duc,report/conf/rivf2026_paper.tex (internal-final),Not started
+46,27/8,Thu,Bach,Researcher,MILESTONE Sprint 4 end: available for last technical checks,Day 40 - Bach,None,Not started
+46,27/8,Thu,Diep,Writer,MILESTONE Sprint 4 end: package ready for submission,Day 40 - Diep,None,Not started
+46,27/8,Thu,Minh,Writer,MILESTONE Sprint 4 end: figures ready for submission,Day 40 - Minh,None,Not started
+47,28/8,Fri,Duc,SA/PM/Writer/Researcher,MILESTONE: final oversight/sign-off before submission,Day 46 - Duc,None,Not started
+47,28/8,Fri,Diep,Writer,"MILESTONE: TARGET SUBMISSION - submit via EDAS (https://edas.info/N35414), a couple of days early to leave slack for portal/timezone surprises before the 30/8 hard deadline",Day 46 - Diep,report/conf/rivf2026_paper.tex (submitted),Not started
+49,30/8,Sun,Duc,SA/PM/Writer/Researcher,HARD DEADLINE (backstop only - should already be submitted by 28/8): RIVF submission closes 23:59 30/8,Day 47 - Diep (submitted),None,Not started
