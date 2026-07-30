@@ -67,44 +67,88 @@
 17,29/7,Wed,Bach,RIVF paper,Follow the GO/NO-GO decision; finish the latency table covering both cases,Day 16 - Bach,None,Not started
 17,29/7,Wed,Minh,RIVF paper,Incorporate advisor feedback; update the contributions sentence per the GO/NO-GO outcome,Day 16 - Minh,None,Not started
 17,29/7,Wed,Diep,RIVF paper,"Send the draft to the advisors (Linh Dinh-Van, Thai Kim-Dinh) for review; update the contributions per the GO/NO-GO outcome",Day 16 - Diep,None,Not started
-18,30/7,Thu,Duc,SA/PM/Writer/Researcher,"RIVF deadline extended 31/7 -> 30 Aug. Re-plan: lock in roles (Duc=SA/PM/Writer/Researcher, Bach=Researcher, Diep/Minh=Writer, Dr. Linh/Dr. Thai=Reviewer) and the Sprint 1-4 + buffer schedule below",Day 17 - Duc,report/plan/ke_hoach_2_tuan.csv (this re-plan),In progress
-18,30/7,Thu,Bach,Researcher,Re-plan sync: prepare to strengthen the Branch 3 dataset/model starting tomorrow (Sprint 1),Day 17 - Bach,None,Not started
-18,30/7,Thu,Minh,Writer,Re-plan sync: review Sprint 1 tasks (architecture diagram + figure re-export),Day 17 - Minh,None,Not started
-18,30/7,Thu,Diep,Writer,Re-plan sync: review Sprint 1 tasks (Continual-Learning section),Day 17 - Diep,None,Not started
-19,31/7,Fri,Duc,SA/PM/Writer/Researcher,Sprint 1 (31/7-6/8) start: read continual_learning/RESULTS.md + mlops_contract.md in full to prep for paper integration; draft Abstract/Intro contribution-bullet updates for framing (B) + continual learning; unblock Bach on Branch 3 dataset strategy,Day 18 - Duc,None (draft notes),Not started
-19,31/7,Fri,Bach,Researcher,"Sprint 1 (31/7-6/8): strengthen the Branch 3 dataset - add more real-DB sessions / reduce the simulated share, enlarge the test set past n=280 so F1 isn't reported off a tiny balanced sample. Retrain the GRU. Produce a more rigorous eval (standard + hard-mode) and document what changed vs. the original branch3_eval.json",Day 18 - Bach,data/processed/branch3_sessions_cach_a.csv (expanded); report/metrics/branch3_eval.json (updated); report/metrics/branch3_eval_hard.json (updated),Not started
-19,31/7,Fri,Minh,Writer,Sprint 1 (31/7-6/8): draw the real architecture diagram (replacing the placeholder box) - 3 branches + decision engine + continual-learning loop; re-export/verify existing Branch 1/2 figures at IEEE column width,Day 18 - Minh,report/conf/figures/architecture_diagram.png; figures/*.png (re-export),Not started
-19,31/7,Fri,Diep,Writer,"Sprint 1 (31/7-6/8): write the new Continual-Learning Results subsection from report/metrics/continual_learning/RESULTS.md + report/plan/mlops_contract.md (drift negative result, gate promotion of stacked, balancing ablation, shadow validation)",Day 18 - Diep,report/conf/rivf2026_paper.tex (CL subsection draft),Not started
-25,6/8,Thu,Bach,Researcher,MILESTONE Sprint 1 end: hand off finalized (strengthened) Branch 3 numbers and figures to Duc,Day 19 - Bach,report/metrics/branch3_eval.json (final for Sprint 2),Not started
-25,6/8,Thu,Diep,Writer,MILESTONE Sprint 1 end: Continual-Learning section draft done,Day 19 - Diep,report/conf/rivf2026_paper.tex (CL subsection draft),Not started
-25,6/8,Thu,Minh,Writer,MILESTONE Sprint 1 end: architecture diagram + figure re-export done,Day 19 - Minh,report/conf/figures/architecture_diagram.png,Not started
-25,6/8,Thu,Duc,SA/PM/Writer/Researcher,"MILESTONE Sprint 1 end: review status of all 3 workstreams, confirm ready for Sprint 2",Day 19 - Duc,None,Not started
-26,7/8,Fri,Duc,SA/PM/Writer/Researcher,"Sprint 2 (7/8-13/8) start: write Branch 3 Results subsection (V-D) using Bach's finalized numbers (standard + hard-mode); write Discussion/Limitations caveat (dataset composition, sample size); integrate Diep's CL section into the paper flow; track page count vs. the 6-page IEEE limit","Day 25 - Bach, Diep",report/conf/rivf2026_paper.tex (V-D + integrated CL section),Not started
-26,7/8,Fri,Bach,Researcher,Sprint 2: finalize any remaining Branch 3 metrics/figures if Sprint 1 work is not fully wrapped,Day 25 - Bach,None,Not started
-26,7/8,Fri,Diep,Writer,"Sprint 2: polish the CL section per Duc's integration feedback; check whether it needs 1-2 new references (drift/PSI, continual-learning literature) beyond the existing 11",Day 25 - Diep,"report/conf/rivf2026_paper.tex (references, if added)",Not started
-26,7/8,Fri,Minh,Writer,Sprint 2: select the final figure set for the new sections (1-2 of the 4 cl_*.png; any Branch 3 figure worth including),Day 25 - Minh,report/conf/figures/ (final selection),Not started
-32,13/8,Thu,Duc,SA/PM/Writer/Researcher,MILESTONE Sprint 2 end: full draft complete with all real results (Branch 1/2/3 + zero-day + continual learning); page count checked against the 6-page IEEE limit,Day 26 - Duc,report/conf/rivf2026_paper.tex (full draft),Not started
-32,13/8,Thu,Bach,Researcher,MILESTONE Sprint 2 end: available to support any last Branch 3 clarifications,Day 26 - Bach,None,Not started
-32,13/8,Thu,Diep,Writer,MILESTONE Sprint 2 end: CL section finalized in the full draft,Day 26 - Diep,None,Not started
-32,13/8,Thu,Minh,Writer,MILESTONE Sprint 2 end: all figures finalized in the full draft,Day 26 - Minh,None,Not started
-33,14/8,Fri,Duc,SA/PM/Writer/Researcher,"Sprint 3 (14/8-20/8) start: own the page-budget trim decision if over 6 pages (likely candidates: shorten Related Work, compress Discussion); send draft to Dr. Linh and Dr. Thai for review",Day 32 - Duc,"report/conf/rivf2026_paper.tex (trimmed, sent for review)",Not started
-33,14/8,Fri,Dr. Linh Dinh-Van,Reviewer,Review the full draft; give feedback on technical content + framing,Day 32 - Duc (draft sent),Review comments,Not started
-33,14/8,Fri,Dr. Thai Kim-Dinh,Reviewer,Review the full draft; give feedback on technical content + framing,Day 32 - Duc (draft sent),Review comments,Not started
-33,14/8,Fri,Bach,Researcher,"Sprint 3: nice-to-have, time-permitting - replace the current *estimated* latency budget with a real end-to-end measurement",Day 32 - Bach,report/metrics/latency_benchmark.json (if done),Not started
-33,14/8,Fri,Diep,Writer,Sprint 3: standby for reviewer feedback on the CL section,Day 32 - Diep,None,Not started
-33,14/8,Fri,Minh,Writer,Sprint 3: standby for reviewer feedback on figures/diagram,Day 32 - Minh,None,Not started
-39,20/8,Thu,Duc,SA/PM/Writer/Researcher,MILESTONE Sprint 3 end: confirm all reviewer feedback from Dr. Linh/Dr. Thai has been addressed,"Day 33 - Dr. Linh, Dr. Thai",report/conf/rivf2026_paper.tex (feedback incorporated),Not started
-39,20/8,Thu,Diep,Writer,MILESTONE Sprint 3 end: incorporate reviewer feedback into the CL section,"Day 33 - Dr. Linh, Dr. Thai",None,Not started
-39,20/8,Thu,Minh,Writer,MILESTONE Sprint 3 end: incorporate reviewer feedback into figures/diagram,"Day 33 - Dr. Linh, Dr. Thai",None,Not started
-39,20/8,Thu,Bach,Researcher,MILESTONE Sprint 3 end: latency benchmark done if time allowed,Day 33 - Bach,None,Not started
-40,21/8,Fri,Duc,SA/PM/Writer/Researcher,Sprint 4 (21/8-27/8) start: coordinate final proofread; confirm no leftover [TODO:] placeholders except author metadata (Duc supplies separately); verify IEEE template compliance,Day 39 - Duc,None,Not started
-40,21/8,Fri,Bach,Researcher,"Sprint 4: help proofread technical sections (Branch 1/2/3, zero-day, CL)",Day 39 - Bach,None,Not started
-40,21/8,Fri,Diep,Writer,Sprint 4: proofread; test-compile the exact submission package,Day 39 - Diep,None,Not started
-40,21/8,Fri,Minh,Writer,Sprint 4: proofread; final figure legibility check,Day 39 - Minh,None,Not started
-46,27/8,Thu,Duc,SA/PM/Writer/Researcher,MILESTONE Sprint 4 end: internal-final draft ready; final sign-off,Day 40 - Duc,report/conf/rivf2026_paper.tex (internal-final),Not started
-46,27/8,Thu,Bach,Researcher,MILESTONE Sprint 4 end: available for last technical checks,Day 40 - Bach,None,Not started
-46,27/8,Thu,Diep,Writer,MILESTONE Sprint 4 end: package ready for submission,Day 40 - Diep,None,Not started
-46,27/8,Thu,Minh,Writer,MILESTONE Sprint 4 end: figures ready for submission,Day 40 - Minh,None,Not started
-47,28/8,Fri,Duc,SA/PM/Writer/Researcher,MILESTONE: final oversight/sign-off before submission,Day 46 - Duc,None,Not started
-47,28/8,Fri,Diep,Writer,"MILESTONE: TARGET SUBMISSION - submit via EDAS (https://edas.info/N35414), a couple of days early to leave slack for portal/timezone surprises before the 30/8 hard deadline",Day 46 - Diep,report/conf/rivf2026_paper.tex (submitted),Not started
-49,30/8,Sun,Duc,SA/PM/Writer/Researcher,HARD DEADLINE (backstop only - should already be submitted by 28/8): RIVF submission closes 23:59 30/8,Day 47 - Diep (submitted),None,Not started
+18,30/7,Wed,Duc,SA/PM/Writer/Researcher,Week 0 (partial kickoff): finalize sprint team sync; read continual_learning/RESULTS.md + mlops_contract.md in full to prep for paper integration,Day 17 - Duc,None (planning notes),In progress
+19,31/7,Thu,Duc,SA/PM/Writer/Researcher,Sprint 0 Day 1: kickoff Sprint 1; draft Abstract/Intro contribution-bullet updates for framing (B) + continual learning,Day 18 - Duc,None (draft notes),Not started
+19,31/7,Thu,Bach,Researcher,Sprint 0 Day 1: begin strengthening the Branch 3 dataset,Day 18 - Bach,data/processed/branch3_sessions_cach_a.csv (in progress),Not started
+19,31/7,Thu,Diep,Writer,Sprint 0 Day 1: begin Continual-Learning section,Day 18 - Diep,None,Not started
+19,31/7,Thu,Minh,Writer,Sprint 0 Day 1: begin architecture diagram,Day 18 - Minh,None,Not started
+20,1/8,Fri,Duc,SA/PM/Writer/Researcher,Sprint 0 Day 2: support all workstreams; unblock Bach on dataset strategy,Day 19 - Duc,None,Not started
+20,1/8,Fri,Bach,Researcher,Sprint 0 Day 2: continue dataset strengthening,Day 19 - Bach,data/processed/branch3_sessions_cach_a.csv (in progress),Not started
+20,1/8,Fri,Diep,Writer,Sprint 0 Day 2: continue CL section,Day 19 - Diep,None,Not started
+20,1/8,Fri,Minh,Writer,Sprint 0 Day 2: continue diagram,Day 19 - Minh,None,Not started
+21,2/8,Sat,Duc,SA/PM/Writer/Researcher,CHECKPOINT 0 (User review): check progress on Week 0 kickoff + Sprint 1 readiness,Day 20 - all,Status report,Not started
+22,5/8,Mon,Duc,SA/PM/Writer/Researcher,Sprint 1 (Mon-Fri): coordinate all workstreams; draft Abstract/Intro updates,Day 21 - Duc,None,Not started
+22,5/8,Mon,Bach,Researcher,Sprint 1: continue strengthening Branch 3 dataset + retrain GRU,Day 21 - Bach,"data/processed/branch3_sessions_cach_a.csv (expanded), report/metrics/branch3_eval.json (in progress)",Not started
+22,5/8,Mon,Diep,Writer,"Sprint 1: write Continual-Learning Results subsection (drift, gate, ablation, shadow)",Day 21 - Diep,"report/conf/rivf2026_paper.tex (CL section draft, in progress)",Not started
+22,5/8,Mon,Minh,Writer,Sprint 1: draw architecture diagram (3 branches + decision engine + CL loop); re-export figures,Day 21 - Minh,report/conf/figures/architecture_diagram.png (in progress),Not started
+23,6/8,Tue,Duc,SA/PM/Writer/Researcher,Sprint 1 Day 2: support all workstreams,Day 22 - Duc,None,Not started
+23,6/8,Tue,Bach,Researcher,Sprint 1 Day 2: continue dataset+retrain,Day 22 - Bach,None,Not started
+23,6/8,Tue,Diep,Writer,Sprint 1 Day 2: continue CL section,Day 22 - Diep,None,Not started
+23,6/8,Tue,Minh,Writer,Sprint 1 Day 2: continue diagram+figures,Day 22 - Minh,None,Not started
+24,7/8,Wed,Duc,SA/PM/Writer/Researcher,Sprint 1 Day 3: support all workstreams,Day 23 - Duc,None,Not started
+24,7/8,Wed,Bach,Researcher,Sprint 1 Day 3: continue dataset+retrain,Day 23 - Bach,None,Not started
+24,7/8,Wed,Diep,Writer,Sprint 1 Day 3: continue CL section,Day 23 - Diep,None,Not started
+24,7/8,Wed,Minh,Writer,Sprint 1 Day 3: continue diagram+figures,Day 23 - Minh,None,Not started
+25,8/8,Thu,Duc,SA/PM/Writer/Researcher,Sprint 1 Day 4: support all workstreams,Day 24 - Duc,None,Not started
+25,8/8,Thu,Bach,Researcher,Sprint 1 Day 4: continue dataset+retrain,Day 24 - Bach,None,Not started
+25,8/8,Thu,Diep,Writer,Sprint 1 Day 4: continue CL section,Day 24 - Diep,None,Not started
+25,8/8,Thu,Minh,Writer,Sprint 1 Day 4: continue diagram+figures,Day 24 - Minh,None,Not started
+26,9/8,Fri,Duc,SA/PM/Writer/Researcher,Sprint 1 Day 5 (Fri): finalize Sprint 1 deliverables; prepare for user checkpoint tomorrow,Day 25 - Duc,None,Not started
+26,9/8,Fri,Bach,Researcher,Sprint 1 Day 5: finalize Branch 3 strengthened eval; hand off to Duc,Day 25 - Bach,report/metrics/branch3_eval.json (final for Sprint 2),Not started
+26,9/8,Fri,Diep,Writer,Sprint 1 Day 5: finalize CL section draft,Day 25 - Diep,"report/conf/rivf2026_paper.tex (CL section draft, final)",Not started
+26,9/8,Fri,Minh,Writer,Sprint 1 Day 5: finalize diagram + figure selection,Day 25 - Minh,report/conf/figures/architecture_diagram.png (final),Not started
+27,10/8,Sat,Duc,SA/PM/Writer/Researcher,"CHECKPOINT 1 (User review): review Sprint 1 deliverables (Branch 3 eval, CL section draft, diagram, figures); go/no-go for Sprint 2",Day 26 - all,Status report,Not started
+29,12/8,Mon,Duc,SA/PM/Writer/Researcher,Sprint 2 (Mon-Fri): write Branch 3 §V-D + Discussion/Limitations; integrate CL section; track page count vs. 6 pages,Day 27 - Duc,"report/conf/rivf2026_paper.tex (V-D + integrated CL section, in progress)",Not started
+29,12/8,Mon,Bach,Researcher,Sprint 2: finalize any remaining Branch 3 metrics/figures; nice-to-have: start real latency measurement,Day 27 - Bach,report/metrics/latency_benchmark.json (if started),Not started
+29,12/8,Mon,Diep,Writer,Sprint 2: polish CL section per Duc integration feedback; add references if needed,Day 27 - Diep,"report/conf/rivf2026_paper.tex (references, if added)",Not started
+29,12/8,Mon,Minh,Writer,Sprint 2: polish figure selection; ensure figures are at IEEE column width,Day 27 - Minh,report/conf/figures/ (final selection),Not started
+30,13/8,Tue,Duc,SA/PM/Writer/Researcher,Sprint 2 Day 2: continue paper writing + integration,Day 28 - Duc,None,Not started
+30,13/8,Tue,Bach,Researcher,Sprint 2 Day 2: continue optional latency work,Day 28 - Bach,None,Not started
+30,13/8,Tue,Diep,Writer,Sprint 2 Day 2: continue CL section,Day 28 - Diep,None,Not started
+30,13/8,Tue,Minh,Writer,Sprint 2 Day 2: continue figure work,Day 28 - Minh,None,Not started
+31,14/8,Wed,Duc,SA/PM/Writer/Researcher,Sprint 2 Day 3: continue paper writing + integration,Day 29 - Duc,None,Not started
+31,14/8,Wed,Bach,Researcher,Sprint 2 Day 3: continue optional latency work,Day 29 - Bach,None,Not started
+31,14/8,Wed,Diep,Writer,Sprint 2 Day 3: continue CL section,Day 29 - Diep,None,Not started
+31,14/8,Wed,Minh,Writer,Sprint 2 Day 3: continue figure work,Day 29 - Minh,None,Not started
+32,15/8,Thu,Duc,SA/PM/Writer/Researcher,Sprint 2 Day 4: continue paper writing + integration,Day 30 - Duc,None,Not started
+32,15/8,Thu,Bach,Researcher,Sprint 2 Day 4: continue optional latency work,Day 30 - Bach,None,Not started
+32,15/8,Thu,Diep,Writer,Sprint 2 Day 4: continue CL section,Day 30 - Diep,None,Not started
+32,15/8,Thu,Minh,Writer,Sprint 2 Day 4: continue figure work,Day 30 - Minh,None,Not started
+33,16/8,Fri,Duc,SA/PM/Writer/Researcher,Sprint 2 Day 5 (Fri): finalize full draft with all real results (B1/2/3 + zero-day + CL); check page count,Day 31 - Duc,"report/conf/rivf2026_paper.tex (full draft, ready for user checkpoint)",Not started
+33,16/8,Fri,Bach,Researcher,Sprint 2 Day 5: finalize latency work if time allows,Day 31 - Bach,report/metrics/latency_benchmark.json (if done),Not started
+33,16/8,Fri,Diep,Writer,Sprint 2 Day 5: finalize CL section for full draft,Day 31 - Diep,None,Not started
+33,16/8,Fri,Minh,Writer,Sprint 2 Day 5: finalize figure selection for full draft,Day 31 - Minh,None,Not started
+34,17/8,Sat,Duc,SA/PM/Writer/Researcher,CHECKPOINT 2 (User review): review full draft (B1/2/3 + zero-day + CL); page count check; go/no-go for Sprint 3 (trim+review phase),Day 32 - all,Full draft PDF,Not started
+36,19/8,Mon,Duc,SA/PM/Writer/Researcher,"Sprint 3 (Mon-Fri): own page-budget trim decision if over 6 pages (candidates: shorten Related Work, compress Discussion); send to Dr. Linh/Dr. Thai for review",Day 33 - Duc,"report/conf/rivf2026_paper.tex (trimmed, sent for review)",Not started
+36,19/8,Mon,Bach,Researcher,Sprint 3: nice-to-have time-permitting: real end-to-end latency measurement,Day 33 - Bach,report/metrics/latency_benchmark.json (if done),Not started
+36,19/8,Mon,Diep,Writer,Sprint 3: standby for reviewer feedback on CL section + references,Day 33 - Diep,None,Not started
+36,19/8,Mon,Minh,Writer,Sprint 3: standby for reviewer feedback on figures/diagram,Day 33 - Minh,None,Not started
+36,19/8,Mon,Dr. Linh Dinh-Van,Reviewer,Sprint 3: review full draft; give feedback on technical content + framing,Day 33 - Duc (draft sent),Review comments,Not started
+36,19/8,Mon,Dr. Thai Kim-Dinh,Reviewer,Sprint 3: review full draft; give feedback on technical content + framing,Day 33 - Duc (draft sent),Review comments,Not started
+37,20/8,Tue,Duc,SA/PM/Writer/Researcher,Sprint 3 Day 2: coordinate feedback loop with reviewers,Day 34 - Duc,None,Not started
+37,20/8,Tue,Diep,Writer,Sprint 3 Day 2: stand by for feedback,Day 34 - Diep,None,Not started
+37,20/8,Tue,Minh,Writer,Sprint 3 Day 2: stand by for feedback,Day 34 - Minh,None,Not started
+38,21/8,Wed,Duc,SA/PM/Writer/Researcher,Sprint 3 Day 3: incorporate feedback + start revisions,Day 35 - Duc,None,Not started
+38,21/8,Wed,Diep,Writer,Sprint 3 Day 3: incorporate reviewer feedback into CL section,Day 35 - Diep,None,Not started
+38,21/8,Wed,Minh,Writer,Sprint 3 Day 3: incorporate reviewer feedback into figures/diagram,Day 35 - Minh,None,Not started
+39,22/8,Thu,Duc,SA/PM/Writer/Researcher,Sprint 3 Day 4: continue revisions,Day 36 - Duc,None,Not started
+39,22/8,Thu,Diep,Writer,Sprint 3 Day 4: continue revisions,Day 36 - Diep,None,Not started
+39,22/8,Thu,Minh,Writer,Sprint 3 Day 4: continue revisions,Day 36 - Minh,None,Not started
+40,23/8,Fri,Duc,SA/PM/Writer/Researcher,Sprint 3 Day 5 (Fri): finalize all reviewer feedback incorporation; confirm ready for Sprint 4 (final polish),Day 37 - Duc,report/conf/rivf2026_paper.tex (feedback incorporated),Not started
+40,23/8,Fri,Diep,Writer,Sprint 3 Day 5: finalize CL section revisions,Day 37 - Diep,None,Not started
+40,23/8,Fri,Minh,Writer,Sprint 3 Day 5: finalize figure/diagram revisions,Day 37 - Minh,None,Not started
+41,24/8,Sat,Duc,SA/PM/Writer/Researcher,CHECKPOINT 3 (User review): review Sprint 3 revisions + reviewer feedback incorporation; go/no-go for Sprint 4 (final polish + submit),Day 38 - all,Status report,Not started
+43,26/8,Mon,Duc,SA/PM/Writer/Researcher,Sprint 4 (Mon-Fri): coordinate final proofread; confirm no leftover [TODO:] placeholders except author metadata (Duc supplies directly); verify IEEE template compliance,Day 39 - Duc,None,Not started
+43,26/8,Mon,Bach,Researcher,"Sprint 4: help proofread technical sections (Branch 1/2/3, zero-day, CL)",Day 39 - Bach,None,Not started
+43,26/8,Mon,Diep,Writer,Sprint 4: proofread; test-compile the exact submission package,Day 39 - Diep,None,Not started
+43,26/8,Mon,Minh,Writer,Sprint 4: proofread; final figure legibility check,Day 39 - Minh,None,Not started
+44,27/8,Tue,Duc,SA/PM/Writer/Researcher,Sprint 4 Day 2: continue final proofread,Day 40 - Duc,None,Not started
+44,27/8,Tue,Bach,Researcher,Sprint 4 Day 2: continue proofread support,Day 40 - Bach,None,Not started
+44,27/8,Tue,Diep,Writer,Sprint 4 Day 2: continue proofread+test-compile,Day 40 - Diep,None,Not started
+44,27/8,Tue,Minh,Writer,Sprint 4 Day 2: continue proofread,Day 40 - Minh,None,Not started
+45,28/8,Wed,Duc,SA/PM/Writer/Researcher,Sprint 4 Day 3: continue final proofread,Day 41 - Duc,None,Not started
+45,28/8,Wed,Diep,Writer,Sprint 4 Day 3: continue test-compile + final checks,Day 41 - Diep,None,Not started
+46,29/8,Thu,Duc,SA/PM/Writer/Researcher,Sprint 4 Day 4: final sign-off before submission,Day 42 - Duc,None,Not started
+46,29/8,Thu,Diep,Writer,Sprint 4 Day 4: final submission package ready,Day 42 - Diep,None,Not started
+47,30/8,Fri,Duc,SA/PM/Writer/Researcher,MILESTONE: SUBMIT — final oversight + confirm submission,Day 43 - Duc,Confirmation,Not started
+47,30/8,Fri,Diep,Writer,MILESTONE: SUBMIT RIVF — submit via EDAS (https://edas.info/N35414) before 23:59 30 Aug (hard deadline),Day 43 - Diep,report/conf/rivf2026_paper.tex (submitted),Not started
