@@ -10,7 +10,7 @@ from fastapi import HTTPException
 
 from src.preprocessing.multiclass_tagger import LABEL_NAMES
 
-VALID_TASKS = ("branch1", "branch2")
+VALID_TASKS = ("branch1", "branch2", "branch3")
 
 
 def validate_task(task: str) -> str:
@@ -30,6 +30,8 @@ def label_options(task: str) -> list[str]:
     if task == "branch2":
         # Branch 2 is benign-only anomaly detection: label is binary.
         return ["normal", "anomaly"]
+    if task == "branch3":
+        return ["benign", "boolean_blind", "time_blind", "query_splitting"]
     raise HTTPException(
         status_code=404,
         detail=f"Unknown task '{task}'. Expected one of {VALID_TASKS}.",

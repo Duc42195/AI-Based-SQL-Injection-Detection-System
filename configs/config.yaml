@@ -156,20 +156,33 @@ branch3_session:
     password_min_len: 6
     password_max_len: 12
     boolean_blind:
-      sessions_per_split: 200
+      sessions_per_split: 500
       max_extract_chars: 8
     time_blind:
-      sessions_per_split: 200
+      sessions_per_split: 500
       # SLEEP(n) seconds for time-blind data generation.  Must be large enough
       # for the bisection oracle to reliably distinguish SLEEP vs no-SLEEP
       # (≥0.05 on most systems; Windows default timer ~15ms).  Increase to
       # 5.0 for production eval where realistic timing matters.
       sleep_seconds: 0.05
+    query_splitting:
+      sessions_per_split: 500
+      min_fragments: 5
+      max_fragments: 15
     benign:
-      sessions_per_split: 200
-      min_steps: 5
-      max_steps: 15
+      sessions_per_split: 500
+      min_steps: 10
+      max_steps: 30
       gap_seconds: [10, 120]
+
+  max_session_len: 64
+  train:
+    hidden_dim: 32
+    epochs: 30
+    learning_rate: 0.001
+    batch_size: 16
+    random_seed: 42
+    val_split: 0.15
 
 decision:
   # Overkill policy: SQLi=0 & Anomaly=1 -> hold for Admin review.

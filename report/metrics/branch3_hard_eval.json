@@ -1,0 +1,138 @@
+{
+  "shuffle_test": {
+    "original_accuracy": 0.5,
+    "shuffled_accuracy": 0.5,
+    "accuracy_drop": 0.0,
+    "original_f1_macro": 0.375,
+    "shuffled_f1_macro": 0.375,
+    "f1_drop": 0.0,
+    "passes": false
+  },
+  "zero_day_test": {
+    "no_boolean_blind": {
+      "b1_variant": "models/branch1_no_boolean_blind",
+      "target_class": "boolean_blind",
+      "target_label": 1,
+      "confusion_matrix": [
+        [
+          0,
+          0,
+          0,
+          200
+        ],
+        [
+          0,
+          0,
+          0,
+          200
+        ],
+        [
+          0,
+          0,
+          200,
+          0
+        ],
+        [
+          0,
+          0,
+          0,
+          200
+        ]
+      ],
+      "f1_per_class": {
+        "benign": 0.0,
+        "boolean_blind": 0.0,
+        "time_blind": 1.0,
+        "query_splitting": 0.5
+      },
+      "f1_macro": 0.375,
+      "accuracy": 0.5,
+      "test_acc": 1.0,
+      "test_loss": 0.0017,
+      "n_train": 800,
+      "n_test": 800,
+      "target_recall": 0.0,
+      "passes": false
+    },
+    "no_time_blind": {
+      "b1_variant": "models/branch1_no_time_blind",
+      "target_class": "time_blind",
+      "target_label": 2,
+      "confusion_matrix": [
+        [
+          0,
+          0,
+          0,
+          200
+        ],
+        [
+          0,
+          0,
+          0,
+          200
+        ],
+        [
+          0,
+          0,
+          200,
+          0
+        ],
+        [
+          0,
+          0,
+          0,
+          200
+        ]
+      ],
+      "f1_per_class": {
+        "benign": 0.0,
+        "boolean_blind": 0.0,
+        "time_blind": 1.0,
+        "query_splitting": 0.5
+      },
+      "f1_macro": 0.375,
+      "accuracy": 0.5,
+      "test_acc": 1.0,
+      "test_loss": 0.001307,
+      "n_train": 800,
+      "n_test": 800,
+      "target_recall": 1.0,
+      "passes": true
+    }
+  },
+  "ablation": {
+    "Full(7d)": 1.0,
+    "Drop B2": 1.0,
+    "Drop Gap": 1.0,
+    "Only B1": 1.0,
+    "Only B2": 1.0,
+    "Only Gap": 0.859,
+    "B2+Gap": 1.0,
+    "Shuffled": 0.263,
+    "drop_gap_passes": true,
+    "drop_b2_passes": true,
+    "shuffle_passes": true
+  },
+  "diversity": {
+    "boolean_blind": {
+      "total_sessions": 500,
+      "distinct_estimate": 500,
+      "diversity_ratio": 1.0
+    },
+    "time_blind": {
+      "total_sessions": 500,
+      "distinct_estimate": 500,
+      "diversity_ratio": 1.0
+    }
+  },
+  "overall_pass": false,
+  "checklist": {
+    "shuffle_test": false,
+    "zero_day_no_boolean_blind": false,
+    "zero_day_no_time_blind": true,
+    "ablation_drop_gap": true,
+    "ablation_drop_b2": true,
+    "diversity": true
+  },
+  "gate_decision": "FAIL \u2192 Phase 3 fix"
+}

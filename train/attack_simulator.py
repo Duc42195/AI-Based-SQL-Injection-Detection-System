@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import csv
 import random
+import re
 import string
 import time
 from pathlib import Path
@@ -11,6 +12,13 @@ from deploy import demo_db
 from src.utils import get_logger, load_config
 
 logger = get_logger(__name__)
+
+LABEL_MAP: dict[str, int] = {
+    "benign": 0,
+    "boolean_blind": 1,
+    "time_blind": 2,
+    "query_splitting": 3,
+}
 
 
 # --------------------------------------------------------------------------- #
@@ -143,6 +151,78 @@ class TimeBlindAttacker:
 
 
 # --------------------------------------------------------------------------- #
+# Query-splitting attacker
+# --------------------------------------------------------------------------- #
+
+_SPLIT_PAYLOADS: list[str] = [
+    "' OR '1'='1' --",
+    "' OR 1=1 --",
+    "admin' --",
+    "' UNION SELECT 1,2,3,4,5 --",
+    "' AND 1=1 --",
+    "' OR 'a'='a' --",
+    "' OR 1=1#",
+    "admin'--",
+    "' UNION SELECT username,password FROM users --",
+    "' OR 'x'='x",
+    "'; DROP TABLE users --",
+    "' OR 1=(SELECT 1 FROM users) --",
+]
+
+
+def _split_payload(payload: str, n_fragments: int, rng: random.Random) -> list[str]:
+    payload = payload.strip()
+    if n_fragments <= 1:
+        return [payload]
+    words = re.split(r"(\s+)", payload)
+    words = [w for w in words if w]
+    if not words:
+        return [""] * n_fragments
+    if len(words) <= n_fragments:
+        result = list(words)
+        while len(result) < n_fragments:
+            result.append("")
+        return result
+    groups: list[list[str]] = [[] for _ in range(n_fragments)]
+    for i, w in enumerate(words):
+        idx = min(i * n_fragments // len(words), n_fragments - 1)
+        groups[idx].append(w)
+    return ["".join(g) for g in groups]
+
+
+class QuerySplittingAttacker:
+    def __init__(
+        self,
+        seed_rows: list[tuple[int, str, str, str, str]],
+        target_user: str,
+        payload: str | None = None,
+        n_fragments_range: tuple[int, int] = (3, 8),
+        random_seed: int = 42,
+    ):
+        self._seed_rows = seed_rows
+        self._target_user = target_user
+        self._payload = payload
+        self._n_min, self._n_max = n_fragments_range
+        self._rng = random.Random(random_seed)
+
+    def run(self) -> list[dict[str, Any]]:
+        payload = self._payload or self._rng.choice(_SPLIT_PAYLOADS)
+        n_frags = self._rng.randint(self._n_min, self._n_max)
+        fragments = _split_payload(payload, n_frags, self._rng)
+        steps: list[dict[str, Any]] = []
+        for fragment in fragments:
+            start = time.monotonic()
+            result = demo_db.execute_raw(fragment, seed_rows=self._seed_rows)
+            elapsed = time.monotonic() - start
+            steps.append({
+                "query": result["constructed_sql"],
+                "row_count": result["row_count"],
+                "timing_seconds": round(elapsed, 4),
+            })
+        return steps
+
+
+# --------------------------------------------------------------------------- #
 # Benign session generator
 # --------------------------------------------------------------------------- #
 
@@ -182,7 +262,7 @@ def _extract_ground_truth(
     session: list[dict[str, Any]],
     target_user: str,
 ) -> dict[str, Any] | None:
-    """Return distinct key for a boolean-blind or time-blind session, or None."""
+    """Return distinct key for a blind or query-splitting session."""
     for step in session:
         q = step.get("query", "")
         if "ASCII(SUBSTR(password," in q or "ASCII(SUBSTR((SELECT password" in q:
@@ -190,18 +270,35 @@ def _extract_ground_truth(
                 "target_user": target_user,
                 "column": "password",
             }
+        if "WHERE username = '" in q:
+            inner = q.split("WHERE username = '")[1].rsplit("'", 1)[0]
+            if "'" in inner and "--" not in q and "ASCII" not in q:
+                return {
+                    "target_user": target_user,
+                    "payload": _normalize_payload(q),
+                }
     return None
+
+
+def _normalize_payload(q: str) -> str:
+    idx = q.find("WHERE username = '")
+    if idx == -1:
+        return q
+    after = q[idx + len("WHERE username = '"):]
+    inner = after.rsplit("'", 1)[0] if "'" in after else after
+    return inner
 
 
 def verify_diversity(
     sessions: list[tuple[str, list[dict[str, Any]]]],
 ) -> dict[str, Any]:
-    distinct: set[tuple[str, str]] = set()
+    distinct: set[str] = set()
     total = 0
     for target_user, steps in sessions:
         gt = _extract_ground_truth(steps, target_user)
         if gt is not None:
-            distinct.add((gt["target_user"], gt["column"]))
+            key = f"{gt['target_user']}|{gt.get('column', gt.get('payload', ''))}"
+            distinct.add(key)
             total += 1
     ratio = len(distinct) / max(total, 1)
     logger.info("Diversity: %d distinct / %d total = %.2f", len(distinct), total, ratio)
@@ -231,11 +328,13 @@ def _build_session_rows(
     class_name: str,
     steps: list[dict[str, Any]],
 ) -> list[dict[str, Any]]:
+    label = LABEL_MAP[class_name]
     rows: list[dict[str, Any]] = []
     for step_idx, step in enumerate(steps, start=1):
         rows.append({
             "session_id": session_id,
             "step_idx": step_idx,
+            "session_label": label,
             "class": class_name,
             "query": step["query"],
             "row_count": step["row_count"],
@@ -266,29 +365,30 @@ def generate_all_sessions(
     output_dir = Path(output_dir)
     output_dir.mkdir(parents=True, exist_ok=True)
 
-    classes = {
+    attack_classes = {
         "boolean_blind": BooleanBlindAttacker,
         "time_blind": TimeBlindAttacker,
+        "query_splitting": QuerySplittingAttacker,
     }
 
     all_sessions: dict[str, list[dict[str, Any]]] = {}
-    all_session_tuples: dict[str, list[tuple[str, list[dict[str, Any]]]]] = {
-        "boolean_blind": [],
-        "time_blind": [],
-    }
+    all_session_tuples: dict[str, list[tuple[str, list[dict[str, Any]]]]] = {}
 
     total = n_train_per_class + n_test_per_class
     session_id = 0
 
-    for class_name in ["boolean_blind", "time_blind"]:
+    for class_name, cls in attack_classes.items():
         logger.info("Generating %d %s sessions ...", total, class_name)
         all_rows: list[dict[str, Any]] = []
+        all_session_tuples[class_name] = []
         for i in range(total):
             user = pool[rng.randint(0, len(pool) - 1)]
             if class_name == "boolean_blind":
-                attacker = BooleanBlindAttacker(seed_rows, user["username"], max_chars=max_extract_chars)
+                attacker = cls(seed_rows, user["username"], max_chars=max_extract_chars)
+            elif class_name == "time_blind":
+                attacker = cls(seed_rows, user["username"], max_chars=max_extract_chars, sleep_seconds=sleep_seconds)
             else:
-                attacker = TimeBlindAttacker(seed_rows, user["username"], max_chars=max_extract_chars, sleep_seconds=sleep_seconds)
+                attacker = cls(seed_rows, user["username"], random_seed=rng.randint(0, 2**31))
             steps = attacker.run()
             session_id += 1
             all_rows.extend(_build_session_rows(session_id, class_name, steps))
@@ -309,12 +409,12 @@ def generate_all_sessions(
             logger.info("  %d/%d benign sessions done", i + 1, total)
     all_sessions["benign"] = all_benign_rows
 
-    rng.shuffle(all_session_tuples["boolean_blind"])
-    rng.shuffle(all_session_tuples["time_blind"])
+    for class_name in attack_classes:
+        rng.shuffle(all_session_tuples[class_name])
 
-    split_at = {}
+    all_classes = list(attack_classes) + ["benign"]
     report: dict[str, Any] = {"classes": {}}
-    for class_name in ["boolean_blind", "time_blind", "benign"]:
+    for class_name in all_classes:
         rows = all_sessions[class_name]
         session_ids = sorted({r["session_id"] for r in rows})
         n_test = max(1, int(len(session_ids) * test_fraction))
@@ -330,11 +430,10 @@ def generate_all_sessions(
             "train_rows": len(train_rows),
             "test_rows": len(test_rows),
         }
-        split_at[class_name] = n_train
 
-    div_boolean = verify_diversity(all_session_tuples["boolean_blind"])
-    div_time = verify_diversity(all_session_tuples["time_blind"])
-    report["diversity"] = {"boolean_blind": div_boolean, "time_blind": div_time}
+    report["diversity"] = {}
+    for class_name in attack_classes:
+        report["diversity"][class_name] = verify_diversity(all_session_tuples[class_name])
     report["total_sessions_generated"] = session_id
     logger.info("Generation complete. Report: %s", report)
     return report
@@ -371,3 +470,5 @@ if __name__ == "__main__":
     print(f"\nDone. Sessions generated: {report['total_sessions_generated']}")
     for cls, stats in report["classes"].items():
         print(f"  {cls}: {stats['train_sessions']} train / {stats['test_sessions']} test")
+    for cls, div in report.get("diversity", {}).items():
+        print(f"  {cls} diversity: {div['distinct_ratio']:.0%}")

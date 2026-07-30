@@ -7,16 +7,21 @@ from pathlib import Path
 
 import pytest
 
+from random import Random
+
 from deploy import demo_db
 from train.attack_simulator import (
     BooleanBlindAttacker,
     TimeBlindAttacker,
+    QuerySplittingAttacker,
     BenignSessionGenerator,
+    _split_payload,
     generate_synthetic_user_pool,
     _user_pool_to_seed_rows,
     verify_diversity,
     generate_all_sessions,
     _build_session_rows,
+    LABEL_MAP,
 )
 
 
@@ -117,6 +122,60 @@ class TestTimeBlindAttacker:
 
 
 # --------------------------------------------------------------------------- #
+# QuerySplittingAttacker + _split_payload
+# --------------------------------------------------------------------------- #
+
+class TestSplitPayload:
+    def test_single_fragment(self):
+        assert _split_payload("' OR 1=1 --", 1, Random(42)) == ["' OR 1=1 --"]
+
+    def test_more_fragments_than_words(self):
+        result = _split_payload("a b", 4, Random(42))
+        assert len(result) == 4
+        assert "a" in result
+        assert "b" in result
+
+    def test_exact_split(self):
+        result = _split_payload("a b c", 3, Random(42))
+        assert len(result) == 3
+
+    def test_handles_empty_string(self):
+        result = _split_payload("", 3, Random(42))
+        assert len(result) == 3
+
+
+class TestQuerySplittingAttacker:
+    @pytest.fixture
+    def seed_rows(self):
+        pool = generate_synthetic_user_pool(10, random_seed=42)
+        return _user_pool_to_seed_rows(pool)
+
+    def test_session_not_empty(self, seed_rows):
+        user = seed_rows[0][1]
+        attacker = QuerySplittingAttacker(seed_rows, user, payload="' OR 1=1 --", random_seed=42)
+        steps = attacker.run()
+        assert len(steps) > 0
+
+    def test_fixed_payload_produces_consistent_n_fragments(self, seed_rows):
+        user = seed_rows[0][1]
+        attacker = QuerySplittingAttacker(seed_rows, user, payload="' OR 1=1 --", random_seed=42)
+        steps = attacker.run()
+        assert len(steps) >= 2
+
+    def test_all_queries_have_constructed_sql(self, seed_rows):
+        user = seed_rows[0][1]
+        attacker = QuerySplittingAttacker(seed_rows, user, payload="admin' --", random_seed=42)
+        steps = attacker.run()
+        for s in steps:
+            assert "SELECT" in s["query"]
+
+    def test_label_field(self, seed_rows):
+        user = seed_rows[0][1]
+        steps = _build_session_rows(1, "query_splitting", [{"query": "test", "row_count": 0, "timing_seconds": 0.0}])
+        assert steps[0]["session_label"] == LABEL_MAP["query_splitting"]
+
+
+# --------------------------------------------------------------------------- #
 # BenignSessionGenerator
 # --------------------------------------------------------------------------- #
 
@@ -179,7 +238,8 @@ class TestBuildSessionRows:
         assert rows[0]["step_idx"] == 1
         assert rows[0]["class"] == "boolean_blind"
         assert list(rows[0].keys()) == [
-            "session_id", "step_idx", "class", "query", "row_count", "timing_seconds",
+            "session_id", "step_idx", "session_label", "class",
+            "query", "row_count", "timing_seconds",
         ]
 
 

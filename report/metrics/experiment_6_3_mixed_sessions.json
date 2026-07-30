@@ -1,0 +1,75 @@
+{
+  "experiment": "6.3_mixed_sessions",
+  "description": "Prepend benign steps to attack sessions at various ratios",
+  "ratios_tested": [
+    "1:2",
+    "1:1",
+    "2:1"
+  ],
+  "results": {
+    "1_2": {
+      "ratio": "1:2",
+      "benign_ratio": 1,
+      "attack_ratio": 2,
+      "config": {
+        "train_size": 1500,
+        "test_size": 300,
+        "input_dim": 7,
+        "hidden_dim": 32
+      },
+      "baseline_test_acc": 1.0,
+      "shuffle_test": {
+        "original_accuracy": 0.6667,
+        "shuffled_accuracy": 0.6667,
+        "accuracy_drop": 0.0,
+        "original_f1_macro": 0.5556,
+        "shuffled_f1_macro": 0.5556,
+        "f1_drop": 0.0,
+        "passes": false
+      }
+    },
+    "1_1": {
+      "ratio": "1:1",
+      "benign_ratio": 1,
+      "attack_ratio": 1,
+      "config": {
+        "train_size": 1500,
+        "test_size": 300,
+        "input_dim": 7,
+        "hidden_dim": 32
+      },
+      "baseline_test_acc": 1.0,
+      "shuffle_test": {
+        "original_accuracy": 0.6667,
+        "shuffled_accuracy": 0.6667,
+        "accuracy_drop": 0.0,
+        "original_f1_macro": 0.5556,
+        "shuffled_f1_macro": 0.5556,
+        "f1_drop": 0.0,
+        "passes": false
+      }
+    },
+    "2_1": {
+      "ratio": "2:1",
+      "benign_ratio": 2,
+      "attack_ratio": 1,
+      "config": {
+        "train_size": 1500,
+        "test_size": 300,
+        "input_dim": 7,
+        "hidden_dim": 32
+      },
+      "baseline_test_acc": 1.0,
+      "shuffle_test": {
+        "original_accuracy": 0.6667,
+        "shuffled_accuracy": 0.6667,
+        "accuracy_drop": 0.0,
+        "original_f1_macro": 0.5556,
+        "shuffled_f1_macro": 0.5556,
+        "f1_drop": 0.0,
+        "passes": false
+      }
+    }
+  },
+  "gate_decision": "FAIL"
+}

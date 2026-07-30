@@ -34,6 +34,8 @@ logger = get_logger(__name__)
 
 router = APIRouter(prefix="/data", tags=["data"])
 
+_LABEL_IDS = {name: label for label, name in LABEL_NAMES.items()}
+
 # Mock pools per task. Real impl reads from the continual-learning stores.
 _UNANNOTATED: dict[str, list[dict]] = {
     "branch1": [

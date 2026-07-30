@@ -1,0 +1,42 @@
+{
+  "experiment": "6.2_drop_b2_delta",
+  "description": "Remove B2 score, keep B1 deltas (5) + timing gap (1) = 6-dim",
+  "config": {
+    "train_size": 2000,
+    "test_size": 2000,
+    "input_dim": 6,
+    "hidden_dim": 32,
+    "epochs": 30,
+    "batch_size": 16,
+    "max_len": 64
+  },
+  "baseline_test_acc": 0.25,
+  "shuffle_test": {
+    "original_accuracy": 0.25,
+    "shuffled_accuracy": 0.25,
+    "accuracy_drop": 0.0,
+    "original_f1_macro": 0.125,
+    "shuffled_f1_macro": 0.125,
+    "f1_drop": 0.0,
+    "passes": false
+  },
+  "zero_day_test": {
+    "no_boolean_blind": {
+      "b1_variant": "models/branch1_no_boolean_blind",
+      "target_class": "boolean_blind",
+      "test_acc": 0.25,
+      "test_loss": 1.386546,
+      "target_recall": 0.0,
+      "passes": false
+    },
+    "no_time_blind": {
+      "b1_variant": "models/branch1_no_time_blind",
+      "target_class": "time_blind",
+      "test_acc": 0.25,
+      "test_loss": 1.386518,
+      "target_recall": 0.0,
+      "passes": false
+    }
+  },
+  "gate_decision": "FAIL"
+}
