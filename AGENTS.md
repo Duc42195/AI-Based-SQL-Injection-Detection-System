@@ -47,9 +47,9 @@ must be checked against all of them**, not just the one you're currently editing
 
 | File | What it owns |
 |---|---|
-| `README.md` | "Current status" + "Project roles" — human-facing project overview |
-| `AGENTS.md` (here) | "Project roles" table + contributor/agent rules |
-| `report/plan/ke_hoach_2_tuan.csv` | Day-by-day/sprint task tracker — the live plan |
+| `README.md` | Architecture, decision logic, install/run/config — technical overview only, no roles or status |
+| `AGENTS.md` (here) | "Project roles" table (sole owner) + contributor/agent rules |
+| `report/plan/ke_hoach_2_tuan.csv` | Day-by-day/sprint task tracker — the live plan, sole owner of current status/progress |
 | `report/conf/outline.md`, `report/conf/research_proposal.md` | RIVF paper status/framing (as of 2026-07-30 these are known stale — flagged separately, not fixed by this checklist) |
 
 **Rule of thumb:** when a core fact changes (a deadline, a role, a branch's status), grep the
