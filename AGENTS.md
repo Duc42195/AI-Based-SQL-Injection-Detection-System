@@ -27,6 +27,18 @@ Tight deadline (14 days) → **prioritize an end-to-end MVP** over perfecting ev
 
 ---
 
+## Project roles
+
+| Person | Role |
+|---|---|
+| Duc | Solution Architect, Project Manager, Writer, Researcher (lead — coordinates, makes architecture/framing calls, writes, and does research as needed) |
+| Bach | Researcher (owns Branch 3 data/model work end-to-end) |
+| Diep | Writer |
+| Minh | Writer |
+| Dr. Linh Dinh-Van, Dr. Thai Kim-Dinh | Reviewer (advisors, RIVF paper co-authors) |
+
+---
+
 ## Environment setup
 
 The project uses [`uv`](https://docs.astral.sh/uv/) (no manual pip/venv). Python **3.12**.
@@ -115,11 +127,18 @@ data/  models/           # DO NOT commit contents (only .gitkeep)
 ## Git workflow (lightweight trunk-based)
 
 1. `git switch main && git pull`
-2. `git switch -c feature/<phase-name>` (e.g. `feature/branch2-anomaly`)
+2. `git switch -c feature/<phase-name>` (e.g. `feature/branch2-anomaly` **for non-sprint work**; see below for sprint work)
 3. Code, commit often in small chunks; write clear commit messages (Vietnamese or English, either is fine).
 4. `git push -u origin feature/<phase-name>`
 5. Open a **PR on GitHub** → review → **Squash and merge** → delete the branch.
-6. Branch prefixes: `feature/` (new functionality), `fix/` (bug fix), `exp/` (experimental notebook, disposable).
+6. Branch prefixes and naming:
+   - **`feature/`** (new functionality)
+   - **`fix/`** (bug fix)
+   - **`exp/`** (experimental notebook, disposable)
+   - **Sprint-based code work** (for the RIVF 30-Aug sprint): include sprint number in the branch name for tracking.
+     - Format: `feature/feat-{description}-s{sprint}` (e.g., `feature/feat-branch3-eval-s1`, `feature/feat-cl-references-s2`)
+     - Or for bug fixes: `fix/{description}-s{sprint}` (e.g., `fix/combined-coverage-s1`)
+     - Experiments during the sprint: `exp/{description}` (no sprint number needed, they're disposable)
 
 **Never** merge with red tests. **Never** force-push to `main`.
 
