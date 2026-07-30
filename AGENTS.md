@@ -39,6 +39,26 @@ Tight deadline (14 days) → **prioritize an end-to-end MVP** over perfecting ev
 
 ---
 
+## Keep these in sync
+
+The same facts (deadlines, framing, team roles, branch status) are duplicated across a few
+files on purpose — each one serves a different audience — but that means **any status change
+must be checked against all of them**, not just the one you're currently editing:
+
+| File | What it owns |
+|---|---|
+| `README.md` | "Current status" + "Project roles" — human-facing project overview |
+| `AGENTS.md` (here) | "Project roles" table + contributor/agent rules |
+| `report/plan/ke_hoach_2_tuan.csv` | Day-by-day/sprint task tracker — the live plan |
+| `report/conf/outline.md`, `report/conf/research_proposal.md` | RIVF paper status/framing (as of 2026-07-30 these are known stale — flagged separately, not fixed by this checklist) |
+
+**Rule of thumb:** when a core fact changes (a deadline, a role, a branch's status), grep the
+whole repo for the *old* value/string before considering the change done. Don't rely on a fixed
+mental list of "files that matter" — new docs get added over time and a remembered list goes
+stale just like the facts it's meant to protect.
+
+---
+
 ## Environment setup
 
 The project uses [`uv`](https://docs.astral.sh/uv/) (no manual pip/venv). Python **3.12**.
