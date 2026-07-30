@@ -42,6 +42,30 @@ calling from a different port (default 8501) isn't blocked.
 > **Recommendation:** use `POST /api/v1/detect` as the main endpoint. It runs all 3 branches
 > + applies the decision matrix and returns **one verdict** (`BLOCK` / `OVERKILL` / `ALLOW` / `UNKNOWN`).
 
+### MLOps lifecycle (Branch 1 is real; Branch 2/3 report `not_ready`)
+
+Full specification: [`report/plan/mlops_contract.md`](../report/plan/mlops_contract.md).
+
+| Method | Path | Purpose |
+|---|---|---|
+| POST | `/api/v1/mlops/replay` | Replay held-out traffic → writes the drift record, fills the review queue. Use ≥ 20k or every window is drift *reference*. |
+| POST | `/api/v1/mlops/reset` | Restore the protected baseline; archives (never deletes) models the round created |
+| GET  | `/api/v1/mlops/versions` | Data-version registry + lineage |
+| GET  | `/api/v1/mlops/runs` | Training runs, keyed by `run_id` |
+| GET  | `/api/v1/mlops/decisions` | Promotion decision log |
+| GET  | `/api/v1/monitor/drift/{task}` | **Measured** PSI per window, every signal (`not_ready` until a replay runs) |
+| POST | `/api/v1/monitor/retrain/{task}` | Real retrain for `branch1`; returns the `run_id`, which `/mlops/runs` can resolve |
+| GET  | `/api/v1/data/{task}/unannotated` | Queue items, each carrying `ai_label` + `ai_confidence` |
+| POST | `/api/v1/data/{task}/annotate` | `{"id","action":"approve\|correct\|reject","label"?}` |
+| POST | `/api/v1/train/{task}/start` | Branch 1 trains for real (`real: true`), seals a data version, runs the gate |
+
+Two behaviours worth knowing before integrating:
+
+- **Training is idempotent.** `run_id = hash(config, data, seed)`. An identical run returns
+  `run_status: "exists"` and retrains nothing.
+- **Promotion is one config flip** (`branch1_supervised.active_version`), so rollback is the
+  same operation reversed. The service reloads its model cache in place.
+
 ## 3. Response shape
 
 ### `POST /api/v1/detect`

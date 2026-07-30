@@ -68,10 +68,34 @@ def annotated(task: str, limit: int = 20, offset: int = 0) -> dict[str, Any]:
     return api_client.annotated(task, limit=limit, offset=offset)
 
 
+@st.cache_data(ttl=_TTL_METRICS, show_spinner=False)
+def versions() -> dict[str, Any]:
+    """Data-version registry with lineage."""
+    return api_client.versions()
+
+
+@st.cache_data(ttl=_TTL_LOGS, show_spinner=False)
+def runs() -> dict[str, Any]:
+    """Recorded training runs."""
+    return api_client.runs()
+
+
+@st.cache_data(ttl=_TTL_LOGS, show_spinner=False)
+def decisions() -> dict[str, Any]:
+    """Promotion decision log."""
+    return api_client.decisions()
+
+
 def invalidate_annotations() -> None:
     """Drop cached annotation pools after a label is saved."""
     unannotated.clear()
     annotated.clear()
+
+
+def invalidate_lifecycle() -> None:
+    """Drop everything a replay, training run or reset can change."""
+    for cached in (health, drift, logs, metrics, unannotated, annotated, versions, runs, decisions):
+        cached.clear()
 
 
 def invalidate_all() -> None:
@@ -84,5 +108,8 @@ def invalidate_all() -> None:
         metrics,
         unannotated,
         annotated,
+        versions,
+        runs,
+        decisions,
     ):
         cached.clear()

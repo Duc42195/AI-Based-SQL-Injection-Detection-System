@@ -1,0 +1,9 @@
+{
+  "rows": 48485,
+  "agreement_rate": 0.988491,
+  "candidate_allows_champion_blocks": 13,
+  "candidate_blocks_champion_allows": 387,
+  "champion_block_rate": 0.183253,
+  "candidate_block_rate": 0.190966,
+  "mean_latency_ms_per_query": 0.1401
+}

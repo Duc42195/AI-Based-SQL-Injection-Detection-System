@@ -132,9 +132,39 @@ def annotated(task: str, limit: int = 20, offset: int = 0) -> dict:
     return get(f"/data/{task}/annotated", limit=limit, offset=offset)
 
 
-def annotate(task: str, item_id: str, label: str) -> dict:
-    """Assign a label to one sample."""
-    return post(f"/data/{task}/annotate", {"id": item_id, "label": label})
+def annotate(task: str, item_id: str, action: str, label: str | None = None) -> dict:
+    """Review one queued item: approve, correct (with a label) or reject."""
+    return post(
+        f"/data/{task}/annotate", {"id": item_id, "action": action, "label": label}
+    )
+
+
+# --------------------------------------------------------------------------- #
+# MLOps lifecycle
+# --------------------------------------------------------------------------- #
+def versions() -> dict:
+    """Return the data-version registry with lineage."""
+    return get("/mlops/versions")
+
+
+def runs() -> dict:
+    """Return recorded training runs."""
+    return get("/mlops/runs")
+
+
+def decisions() -> dict:
+    """Return the promotion decision log."""
+    return get("/mlops/decisions")
+
+
+def replay(limit: int = 20000, max_queue: int = 200) -> dict:
+    """Replay a slice of the held-out stream: writes drift, fills the queue."""
+    return post("/mlops/replay", {"limit": limit, "max_queue": max_queue})
+
+
+def reset_demo() -> dict:
+    """Restore the protected baseline so the demo can be run again."""
+    return post("/mlops/reset")
 
 
 def train_start(task: str, train: int, valid: int, test: int) -> dict:

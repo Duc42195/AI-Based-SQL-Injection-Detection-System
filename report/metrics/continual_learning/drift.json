@@ -1,0 +1,1602 @@
+{
+  "data_version": "1.0",
+  "reference": "stream baseline: first 10 windows",
+  "baseline_windows": 10,
+  "psi_bins": 10,
+  "threshold": 0.2,
+  "sustained_windows": 2,
+  "summary": {
+    "global": {
+      "phase_a_mean": 0.006945,
+      "phase_a_max": 0.014111,
+      "phase_b_mean": 0.007691,
+      "phase_b_max": 0.012733,
+      "quiet_in_phase_a": true,
+      "fired_in_phase_b": false,
+      "phase_b_over_phase_a": 1.107
+    },
+    "attack_subpop": {
+      "phase_a_mean": 0.044467,
+      "phase_a_max": 0.072723,
+      "phase_b_mean": 0.049549,
+      "phase_b_max": 0.115736,
+      "quiet_in_phase_a": true,
+      "fired_in_phase_b": false,
+      "phase_b_over_phase_a": 1.114
+    },
+    "prediction": {
+      "phase_a_mean": 0.005852,
+      "phase_a_max": 0.015306,
+      "phase_b_mean": 0.00898,
+      "phase_b_max": 0.028024,
+      "quiet_in_phase_a": true,
+      "fired_in_phase_b": false,
+      "phase_b_over_phase_a": 1.535
+    },
+    "confidence": {
+      "phase_a_mean": 0.011147,
+      "phase_a_max": 0.019532,
+      "phase_b_mean": 0.010789,
+      "phase_b_max": 0.023449,
+      "quiet_in_phase_a": true,
+      "fired_in_phase_b": false,
+      "phase_b_over_phase_a": 0.968
+    },
+    "confidence_flagged": {
+      "phase_a_mean": 0.061301,
+      "phase_a_max": 0.129283,
+      "phase_b_mean": 0.075728,
+      "phase_b_max": 0.189609,
+      "quiet_in_phase_a": true,
+      "fired_in_phase_b": false,
+      "phase_b_over_phase_a": 1.235
+    }
+  },
+  "windows": [
+    {
+      "index": 0,
+      "phase": "A",
+      "is_reference": true,
+      "n": 1000,
+      "psi": {
+        "global": 0.00485,
+        "attack_subpop": 0.02646,
+        "prediction": 0.001281,
+        "confidence": 0.006916,
+        "confidence_flagged": 0.076466
+      },
+      "rates": {
+        "block": 0.19,
+        "low_confidence": 0.18,
+        "mean_confidence": 0.799856
+      },
+      "alert": false
+    },
+    {
+      "index": 1,
+      "phase": "A",
+      "is_reference": true,
+      "n": 1000,
+      "psi": {
+        "global": 0.008584,
+        "attack_subpop": 0.027313,
+        "prediction": 0.00286,
+        "confidence": 0.004523,
+        "confidence_flagged": 0.047781
+      },
+      "rates": {
+        "block": 0.202,
+        "low_confidence": 0.178,
+        "mean_confidence": 0.801522
+      },
+      "alert": false
+    },
+    {
+      "index": 2,
+      "phase": "A",
+      "is_reference": true,
+      "n": 1000,
+      "psi": {
+        "global": 0.005744,
+        "attack_subpop": 0.020388,
+        "prediction": 0.001275,
+        "confidence": 0.001621,
+        "confidence_flagged": 0.026278
+      },
+      "rates": {
+        "block": 0.183,
+        "low_confidence": 0.177,
+        "mean_confidence": 0.801425
+      },
+      "alert": false
+    },
+    {
+      "index": 3,
+      "phase": "A",
+      "is_reference": true,
+      "n": 1000,
+      "psi": {
+        "global": 0.003672,
+        "attack_subpop": 0.026587,
+        "prediction": 0.001997,
+        "confidence": 0.004933,
+        "confidence_flagged": 0.02195
+      },
+      "rates": {
+        "block": 0.184,
+        "low_confidence": 0.165,
+        "mean_confidence": 0.801807
+      },
+      "alert": false
+    },
+    {
+      "index": 4,
+      "phase": "A",
+      "is_reference": true,
+      "n": 1000,
+      "psi": {
+        "global": 0.007323,
+        "attack_subpop": 0.04104,
+        "prediction": 0.004798,
+        "confidence": 0.006094,
+        "confidence_flagged": 0.049188
+      },
+      "rates": {
+        "block": 0.183,
+        "low_confidence": 0.164,
+        "mean_confidence": 0.803919
+      },
+      "alert": false
+    },
+    {
+      "index": 5,
+      "phase": "A",
+      "is_reference": true,
+      "n": 1000,
+      "psi": {
+        "global": 0.006839,
+        "attack_subpop": 0.036417,
+        "prediction": 0.002499,
+        "confidence": 0.008423,
+        "confidence_flagged": 0.039085
+      },
+      "rates": {
+        "block": 0.178,
+        "low_confidence": 0.186,
+        "mean_confidence": 0.795086
+      },
+      "alert": false
+    },
+    {
+      "index": 6,
+      "phase": "A",
+      "is_reference": true,
+      "n": 1000,
+      "psi": {
+        "global": 0.006627,
+        "attack_subpop": 0.019084,
+        "prediction": 0.000826,
+        "confidence": 0.016567,
+        "confidence_flagged": 0.052099
+      },
+      "rates": {
+        "block": 0.197,
+        "low_confidence": 0.193,
+        "mean_confidence": 0.798091
+      },
+      "alert": false
+    },
+    {
+      "index": 7,
+      "phase": "A",
+      "is_reference": true,
+      "n": 1000,
+      "psi": {
+        "global": 0.004959,
+        "attack_subpop": 0.027994,
+        "prediction": 0.002296,
+        "confidence": 0.009831,
+        "confidence_flagged": 0.025148
+      },
+      "rates": {
+        "block": 0.207,
+        "low_confidence": 0.173,
+        "mean_confidence": 0.803812
+      },
+      "alert": false
+    },
+    {
+      "index": 8,
+      "phase": "A",
+      "is_reference": true,
+      "n": 1000,
+      "psi": {
+        "global": 0.00551,
+        "attack_subpop": 0.039877,
+        "prediction": 0.001613,
+        "confidence": 0.013647,
+        "confidence_flagged": 0.021476
+      },
+      "rates": {
+        "block": 0.192,
+        "low_confidence": 0.151,
+        "mean_confidence": 0.808671
+      },
+      "alert": false
+    },
+    {
+      "index": 9,
+      "phase": "A",
+      "is_reference": true,
+      "n": 1000,
+      "psi": {
+        "global": 0.007495,
+        "attack_subpop": 0.040975,
+        "prediction": 0.010609,
+        "confidence": 0.014583,
+        "confidence_flagged": 0.091454
+      },
+      "rates": {
+        "block": 0.195,
+        "low_confidence": 0.166,
+        "mean_confidence": 0.805884
+      },
+      "alert": false
+    },
+    {
+      "index": 10,
+      "phase": "A",
+      "is_reference": false,
+      "n": 1000,
+      "psi": {
+        "global": 0.006612,
+        "attack_subpop": 0.052969,
+        "prediction": 0.000706,
+        "confidence": 0.019532,
+        "confidence_flagged": 0.089916
+      },
+      "rates": {
+        "block": 0.192,
+        "low_confidence": 0.182,
+        "mean_confidence": 0.794817
+      },
+      "alert": false
+    },
+    {
+      "index": 11,
+      "phase": "A",
+      "is_reference": false,
+      "n": 1000,
+      "psi": {
+        "global": 0.007537,
+        "attack_subpop": 0.03049,
+        "prediction": 0.001668,
+        "confidence": 0.007426,
+        "confidence_flagged": 0.109167
+      },
+      "rates": {
+        "block": 0.197,
+        "low_confidence": 0.16,
+        "mean_confidence": 0.803425
+      },
+      "alert": false
+    },
+    {
+      "index": 12,
+      "phase": "A",
+      "is_reference": false,
+      "n": 1000,
+      "psi": {
+        "global": 0.006296,
+        "attack_subpop": 0.035543,
+        "prediction": 0.006775,
+        "confidence": 0.014678,
+        "confidence_flagged": 0.067375
+      },
+      "rates": {
+        "block": 0.209,
+        "low_confidence": 0.172,
+        "mean_confidence": 0.799452
+      },
+      "alert": false
+    },
+    {
+      "index": 13,
+      "phase": "A",
+      "is_reference": false,
+      "n": 1000,
+      "psi": {
+        "global": 0.008609,
+        "attack_subpop": 0.052564,
+        "prediction": 0.013702,
+        "confidence": 0.016499,
+        "confidence_flagged": 0.077673
+      },
+      "rates": {
+        "block": 0.183,
+        "low_confidence": 0.16,
+        "mean_confidence": 0.799511
+      },
+      "alert": false
+    },
+    {
+      "index": 14,
+      "phase": "A",
+      "is_reference": false,
+      "n": 1000,
+      "psi": {
+        "global": 0.004456,
+        "attack_subpop": 0.044463,
+        "prediction": 0.000835,
+        "confidence": 0.006084,
+        "confidence_flagged": 0.029287
+      },
+      "rates": {
+        "block": 0.196,
+        "low_confidence": 0.179,
+        "mean_confidence": 0.797435
+      },
+      "alert": false
+    },
+    {
+      "index": 15,
+      "phase": "A",
+      "is_reference": false,
+      "n": 1000,
+      "psi": {
+        "global": 0.007025,
+        "attack_subpop": 0.055298,
+        "prediction": 0.006049,
+        "confidence": 0.014573,
+        "confidence_flagged": 0.129283
+      },
+      "rates": {
+        "block": 0.173,
+        "low_confidence": 0.17,
+        "mean_confidence": 0.809279
+      },
+      "alert": false
+    },
+    {
+      "index": 16,
+      "phase": "A",
+      "is_reference": false,
+      "n": 1000,
+      "psi": {
+        "global": 0.007094,
+        "attack_subpop": 0.043055,
+        "prediction": 0.000841,
+        "confidence": 0.01453,
+        "confidence_flagged": 0.029626
+      },
+      "rates": {
+        "block": 0.199,
+        "low_confidence": 0.158,
+        "mean_confidence": 0.807073
+      },
+      "alert": false
+    },
+    {
+      "index": 17,
+      "phase": "A",
+      "is_reference": false,
+      "n": 1000,
+      "psi": {
+        "global": 0.004602,
+        "attack_subpop": 0.034765,
+        "prediction": 0.00201,
+        "confidence": 0.012299,
+        "confidence_flagged": 0.068041
+      },
+      "rates": {
+        "block": 0.195,
+        "low_confidence": 0.192,
+        "mean_confidence": 0.798253
+      },
+      "alert": false
+    },
+    {
+      "index": 18,
+      "phase": "A",
+      "is_reference": false,
+      "n": 1000,
+      "psi": {
+        "global": 0.014111,
+        "attack_subpop": 0.033816,
+        "prediction": 0.000621,
+        "confidence": 0.012209,
+        "confidence_flagged": 0.037211
+      },
+      "rates": {
+        "block": 0.186,
+        "low_confidence": 0.162,
+        "mean_confidence": 0.804184
+      },
+      "alert": false
+    },
+    {
+      "index": 19,
+      "phase": "A",
+      "is_reference": false,
+      "n": 1000,
+      "psi": {
+        "global": 0.007303,
+        "attack_subpop": 0.0338,
+        "prediction": 0.002513,
+        "confidence": 0.012757,
+        "confidence_flagged": 0.090518
+      },
+      "rates": {
+        "block": 0.184,
+        "low_confidence": 0.154,
+        "mean_confidence": 0.807938
+      },
+      "alert": false
+    },
+    {
+      "index": 20,
+      "phase": "A",
+      "is_reference": false,
+      "n": 1000,
+      "psi": {
+        "global": 0.005097,
+        "attack_subpop": 0.072723,
+        "prediction": 0.008794,
+        "confidence": 0.008595,
+        "confidence_flagged": 0.019913
+      },
+      "rates": {
+        "block": 0.217,
+        "low_confidence": 0.191,
+        "mean_confidence": 0.795527
+      },
+      "alert": false
+    },
+    {
+      "index": 21,
+      "phase": "A",
+      "is_reference": false,
+      "n": 1000,
+      "psi": {
+        "global": 0.009529,
+        "attack_subpop": 0.040116,
+        "prediction": 0.012648,
+        "confidence": 0.015494,
+        "confidence_flagged": 0.086768
+      },
+      "rates": {
+        "block": 0.156,
+        "low_confidence": 0.175,
+        "mean_confidence": 0.805242
+      },
+      "alert": false
+    },
+    {
+      "index": 22,
+      "phase": "A",
+      "is_reference": false,
+      "n": 1000,
+      "psi": {
+        "global": 0.00577,
+        "attack_subpop": 0.034608,
+        "prediction": 0.00346,
+        "confidence": 0.012329,
+        "confidence_flagged": 0.07074
+      },
+      "rates": {
+        "block": 0.187,
+        "low_confidence": 0.166,
+        "mean_confidence": 0.802695
+      },
+      "alert": false
+    },
+    {
+      "index": 23,
+      "phase": "A",
+      "is_reference": false,
+      "n": 1000,
+      "psi": {
+        "global": 0.005944,
+        "attack_subpop": 0.027695,
+        "prediction": 0.000902,
+        "confidence": 0.010628,
+        "confidence_flagged": 0.044153
+      },
+      "rates": {
+        "block": 0.199,
+        "low_confidence": 0.164,
+        "mean_confidence": 0.806065
+      },
+      "alert": false
+    },
+    {
+      "index": 24,
+      "phase": "A",
+      "is_reference": false,
+      "n": 1000,
+      "psi": {
+        "global": 0.006738,
+        "attack_subpop": 0.058948,
+        "prediction": 0.003821,
+        "confidence": 0.008852,
+        "confidence_flagged": 0.094176
+      },
+      "rates": {
+        "block": 0.195,
+        "low_confidence": 0.196,
+        "mean_confidence": 0.794429
+      },
+      "alert": false
+    },
+    {
+      "index": 25,
+      "phase": "A",
+      "is_reference": false,
+      "n": 1000,
+      "psi": {
+        "global": 0.006651,
+        "attack_subpop": 0.044126,
+        "prediction": 0.008994,
+        "confidence": 0.016716,
+        "confidence_flagged": 0.037076
+      },
+      "rates": {
+        "block": 0.175,
+        "low_confidence": 0.16,
+        "mean_confidence": 0.80719
+      },
+      "alert": false
+    },
+    {
+      "index": 26,
+      "phase": "A",
+      "is_reference": false,
+      "n": 1000,
+      "psi": {
+        "global": 0.007671,
+        "attack_subpop": 0.05652,
+        "prediction": 0.001603,
+        "confidence": 0.003643,
+        "confidence_flagged": 0.038051
+      },
+      "rates": {
+        "block": 0.193,
+        "low_confidence": 0.174,
+        "mean_confidence": 0.80663
+      },
+      "alert": false
+    },
+    {
+      "index": 27,
+      "phase": "A",
+      "is_reference": false,
+      "n": 1000,
+      "psi": {
+        "global": 0.004214,
+        "attack_subpop": 0.039856,
+        "prediction": 0.011002,
+        "confidence": 0.002232,
+        "confidence_flagged": 0.041597
+      },
+      "rates": {
+        "block": 0.168,
+        "low_confidence": 0.174,
+        "mean_confidence": 0.803617
+      },
+      "alert": false
+    },
+    {
+      "index": 28,
+      "phase": "A",
+      "is_reference": false,
+      "n": 1000,
+      "psi": {
+        "global": 0.006384,
+        "attack_subpop": 0.033208,
+        "prediction": 0.006503,
+        "confidence": 0.017662,
+        "confidence_flagged": 0.02917
+      },
+      "rates": {
+        "block": 0.166,
+        "low_confidence": 0.161,
+        "mean_confidence": 0.80555
+      },
+      "alert": false
+    },
+    {
+      "index": 29,
+      "phase": "A",
+      "is_reference": false,
+      "n": 1000,
+      "psi": {
+        "global": 0.00649,
+        "attack_subpop": 0.045383,
+        "prediction": 0.015306,
+        "confidence": 0.003271,
+        "confidence_flagged": 0.061181
+      },
+      "rates": {
+        "block": 0.22,
+        "low_confidence": 0.18,
+        "mean_confidence": 0.798155
+      },
+      "alert": false
+    },
+    {
+      "index": 30,
+      "phase": "A",
+      "is_reference": false,
+      "n": 1000,
+      "psi": {
+        "global": 0.006397,
+        "attack_subpop": 0.050463,
+        "prediction": 0.012059,
+        "confidence": 0.00805,
+        "confidence_flagged": 0.047251
+      },
+      "rates": {
+        "block": 0.184,
+        "low_confidence": 0.181,
+        "mean_confidence": 0.800593
+      },
+      "alert": false
+    },
+    {
+      "index": 31,
+      "phase": "A",
+      "is_reference": false,
+      "n": 1000,
+      "psi": {
+        "global": 0.007148,
+        "attack_subpop": 0.063318,
+        "prediction": 0.009275,
+        "confidence": 0.008391,
+        "confidence_flagged": 0.077945
+      },
+      "rates": {
+        "block": 0.183,
+        "low_confidence": 0.199,
+        "mean_confidence": 0.793909
+      },
+      "alert": false
+    },
+    {
+      "index": 32,
+      "phase": "A",
+      "is_reference": false,
+      "n": 1000,
+      "psi": {
+        "global": 0.008061,
+        "attack_subpop": 0.039015,
+        "prediction": 0.00451,
+        "confidence": 0.009941,
+        "confidence_flagged": 0.033801
+      },
+      "rates": {
+        "block": 0.197,
+        "low_confidence": 0.186,
+        "mean_confidence": 0.795956
+      },
+      "alert": false
+    },
+    {
+      "index": 33,
+      "phase": "B",
+      "is_reference": false,
+      "n": 1000,
+      "psi": {
+        "global": 0.008633,
+        "attack_subpop": 0.074029,
+        "prediction": 0.020266,
+        "confidence": 0.014353,
+        "confidence_flagged": 0.088424
+      },
+      "rates": {
+        "block": 0.172,
+        "low_confidence": 0.185,
+        "mean_confidence": 0.795654
+      },
+      "alert": false
+    },
+    {
+      "index": 34,
+      "phase": "B",
+      "is_reference": false,
+      "n": 1000,
+      "psi": {
+        "global": 0.007942,
+        "attack_subpop": 0.054643,
+        "prediction": 0.005498,
+        "confidence": 0.002701,
+        "confidence_flagged": 0.077078
+      },
+      "rates": {
+        "block": 0.172,
+        "low_confidence": 0.181,
+        "mean_confidence": 0.800736
+      },
+      "alert": false
+    },
+    {
+      "index": 35,
+      "phase": "B",
+      "is_reference": false,
+      "n": 1000,
+      "psi": {
+        "global": 0.008317,
+        "attack_subpop": 0.028082,
+        "prediction": 0.004427,
+        "confidence": 0.009456,
+        "confidence_flagged": 0.086654
+      },
+      "rates": {
+        "block": 0.185,
+        "low_confidence": 0.183,
+        "mean_confidence": 0.801131
+      },
+      "alert": false
+    },
+    {
+      "index": 36,
+      "phase": "B",
+      "is_reference": false,
+      "n": 1000,
+      "psi": {
+        "global": 0.009453,
+        "attack_subpop": 0.041139,
+        "prediction": 0.010132,
+        "confidence": 0.009284,
+        "confidence_flagged": 0.067228
+      },
+      "rates": {
+        "block": 0.199,
+        "low_confidence": 0.181,
+        "mean_confidence": 0.792811
+      },
+      "alert": false
+    },
+    {
+      "index": 37,
+      "phase": "B",
+      "is_reference": false,
+      "n": 1000,
+      "psi": {
+        "global": 0.009195,
+        "attack_subpop": 0.040576,
+        "prediction": 0.003749,
+        "confidence": 0.011794,
+        "confidence_flagged": 0.09178
+      },
+      "rates": {
+        "block": 0.178,
+        "low_confidence": 0.185,
+        "mean_confidence": 0.79654
+      },
+      "alert": false
+    },
+    {
+      "index": 38,
+      "phase": "B",
+      "is_reference": false,
+      "n": 1000,
+      "psi": {
+        "global": 0.008449,
+        "attack_subpop": 0.081817,
+        "prediction": 0.01445,
+        "confidence": 0.005019,
+        "confidence_flagged": 0.05887
+      },
+      "rates": {
+        "block": 0.182,
+        "low_confidence": 0.187,
+        "mean_confidence": 0.797991
+      },
+      "alert": false
+    },
+    {
+      "index": 39,
+      "phase": "B",
+      "is_reference": false,
+      "n": 1000,
+      "psi": {
+        "global": 0.008426,
+        "attack_subpop": 0.027722,
+        "prediction": 0.006883,
+        "confidence": 0.005001,
+        "confidence_flagged": 0.071281
+      },
+      "rates": {
+        "block": 0.19,
+        "low_confidence": 0.171,
+        "mean_confidence": 0.802105
+      },
+      "alert": false
+    },
+    {
+      "index": 40,
+      "phase": "B",
+      "is_reference": false,
+      "n": 1000,
+      "psi": {
+        "global": 0.01009,
+        "attack_subpop": 0.047675,
+        "prediction": 0.009059,
+        "confidence": 0.010466,
+        "confidence_flagged": 0.10967
+      },
+      "rates": {
+        "block": 0.175,
+        "low_confidence": 0.189,
+        "mean_confidence": 0.796414
+      },
+      "alert": false
+    },
+    {
+      "index": 41,
+      "phase": "B",
+      "is_reference": false,
+      "n": 1000,
+      "psi": {
+        "global": 0.007732,
+        "attack_subpop": 0.052705,
+        "prediction": 0.003448,
+        "confidence": 0.006244,
+        "confidence_flagged": 0.135885
+      },
+      "rates": {
+        "block": 0.201,
+        "low_confidence": 0.193,
+        "mean_confidence": 0.792381
+      },
+      "alert": false
+    },
+    {
+      "index": 42,
+      "phase": "B",
+      "is_reference": false,
+      "n": 1000,
+      "psi": {
+        "global": 0.005658,
+        "attack_subpop": 0.030776,
+        "prediction": 0.004267,
+        "confidence": 0.00795,
+        "confidence_flagged": 0.037528
+      },
+      "rates": {
+        "block": 0.195,
+        "low_confidence": 0.182,
+        "mean_confidence": 0.795677
+      },
+      "alert": false
+    },
+    {
+      "index": 43,
+      "phase": "B",
+      "is_reference": false,
+      "n": 1000,
+      "psi": {
+        "global": 0.0082,
+        "attack_subpop": 0.044213,
+        "prediction": 0.006679,
+        "confidence": 0.018262,
+        "confidence_flagged": 0.083856
+      },
+      "rates": {
+        "block": 0.181,
+        "low_confidence": 0.154,
+        "mean_confidence": 0.808792
+      },
+      "alert": false
+    },
+    {
+      "index": 44,
+      "phase": "B",
+      "is_reference": false,
+      "n": 1000,
+      "psi": {
+        "global": 0.00639,
+        "attack_subpop": 0.04734,
+        "prediction": 0.005285,
+        "confidence": 0.015501,
+        "confidence_flagged": 0.098154
+      },
+      "rates": {
+        "block": 0.191,
+        "low_confidence": 0.181,
+        "mean_confidence": 0.797824
+      },
+      "alert": false
+    },
+    {
+      "index": 45,
+      "phase": "B",
+      "is_reference": false,
+      "n": 1000,
+      "psi": {
+        "global": 0.005896,
+        "attack_subpop": 0.038463,
+        "prediction": 0.010818,
+        "confidence": 0.009675,
+        "confidence_flagged": 0.042094
+      },
+      "rates": {
+        "block": 0.168,
+        "low_confidence": 0.175,
+        "mean_confidence": 0.796496
+      },
+      "alert": false
+    },
+    {
+      "index": 46,
+      "phase": "B",
+      "is_reference": false,
+      "n": 1000,
+      "psi": {
+        "global": 0.012733,
+        "attack_subpop": 0.060745,
+        "prediction": 0.000778,
+        "confidence": 0.009651,
+        "confidence_flagged": 0.030235
+      },
+      "rates": {
+        "block": 0.184,
+        "low_confidence": 0.183,
+        "mean_confidence": 0.795009
+      },
+      "alert": false
+    },
+    {
+      "index": 47,
+      "phase": "B",
+      "is_reference": false,
+      "n": 1000,
+      "psi": {
+        "global": 0.008134,
+        "attack_subpop": 0.053905,
+        "prediction": 0.004687,
+        "confidence": 0.016065,
+        "confidence_flagged": 0.067639
+      },
+      "rates": {
+        "block": 0.178,
+        "low_confidence": 0.158,
+        "mean_confidence": 0.807671
+      },
+      "alert": false
+    },
+    {
+      "index": 48,
+      "phase": "B",
+      "is_reference": false,
+      "n": 1000,
+      "psi": {
+        "global": 0.009602,
+        "attack_subpop": 0.06733,
+        "prediction": 0.005997,
+        "confidence": 0.008547,
+        "confidence_flagged": 0.035638
+      },
+      "rates": {
+        "block": 0.182,
+        "low_confidence": 0.159,
+        "mean_confidence": 0.806355
+      },
+      "alert": false
+    },
+    {
+      "index": 49,
+      "phase": "B",
+      "is_reference": false,
+      "n": 1000,
+      "psi": {
+        "global": 0.008359,
+        "attack_subpop": 0.032174,
+        "prediction": 0.008482,
+        "confidence": 0.023449,
+        "confidence_flagged": 0.118644
+      },
+      "rates": {
+        "block": 0.181,
+        "low_confidence": 0.18,
+        "mean_confidence": 0.795054
+      },
+      "alert": false
+    },
+    {
+      "index": 50,
+      "phase": "B",
+      "is_reference": false,
+      "n": 1000,
+      "psi": {
+        "global": 0.004937,
+        "attack_subpop": 0.052914,
+        "prediction": 0.003165,
+        "confidence": 0.008398,
+        "confidence_flagged": 0.062374
+      },
+      "rates": {
+        "block": 0.185,
+        "low_confidence": 0.161,
+        "mean_confidence": 0.803678
+      },
+      "alert": false
+    },
+    {
+      "index": 51,
+      "phase": "B",
+      "is_reference": false,
+      "n": 1000,
+      "psi": {
+        "global": 0.007551,
+        "attack_subpop": 0.046582,
+        "prediction": 0.011815,
+        "confidence": 0.003088,
+        "confidence_flagged": 0.099502
+      },
+      "rates": {
+        "block": 0.2,
+        "low_confidence": 0.177,
+        "mean_confidence": 0.797312
+      },
+      "alert": false
+    },
+    {
+      "index": 52,
+      "phase": "B",
+      "is_reference": false,
+      "n": 1000,
+      "psi": {
+        "global": 0.009988,
+        "attack_subpop": 0.042357,
+        "prediction": 0.008286,
+        "confidence": 0.004743,
+        "confidence_flagged": 0.020651
+      },
+      "rates": {
+        "block": 0.194,
+        "low_confidence": 0.176,
+        "mean_confidence": 0.798655
+      },
+      "alert": false
+    },
+    {
+      "index": 53,
+      "phase": "B",
+      "is_reference": false,
+      "n": 1000,
+      "psi": {
+        "global": 0.004522,
+        "attack_subpop": 0.06305,
+        "prediction": 0.022395,
+        "confidence": 0.003727,
+        "confidence_flagged": 0.09087
+      },
+      "rates": {
+        "block": 0.163,
+        "low_confidence": 0.172,
+        "mean_confidence": 0.802293
+      },
+      "alert": false
+    },
+    {
+      "index": 54,
+      "phase": "B",
+      "is_reference": false,
+      "n": 1000,
+      "psi": {
+        "global": 0.005531,
+        "attack_subpop": 0.032182,
+        "prediction": 0.010056,
+        "confidence": 0.007685,
+        "confidence_flagged": 0.053022
+      },
+      "rates": {
+        "block": 0.168,
+        "low_confidence": 0.181,
+        "mean_confidence": 0.799407
+      },
+      "alert": false
+    },
+    {
+      "index": 55,
+      "phase": "B",
+      "is_reference": false,
+      "n": 1000,
+      "psi": {
+        "global": 0.006051,
+        "attack_subpop": 0.030549,
+        "prediction": 0.002803,
+        "confidence": 0.006115,
+        "confidence_flagged": 0.102798
+      },
+      "rates": {
+        "block": 0.195,
+        "low_confidence": 0.179,
+        "mean_confidence": 0.79486
+      },
+      "alert": false
+    },
+    {
+      "index": 56,
+      "phase": "B",
+      "is_reference": false,
+      "n": 1000,
+      "psi": {
+        "global": 0.01088,
+        "attack_subpop": 0.065596,
+        "prediction": 0.028024,
+        "confidence": 0.018773,
+        "confidence_flagged": 0.156118
+      },
+      "rates": {
+        "block": 0.168,
+        "low_confidence": 0.183,
+        "mean_confidence": 0.790552
+      },
+      "alert": false
+    },
+    {
+      "index": 57,
+      "phase": "B",
+      "is_reference": false,
+      "n": 1000,
+      "psi": {
+        "global": 0.006325,
+        "attack_subpop": 0.033362,
+        "prediction": 0.005896,
+        "confidence": 0.019985,
+        "confidence_flagged": 0.043263
+      },
+      "rates": {
+        "block": 0.181,
+        "low_confidence": 0.168,
+        "mean_confidence": 0.798492
+      },
+      "alert": false
+    },
+    {
+      "index": 58,
+      "phase": "B",
+      "is_reference": false,
+      "n": 1000,
+      "psi": {
+        "global": 0.005462,
+        "attack_subpop": 0.055684,
+        "prediction": 0.003098,
+        "confidence": 0.016298,
+        "confidence_flagged": 0.048338
+      },
+      "rates": {
+        "block": 0.179,
+        "low_confidence": 0.18,
+        "mean_confidence": 0.796996
+      },
+      "alert": false
+    },
+    {
+      "index": 59,
+      "phase": "B",
+      "is_reference": false,
+      "n": 1000,
+      "psi": {
+        "global": 0.010045,
+        "attack_subpop": 0.059156,
+        "prediction": 0.008211,
+        "confidence": 0.006543,
+        "confidence_flagged": 0.059126
+      },
+      "rates": {
+        "block": 0.175,
+        "low_confidence": 0.172,
+        "mean_confidence": 0.802002
+      },
+      "alert": false
+    },
+    {
+      "index": 60,
+      "phase": "B",
+      "is_reference": false,
+      "n": 1000,
+      "psi": {
+        "global": 0.006143,
+        "attack_subpop": 0.045114,
+        "prediction": 0.013832,
+        "confidence": 0.021656,
+        "confidence_flagged": 0.111552
+      },
+      "rates": {
+        "block": 0.198,
+        "low_confidence": 0.159,
+        "mean_confidence": 0.800229
+      },
+      "alert": false
+    },
+    {
+      "index": 61,
+      "phase": "B",
+      "is_reference": false,
+      "n": 1000,
+      "psi": {
+        "global": 0.009854,
+        "attack_subpop": 0.049153,
+        "prediction": 0.009017,
+        "confidence": 0.021196,
+        "confidence_flagged": 0.070873
+      },
+      "rates": {
+        "block": 0.164,
+        "low_confidence": 0.18,
+        "mean_confidence": 0.797149
+      },
+      "alert": false
+    },
+    {
+      "index": 62,
+      "phase": "B",
+      "is_reference": false,
+      "n": 1000,
+      "psi": {
+        "global": 0.007317,
+        "attack_subpop": 0.115736,
+        "prediction": 0.024343,
+        "confidence": 0.013312,
+        "confidence_flagged": 0.09799
+      },
+      "rates": {
+        "block": 0.166,
+        "low_confidence": 0.181,
+        "mean_confidence": 0.79717
+      },
+      "alert": false
+    },
+    {
+      "index": 63,
+      "phase": "B",
+      "is_reference": false,
+      "n": 1000,
+      "psi": {
+        "global": 0.004376,
+        "attack_subpop": 0.051072,
+        "prediction": 0.013318,
+        "confidence": 0.010741,
+        "confidence_flagged": 0.072021
+      },
+      "rates": {
+        "block": 0.168,
+        "low_confidence": 0.199,
+        "mean_confidence": 0.79027
+      },
+      "alert": false
+    },
+    {
+      "index": 64,
+      "phase": "B",
+      "is_reference": false,
+      "n": 1000,
+      "psi": {
+        "global": 0.008538,
+        "attack_subpop": 0.031427,
+        "prediction": 0.009835,
+        "confidence": 0.00846,
+        "confidence_flagged": 0.061567
+      },
+      "rates": {
+        "block": 0.212,
+        "low_confidence": 0.182,
+        "mean_confidence": 0.795191
+      },
+      "alert": false
+    },
+    {
+      "index": 65,
+      "phase": "B",
+      "is_reference": false,
+      "n": 1000,
+      "psi": {
+        "global": 0.008757,
+        "attack_subpop": 0.058116,
+        "prediction": 0.010264,
+        "confidence": 0.01267,
+        "confidence_flagged": 0.111539
+      },
+      "rates": {
+        "block": 0.18,
+        "low_confidence": 0.183,
+        "mean_confidence": 0.79901
+      },
+      "alert": false
+    },
+    {
+      "index": 66,
+      "phase": "B",
+      "is_reference": false,
+      "n": 1000,
+      "psi": {
+        "global": 0.007353,
+        "attack_subpop": 0.048232,
+        "prediction": 0.009142,
+        "confidence": 0.014202,
+        "confidence_flagged": 0.056865
+      },
+      "rates": {
+        "block": 0.176,
+        "low_confidence": 0.16,
+        "mean_confidence": 0.803649
+      },
+      "alert": false
+    },
+    {
+      "index": 67,
+      "phase": "B",
+      "is_reference": false,
+      "n": 1000,
+      "psi": {
+        "global": 0.003838,
+        "attack_subpop": 0.044528,
+        "prediction": 0.005695,
+        "confidence": 0.009147,
+        "confidence_flagged": 0.066251
+      },
+      "rates": {
+        "block": 0.185,
+        "low_confidence": 0.165,
+        "mean_confidence": 0.801722
+      },
+      "alert": false
+    },
+    {
+      "index": 68,
+      "phase": "B",
+      "is_reference": false,
+      "n": 1000,
+      "psi": {
+        "global": 0.008998,
+        "attack_subpop": 0.027554,
+        "prediction": 0.012096,
+        "confidence": 0.008663,
+        "confidence_flagged": 0.038876
+      },
+      "rates": {
+        "block": 0.178,
+        "low_confidence": 0.194,
+        "mean_confidence": 0.793664
+      },
+      "alert": false
+    },
+    {
+      "index": 69,
+      "phase": "B",
+      "is_reference": false,
+      "n": 1000,
+      "psi": {
+        "global": 0.006161,
+        "attack_subpop": 0.047856,
+        "prediction": 0.009703,
+        "confidence": 0.006827,
+        "confidence_flagged": 0.118807
+      },
+      "rates": {
+        "block": 0.196,
+        "low_confidence": 0.186,
+        "mean_confidence": 0.795033
+      },
+      "alert": false
+    },
+    {
+      "index": 70,
+      "phase": "B",
+      "is_reference": false,
+      "n": 1000,
+      "psi": {
+        "global": 0.006174,
+        "attack_subpop": 0.057448,
+        "prediction": 0.005839,
+        "confidence": 0.020038,
+        "confidence_flagged": 0.038846
+      },
+      "rates": {
+        "block": 0.195,
+        "low_confidence": 0.194,
+        "mean_confidence": 0.790834
+      },
+      "alert": false
+    },
+    {
+      "index": 71,
+      "phase": "B",
+      "is_reference": false,
+      "n": 1000,
+      "psi": {
+        "global": 0.004611,
+        "attack_subpop": 0.041,
+        "prediction": 0.015787,
+        "confidence": 0.013135,
+        "confidence_flagged": 0.189609
+      },
+      "rates": {
+        "block": 0.179,
+        "low_confidence": 0.174,
+        "mean_confidence": 0.792873
+      },
+      "alert": false
+    },
+    {
+      "index": 72,
+      "phase": "B",
+      "is_reference": false,
+      "n": 1000,
+      "psi": {
+        "global": 0.010335,
+        "attack_subpop": 0.045336,
+        "prediction": 0.011961,
+        "confidence": 0.008915,
+        "confidence_flagged": 0.07482
+      },
+      "rates": {
+        "block": 0.187,
+        "low_confidence": 0.176,
+        "mean_confidence": 0.796184
+      },
+      "alert": false
+    },
+    {
+      "index": 73,
+      "phase": "B",
+      "is_reference": false,
+      "n": 1000,
+      "psi": {
+        "global": 0.012064,
+        "attack_subpop": 0.044471,
+        "prediction": 0.003205,
+        "confidence": 0.013104,
+        "confidence_flagged": 0.032382
+      },
+      "rates": {
+        "block": 0.183,
+        "low_confidence": 0.182,
+        "mean_confidence": 0.799979
+      },
+      "alert": false
+    },
+    {
+      "index": 74,
+      "phase": "B",
+      "is_reference": false,
+      "n": 1000,
+      "psi": {
+        "global": 0.006508,
+        "attack_subpop": 0.081364,
+        "prediction": 0.01749,
+        "confidence": 0.008314,
+        "confidence_flagged": 0.058581
+      },
+      "rates": {
+        "block": 0.175,
+        "low_confidence": 0.184,
+        "mean_confidence": 0.799688
+      },
+      "alert": false
+    },
+    {
+      "index": 75,
+      "phase": "B",
+      "is_reference": false,
+      "n": 1000,
+      "psi": {
+        "global": 0.006208,
+        "attack_subpop": 0.040067,
+        "prediction": 0.005304,
+        "confidence": 0.003898,
+        "confidence_flagged": 0.047882
+      },
+      "rates": {
+        "block": 0.205,
+        "low_confidence": 0.183,
+        "mean_confidence": 0.798072
+      },
+      "alert": false
+    },
+    {
+      "index": 76,
+      "phase": "B",
+      "is_reference": false,
+      "n": 1000,
+      "psi": {
+        "global": 0.008468,
+        "attack_subpop": 0.056405,
+        "prediction": 0.004,
+        "confidence": 0.008649,
+        "confidence_flagged": 0.07774
+      },
+      "rates": {
+        "block": 0.203,
+        "low_confidence": 0.175,
+        "mean_confidence": 0.795312
+      },
+      "alert": false
+    },
+    {
+      "index": 77,
+      "phase": "B",
+      "is_reference": false,
+      "n": 1000,
+      "psi": {
+        "global": 0.006003,
+        "attack_subpop": 0.040625,
+        "prediction": 0.002569,
+        "confidence": 0.007304,
+        "confidence_flagged": 0.061075
+      },
+      "rates": {
+        "block": 0.177,
+        "low_confidence": 0.173,
+        "mean_confidence": 0.802468
+      },
+      "alert": false
+    },
+    {
+      "index": 78,
+      "phase": "B",
+      "is_reference": false,
+      "n": 1000,
+      "psi": {
+        "global": 0.010912,
+        "attack_subpop": 0.063849,
+        "prediction": 0.006395,
+        "confidence": 0.019904,
+        "confidence_flagged": 0.074713
+      },
+      "rates": {
+        "block": 0.183,
+        "low_confidence": 0.18,
+        "mean_confidence": 0.794349
+      },
+      "alert": false
+    },
+    {
+      "index": 79,
+      "phase": "B",
+      "is_reference": false,
+      "n": 1000,
+      "psi": {
+        "global": 0.006646,
+        "attack_subpop": 0.053201,
+        "prediction": 0.007734,
+        "confidence": 0.005052,
+        "confidence_flagged": 0.055119
+      },
+      "rates": {
+        "block": 0.175,
+        "low_confidence": 0.178,
+        "mean_confidence": 0.801084
+      },
+      "alert": false
+    },
+    {
+      "index": 80,
+      "phase": "B",
+      "is_reference": false,
+      "n": 808,
+      "psi": {
+        "global": 0.005413,
+        "attack_subpop": 0.031043,
+        "prediction": 0.004877,
+        "confidence": 0.003904,
+        "confidence_flagged": 0.08114
+      },
+      "rates": {
+        "block": 0.179455,
+        "low_confidence": 0.17203,
+        "mean_confidence": 0.801514
+      },
+      "alert": false
+    }
+  ],
+  "trigger": {
+    "fired": false,
+    "window_index": null,
+    "signal": null,
+    "sustained_windows": 0
+  }
+}

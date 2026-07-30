@@ -34,3 +34,12 @@ models/**/*.txt
 
 # Notebook checkpoints
 .ipynb_checkpoints/
+
+# MLOps: keep the data-version registry (small, lineage-critical), ignore the
+# review-queue database and confirmed-label ledger (regenerated per round).
+!data/versions/**/*.json
+data/*.db
+report/metrics/continual_learning/experiment_queue.db
+report/metrics/continual_learning/experiment_confirmed_labels.jsonl
+# Demo-reset archive: models moved aside by POST /mlops/reset
+models/_archive/

@@ -20,6 +20,7 @@ from deploy.routers import (
     detect,
     health,
     metrics,
+    mlops,
     monitor,
     branch1,
     branch2,
@@ -70,6 +71,7 @@ def create_app() -> FastAPI:
     app.include_router(monitor.router, prefix=prefix)
     app.include_router(data.router, prefix=prefix)
     app.include_router(train.router, prefix=prefix)
+    app.include_router(mlops.router, prefix=prefix)
     return app
 
 

@@ -20,5 +20,9 @@
     "ngram_min": 2,
     "ngram_max": 4,
     "max_features": 50000
-  }
+  },
+  "data_version": "1.0",
+  "protected": true,
+  "state": "promoted",
+  "promoted_at": "2026-07-29T09:58:56+00:00"
 }

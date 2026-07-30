@@ -70,6 +70,30 @@ app/
 Add a new backend call in `api_client.py`, not inline in a page — that keeps the
 API surface in one place.
 
+## The MLOps demo loop
+
+Monitor, Data and Train are wired to real storage (contract:
+[`report/plan/mlops_contract.md`](../report/plan/mlops_contract.md)). One full round:
+
+1. **Monitor → ▶ Replay stream.** Pushes held-out traffic through the live model, writes a
+   real drift record and fills the review queue. Pick **20k or more** — a shorter slice is
+   entirely drift *reference* and the chart would compare the baseline against itself.
+2. **Monitor.** Every PSI signal is charted against the alert threshold. Expect **no alarm**:
+   at a ~5 % attack rate a new class is ~1 % of traffic, which aggregate statistics do not
+   register. That is the measured finding, not a broken monitor.
+3. **Data.** Each queued query arrives with the model's own prediction as `ai_label`.
+   **Approve** accepts it, **Correct** overrides it, **Reject** drops the sample. The
+   *pre-label acceptance* metric is the share accepted unchanged — a live quality signal.
+4. **Train → ▶ Start training.** Seals a new data version from what was confirmed (a new class
+   ⇒ **major**, more of the same ⇒ **minor**), trains, and runs the gate. Press it again and
+   the `run_id` check reports the identical run instead of repeating it.
+5. **Gate.** Cross-major comparisons are *refused* and promoted directly; within a major the
+   candidate must not lose F1, raise FPR, or regress any class. Rejection is a normal outcome.
+6. **↺ Reset demo** (Train sidebar). Restores the protected baseline, archives — never
+   deletes — models the round created, and clears the round's queue, labels and drift record.
+
+Branch 2/3 tabs are honest placeholders: no drift pipeline, no queue, simulated training.
+
 ## State model
 
 Streamlit re-runs the **entire script on every interaction**. Three rules follow

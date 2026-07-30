@@ -56,6 +56,22 @@ Contract + guide for Streamlit: [`deploy/README.md`](deploy/README.md). **Don't 
 retype existing response fields** — the frontend depends on them. The URL prefix stays
 `/api/v1/...` (per `config.yaml`), independent of directory names.
 
+**MLOps / continual learning** — spec: [`report/plan/mlops_contract.md`](report/plan/mlops_contract.md).
+Data carries a `major.minor` version; a new class is a **major** bump and makes
+champion/challenger comparison invalid, so the gate refuses it and promotes directly. Four
+rules that are easy to break by accident:
+
+1. **Never train on `golden`.** It is the frozen benchmark; contaminating it invalidates every
+   comparison. `train/build_mlops_split.py` asserts this before writing anything.
+2. **Deduplicate by `query_canonical` before partitioning**, not by row id — the corpus has
+   4,277 repeated texts that otherwise straddle train and golden.
+3. **The offline experiment writes its own registry** under `report/metrics/continual_learning/`.
+   Writing into `data/versions/` mixes experiment lineage with what is deployed.
+4. **A model may emit integer label ids or label names** (the two trainers differ);
+   `deploy/registry.py` normalises both. Don't reintroduce `int(c)` on `clf.classes_`.
+
+Promotion and rollback are each one flip of `branch1_supervised.active_version`.
+
 ---
 
 ## Directory structure (don't put files in the wrong place)

@@ -176,20 +176,33 @@ class DemoExecuteResponse(BaseModel):
 # Monitor page
 # --------------------------------------------------------------------------- #
 class DriftPoint(BaseModel):
-    """One drift measurement in time."""
+    """One drift window: every monitored signal, plus operational rates."""
 
-    date: str
-    value: float
+    date: str  # window label, e.g. "w12"
+    value: float  # the strongest signal in this window, for a single-line chart
+    index: int = 0
+    phase: str = ""
+    # Reference windows score ~0 against themselves; the UI shades them so they
+    # are not mistaken for a quiet period that means something.
+    is_reference: bool = False
+    psi: dict[str, float] = Field(default_factory=dict)
+    rates: dict[str, float] = Field(default_factory=dict)
 
 
 class DriftResponse(BaseModel):
-    """Drift time-series for one task + alert state."""
+    """Drift series for one task, or a structured not_ready."""
 
     task: str
     metric: str
     threshold: float
     alert: bool
-    points: list[DriftPoint]
+    status: BranchStatus = "ready"
+    signals: list[str] = Field(default_factory=list)
+    trigger: dict | None = None
+    reference: str | None = None
+    generated_at: str | None = None
+    detail: str | None = None
+    points: list[DriftPoint] = Field(default_factory=list)
 
 
 class RetrainResponse(BaseModel):
@@ -198,7 +211,9 @@ class RetrainResponse(BaseModel):
     ok: bool
     task: str
     job_id: str
-    status: Literal["queued"] = "queued"
+    # `job_id` is the run_id, so it can be looked up via /mlops/runs.
+    status: str = "queued"
+    detail: str | None = None
 
 
 class LogsResponse(BaseModel):
@@ -212,53 +227,69 @@ class LogsResponse(BaseModel):
 # Data page — annotation
 # --------------------------------------------------------------------------- #
 class UnannotatedItem(BaseModel):
-    """A sample awaiting a label."""
+    """A sample awaiting review, carrying the model's proposed label."""
 
     id: str
     query: str
     source: str
+    # The AI pre-label: the reviewer accepts or corrects it rather than
+    # labelling from scratch.
+    ai_label: str | None = None
+    ai_confidence: float | None = None
+    anomaly_score: float | None = None
 
 
 class UnannotatedResponse(BaseModel):
-    """A page of unannotated samples + the label choices for this task."""
+    """A page of items awaiting review + the label choices for this task."""
 
     task: str
     count: int
     items: list[UnannotatedItem]
     label_options: list[str]
+    # Share of pre-labels accepted unchanged so far — a live measure of model
+    # quality, not just bookkeeping.
+    acceptance_rate: float | None = None
 
 
 class AnnotatedItem(BaseModel):
-    """A sample that already has a label."""
+    """A confirmed label."""
 
     id: str
     query: str
     label: str
     annotated_at: str
+    ai_label: str | None = None
+    was_corrected: bool = False
 
 
 class AnnotatedResponse(BaseModel):
-    """A page of annotated samples."""
+    """A page of confirmed labels."""
 
     task: str
     count: int
     items: list[AnnotatedItem]
+    corrected: int = 0
 
 
 class AnnotateRequest(BaseModel):
-    """Assign a label to one unannotated sample."""
+    """Review one queued item."""
 
     id: str
-    label: str
+    action: Literal["approve", "correct", "reject"] = "approve"
+    # Required only for "correct".
+    label: str | None = None
 
 
 class AnnotateResponse(BaseModel):
-    """Result of an annotation (not persisted until continual-learning lands)."""
+    """Result of a review decision."""
 
     ok: bool
     id: str
     label: str
+    status: str = "approved"
+    was_corrected: bool = False
     persisted: bool = False
+    acceptance_rate: float | None = None
 
 
 # --------------------------------------------------------------------------- #
@@ -273,12 +304,14 @@ class TrainStartRequest(BaseModel):
 
 
 class TrainStartResponse(BaseModel):
-    """Handle for a started (simulated) training job."""
+    """Handle for a started training job."""
 
     job_id: str
     task: str
     status: Literal["running"] = "running"
     total_epochs: int
+    # False means the response is simulated and no model is written.
+    real: bool = False
 
 
 class LossPoint(BaseModel):
@@ -299,10 +332,54 @@ class TrainStatusResponse(BaseModel):
     total_epochs: int
     loss_curve: list[LossPoint]
     logs: list[str]
+    real: bool = False
+
+
+# --------------------------------------------------------------------------- #
+# MLOps lifecycle
+# --------------------------------------------------------------------------- #
+class VersionsResponse(BaseModel):
+    """The data-version registry with lineage."""
+
+    dataset: str
+    active_model: str
+    versions: list[dict] = Field(default_factory=list)
+
+
+class ReplayRequest(BaseModel):
+    """Replay a slice of the held-out stream through the live model."""
+
+    # Kept modest by default: a full 80k replay takes minutes and the demo only
+    # needs enough windows to show a drift curve.
+    limit: int | None = Field(20000, ge=100, le=200000)
+    max_queue: int | None = Field(200, ge=1, le=5000)
+
+
+class ReplayResponse(BaseModel):
+    """Outcome of a replay: drift written, queue filled."""
+
+    replayed: int
+    windows: int
+    queued: int
+    alert: bool
+    trigger: dict
+    sources: list[str] = Field(default_factory=list)
+
+
+class MlopsResetResponse(BaseModel):
+    """What a demo reset restored and archived."""
+
+    ok: bool
+    baseline_model: str
+    baseline_data_version: str
+    archived_models: list[str] = Field(default_factory=list)
+    purged_queue_rows: int = 0
+    dropped_labels: int = 0
+    removed_versions: list[str] = Field(default_factory=list)
 
 
 class TrainResultResponse(BaseModel):
-    """Final metrics + confusion matrix once training is done."""
+    """Final metrics, gate decision and promotion outcome."""
 
     job_id: str
     task: str
@@ -312,3 +389,10 @@ class TrainResultResponse(BaseModel):
     metrics: dict | None = None
     saved_version: str | None = None
     detail: str | None = None
+    real: bool = False
+    # Real runs only: the sealed version, why it bumped, and the gate's verdict.
+    data_version: str | None = None
+    bump: str | None = None
+    run_id: str | None = None
+    run_status: str | None = None
+    decision: dict | None = None
