@@ -6,8 +6,23 @@ An AI-based SQL Injection detection system, deployed at the **Database Proxy —
 - **Branch 2 (Anomaly Detection):** learns the "safe zone" from **100% benign traffic**, outputs a **continuous anomaly score** (zero-day flag + feature for Branch 3) via **Isolation Forest / One-Class SVM**.
 - **Branch 3 (Session-level — main contribution):** a sequence model (GRU / lightweight Transformer) over the whole **session**; each step = `[content embedding (Branch 1) ⊕ anomaly score (Branch 2)]`. Catches **Blind SQLi** and **query-splitting** that a per-query classifier misses.
 
-> ⏱️ **Deadline:** technical work complete **26 Jul 2026**, report due **28 Jul 2026** (14 days).
-> Prioritize an **early end-to-end MVP** over perfecting every individual part.
+## Current status (updated 30 Jul 2026)
+
+- **Branch 1** (multi-class) — ✅ done, F1-macro 0.9822.
+- **Branch 2** (anomaly) — ✅ done, AUC 0.90, FPR 0.3%.
+- **Branch 3** (session-level) — ✅ implemented and evaluated (F1-macro 1.0 on a small held-out set); the eval is being strengthened (larger, less synthetic test set) before the RIVF paper cites it.
+- **Continual learning + drift monitoring** — ✅ implemented and run as a full offline experiment (drift negative result, gate-based promotion, ablation, shadow validation); not yet wired into the live API.
+- Live plan / sprint tracker: [`report/plan/ke_hoach_2_tuan.csv`](report/plan/ke_hoach_2_tuan.csv). Full status detail: [`report/conf/research_proposal.md`](report/conf/research_proposal.md).
+
+## Project roles
+
+| Person | Role |
+|---|---|
+| Duc | Solution Architect, Project Manager, Writer, Researcher |
+| Bach | Researcher (owns Branch 3 data/model work) |
+| Diep | Writer |
+| Minh | Writer |
+| Dr. Linh Dinh-Van, Dr. Thai Kim-Dinh | Reviewer (advisors, RIVF co-authors) |
 
 ---
 
@@ -83,8 +98,10 @@ uv run pytest            # smoke test for the config loader
 
 ## API service (FastAPI) — for Streamlit
 
-The backend already has a running app. Branch 1 runs **for real**; Branch 2/3 return `not_ready`
-(HTTP 200, not an error) until training is done, keeping the response shape stable.
+The backend already has a running app. Branch 1 and Branch 2 run **for real** and are wired end
+to end. Branch 3 is trained and evaluated offline (see Current Status above) but the live
+`deploy/routers/branch3.py` route still returns `not_ready` — it hasn't been wired to the real
+model yet.
 
 ```bash
 uv run uvicorn deploy.main:app --reload --port 8000   # docs: http://localhost:8000/docs
@@ -108,6 +125,14 @@ SQLIDS_LOGGING_LEVEL=DEBUG
 
 ---
 
+## Continual Learning & Monitoring (MLOps-lite)
+
+- **Continual Learning:** Admin confirms a query in the Overkill queue → label it, store in the new-data pool → a retrain script uses **rehearsal** (mixing new + old data to avoid catastrophic forgetting) → **validation gate** (only promotes if F1/FPR ≥ the current model on a fixed test set).
+- **Concept Drift:** periodically logs **PSI/KL-divergence** over the feature distribution + FPR/Recall over time; fixed retrain schedule (weekly) + manual trigger; versioned under `models/vN/`; fast **rollback** to the previous version.
+- **Status:** ✅ implemented (`src/continual_learning/`, `src/monitoring/drift.py`, `src/decision/queue.py`) and run as a full offline experiment — drift monitoring alone misses a rare new attack class, but the review queue catches it; naive retraining on raw confirmed data degrades the model, balancing the pool first is what earns promotion (FPR down 64%). Full write-up: [`report/metrics/continual_learning/RESULTS.md`](report/metrics/continual_learning/RESULTS.md). Not yet wired into the live API (`deploy/routers/admin.py`/`monitor.py` are still stubs).
+
+---
+
 ## Canonicalization (evasion resistance)
 
 Before tokenizing, normalize input that's prone to evasion:
@@ -116,41 +141,6 @@ Before tokenizing, normalize input that's prone to evasion:
 - **Flag (don't strip)** `/* */` and `--` comments as a separate feature.
 
 Goal: reduce evasion risk from syntactically-equivalent transformations.
-
----
-
-## Continual Learning & Monitoring (MLOps-lite)
-
-- **Continual Learning:** Admin confirms a query in the Overkill queue → label it, store in the new-data pool → a retrain script uses **rehearsal** (mixing new + old data to avoid catastrophic forgetting) → **validation gate** (only promotes if F1/FPR ≥ the current model on a fixed test set).
-- **Concept Drift:** periodically logs **PSI/KL-divergence** over the feature distribution + FPR/Recall over time; fixed retrain schedule (weekly) + manual trigger; versioned under `models/vN/`; fast **rollback** to the previous version.
-
----
-
-## Implementation plan (14 days — V4)
-
-> Cut priority from the bottom up if time runs short: **(1)** Branch 1 multi-class core + Branch 2 + Overkill + end-to-end → **(2)** Branch 3 on Cách A session data → **(3)** Branch 3 Cách B (real sqlmap) + A↔B comparison → **(4)** full Continual Learning (fall back to a single demo round if needed).
-
-| Day | Main tasks |
-|---|---|
-| 1–2 | Set up repo; download D1/D3/D4; clean + **multi-class label** D1; enrich benign from CSIC 2010; **run 3 Branch-1 model candidates in parallel** on a small subset to lock in a direction |
-| 3–4 | Fully train **Branch 1** (winning model); F1-macro/latency/size + confusion matrix |
-| 5–6 | Extract statistical features; train **Branch 2** (benign only); output anomaly scores |
-| 7 | Canonicalization + generate an **adversarial** set (WAF-A-MoLE); fold part of it into Branch-1 training (robustness) |
-| 8–9 | **Session data Cách A** (simulation script); build **Branch 3** (reuse Layer 1 + small GRU/Transformer) |
-| 10 | 3-branch fusion logic + **Overkill**; end-to-end testing |
-| 11–12 | **Session data Cách B** (Docker + sqlmap + proxy capture); train/test Branch 3 on B; **compare A↔B** |
-| 13 | **Continual Learning**: run the Overkill→label→retrain→validation-gate pipeline for ≥1 round with drift |
-| 14 | Compile the results tables; write Discussion/Limitations/Threat model; assemble the report |
-
----
-
-## Technical conventions
-
-- Python **type hints** + **docstrings** on every public function/class.
-- Use the `logging` module (via `src.utils.get_logger`) — **no `print`** in production code.
-- **pytest** for: canonicalization, decision logic, validation gate.
-- Config kept separate (`.yaml` / `.env`) — **no hardcoding**.
-- Time-consuming steps (train/retrain/benchmark): log progress clearly.
 
 ## Data sources (public — cite clearly)
 
@@ -194,6 +184,7 @@ The repo's `models/` directory also **only has `metadata.json`** (`.joblib` file
 |---|---|---|
 | `branch1_v1/` | TF-IDF + Logistic Regression | F1-macro = 0.9822 |
 | `branch2_v1/` | One-Class SVM | AUC = 0.90, FPR = 0.3%, detection rate = 20.7% |
+| `branch3_v1/` | GRU over `[Branch-1 embedding ⊕ Branch-2 score]` per session step | F1-macro = 1.0 on a small (n=280) held-out set — eval being strengthened, not yet HF-uploaded |
 
 Quick download:
 ```bash
