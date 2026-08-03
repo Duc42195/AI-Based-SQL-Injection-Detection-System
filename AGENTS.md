@@ -59,6 +59,27 @@ stale just like the facts it's meant to protect.
 
 ---
 
+## "Check plan" — what Duc means by this
+
+When Duc says **"check plan"**, he means: read `report/plan/ke_hoach_2_tuan.csv` and evaluate
+**actual progress against the sprint schedule** — not just open the file, and not just check
+git/branch state in isolation. Concretely:
+
+1. What's the current date, and which sprint/day does that fall in per the CSV?
+2. For each row at or before today: is the `Status` column actually reflected in reality (check
+   the real deliverable — file exists, tests pass, branch has commits — not just the CSV text,
+   since the CSV isn't updated automatically)?
+3. **What's slipping** — tasks past their date still "Not started", deliverables that don't
+   exist yet, dependencies that block a later row?
+4. **What to do about it** — a concrete recommendation (re-scope, reassign, flag to the team),
+   not just a status dump.
+
+Cross-reference with live signals when relevant (e.g., recent commits/branches matching a
+person's assigned task) rather than trusting the CSV's `Status` field alone, since it's
+manually maintained and can lag reality in either direction.
+
+---
+
 ## Environment setup
 
 The project uses [`uv`](https://docs.astral.sh/uv/) (no manual pip/venv). Python **3.12**.

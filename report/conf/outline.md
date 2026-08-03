@@ -9,7 +9,7 @@
 
 ## STATUS (updated 2026-07-24)
 
-**Framing LOCKED = (A)** ship-what's-proven. Full draft written: [`report/conf/rivf2026_paper.tex`](rivf2026_paper.tex) (IEEEtran, compiles on Overleaf; `pdflatex` not installed locally).
+**Framing LOCKED = (A)** ship-what's-proven. Full draft written: [`report/conf/rivf2026_paper.tex`](rivf2026_paper.tex) (IEEEtran, compiles on Overleaf; `pdflatex` not installed locally). Full-scope companion document (all 3 branches, tagged done/planned, RIVF milestones, team roles): [`report/conf/research_proposal.md`](research_proposal.md) — not a submission requirement, just the single source of truth for the whole vision. Short Vietnamese version (~3 pages): [`report/conf/research_proposal_vn.md`](research_proposal_vn.md).
 
 - **#4 end-to-end latency → estimated, not blocked.** Presented as a latency *budget* (~1–2 ms/query) derived from measured per-branch costs (B1 = 0.5 ms; B2 = 4 features + linear SVM). Labeled as an estimate in the paper.
 - **#5 references → DONE.** 11 refs reused from the mid-term report ([`full_outline.md`](../midterm/full_outline.md) References). Cross-check against the team's original survey before camera-ready.
