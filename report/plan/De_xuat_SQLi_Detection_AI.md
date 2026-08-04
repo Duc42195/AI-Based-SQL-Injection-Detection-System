@@ -233,7 +233,7 @@ Same as V2 (FastAPI + CTranslate2 if using a transformer). Addition: need to cho
 
 **Day 14 (Sun 26 Jul) — added (24 Jul):** the whole team spends 1 buffer day polishing **metrics specifically for the conference report** (Version 2) — reviewing figures, adding any missing charts/tables, no new code.
 
-**The detailed day-by-day/per-person table lives in `ke_hoach_2_tuan.csv`** (56 rows, Day 1-14, ending 26 Jul) — see Section 14 for how it's updated automatically via Claude Code.
+**The detailed per-task table lives in `plan.csv`** (150 rows, restructured 2026-08-04 into a Sprint/TaskID format — see Section 14 for how it's updated automatically via Claude Code).
 
 **Summary of the main flow (full detail in the CSV):**
 - *Day 1-8 (done):* Duc handled D1 → trained Branch 1 → built the API. Bach handled D3 → trained/evaluated Branch 2. Minh built the Streamlit scaffold. Diep wrote the report's opening sections.
@@ -277,7 +277,7 @@ Same as V2 (FastAPI + CTranslate2 if using a transformer). Addition: need to cho
 
 ## 14. Progress-tracking file and how it's updated automatically
 
-The detailed plan (13 days × 4 people, 13 Jul-25 Jul, with deliverables) lives in `ke_hoach_2_tuan.csv` — each row is one task with columns: `Day, Date, Weekday, Owner, Role, Task, Dependency, Deliverable, Status`. Use the command in `Prompt_Claude_Code_Cap_Nhat_Ke_Hoach.md` to have Claude Code ask for your role, determine the current date, check which deliverables already exist in the repo, and automatically update the `Status` column + sync a summary into this proposal file.
+The detailed plan lives in `plan.csv` — each row is one task with columns: `Sprint, TaskID, Task, Owner, Role, Dependency, Deliverable, Status`. `Sprint` groups tasks by phase (the "main story," including retroactive sprints for already-completed work); `TaskID` increments globally across the whole file and `Dependency` references other tasks by ID (e.g. `Task 45`) rather than by date, since dates are exactly what broke once already. Use the `/check-plan` skill (`.claude/skills/check-plan/SKILL.md`) to check real progress against this file — it asks who you are (if not already known), cross-references the repo's actual state against the `Status` column, and reports what's slipping.
 
 ---
 
