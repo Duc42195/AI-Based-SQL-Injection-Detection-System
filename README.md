@@ -87,7 +87,7 @@ uv run pytest            # smoke test for the config loader
 ## API service (FastAPI) — for Streamlit
 
 The backend already has a running app. Branch 1 and Branch 2 run **for real** and are wired end
-to end. Branch 3 is trained and evaluated offline (see [`report/plan/ke_hoach_2_tuan.csv`](report/plan/ke_hoach_2_tuan.csv)
+to end. Branch 3 is trained and evaluated offline (see [`report/plan/plan.csv`](report/plan/plan.csv)
 for current status) but the live `deploy/routers/branch3.py` route still returns `not_ready` —
 it hasn't been wired to the real model yet.
 

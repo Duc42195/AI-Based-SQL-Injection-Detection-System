@@ -49,7 +49,7 @@ must be checked against all of them**, not just the one you're currently editing
 |---|---|
 | `README.md` | Architecture, decision logic, install/run/config — technical overview only, no roles or status |
 | `AGENTS.md` (here) | "Project roles" table (sole owner) + contributor/agent rules |
-| `report/plan/ke_hoach_2_tuan.csv` | Day-by-day/sprint task tracker — the live plan, sole owner of current status/progress |
+| `report/plan/plan.csv` | Sprint/Task tracker — the live plan, sole owner of current status/progress |
 | `report/conf/outline.md`, `report/conf/research_proposal.md` | RIVF paper status/framing (as of 2026-07-30 these are known stale — flagged separately, not fixed by this checklist) |
 
 **Rule of thumb:** when a core fact changes (a deadline, a role, a branch's status), grep the
@@ -61,22 +61,12 @@ stale just like the facts it's meant to protect.
 
 ## "Check plan" — what Duc means by this
 
-When Duc says **"check plan"**, he means: read `report/plan/ke_hoach_2_tuan.csv` and evaluate
-**actual progress against the sprint schedule** — not just open the file, and not just check
-git/branch state in isolation. Concretely:
-
-1. What's the current date, and which sprint/day does that fall in per the CSV?
-2. For each row at or before today: is the `Status` column actually reflected in reality (check
-   the real deliverable — file exists, tests pass, branch has commits — not just the CSV text,
-   since the CSV isn't updated automatically)?
-3. **What's slipping** — tasks past their date still "Not started", deliverables that don't
-   exist yet, dependencies that block a later row?
-4. **What to do about it** — a concrete recommendation (re-scope, reassign, flag to the team),
-   not just a status dump.
-
-Cross-reference with live signals when relevant (e.g., recent commits/branches matching a
-person's assigned task) rather than trusting the CSV's `Status` field alone, since it's
-manually maintained and can lag reality in either direction.
+When Duc says **"check plan"**, he means: evaluate **actual progress against the sprint
+schedule** in `report/plan/plan.csv` — not just open the file, and not just check git/branch
+state in isolation. Use the **`/check-plan` skill** (`.claude/skills/check-plan/SKILL.md`) for
+the full routine (identifies who's asking, cross-references real signals like commits/branches
+against the `Status` column, reports what's slipping and what to do about it) — don't
+re-derive this from scratch each time.
 
 ---
 
