@@ -197,6 +197,36 @@ class TestSessionCorrelatorCalibrate:
         # attack session means (~9.23, 9.43).
         assert 1.05 < correlator.mean_threshold < 9.23
 
+    def test_calibrate_picks_content_threshold_from_train_data(self) -> None:
+        """content_threshold must come from calibrate(), not stay pinned at the
+        constructor's placeholder (0.5, B1's single-query decision_threshold)."""
+        correlator = _make_correlator(content_threshold=0.5, per_query_threshold=0.0,
+                                       mean_threshold=0.0, fraction_threshold=0.0)
+        train_sessions = [
+            (["select 1", "select 2"], [1.0, 1.1], 0),  # benign, no "attack" -> concat content_prob = 0.1
+            (["select 3", "select 4"], [0.9, 1.0], 0),  # benign -> 0.1
+            (["attack p1", "attack p2"], [9.0, 9.5], 1),  # attack -> 0.9
+            (["attack p3", "attack p4"], [8.8, 9.1], 2),  # attack -> 0.9
+        ]
+        correlator.calibrate(train_sessions, percentile=0.90)
+        # Perfectly separable at any threshold in (0.1, 0.9]; the max-margin
+        # search must land strictly between the benign and attack content_prob values.
+        assert 0.1 < correlator.content_threshold <= 0.9
+
+    def test_calibrate_content_threshold_persists_through_save_load(self, tmp_path) -> None:
+        correlator = _make_correlator(content_threshold=0.5, per_query_threshold=0.0,
+                                       mean_threshold=0.0, fraction_threshold=0.0)
+        train_sessions = [
+            (["select 1"], [1.0], 0),
+            (["attack p1"], [9.0], 1),
+        ]
+        correlator.calibrate(train_sessions, percentile=0.90)
+        calibrated_threshold = correlator.content_threshold
+
+        correlator.save(tmp_path)
+        loaded = SessionCorrelator.load(tmp_path, _FakeVectorizer(), _FakeClf(), _FakeB2Detector())
+        assert loaded.content_threshold == calibrated_threshold
+
 
 class TestSessionCorrelatorSaveLoad:
     def test_roundtrip_thresholds_and_scoring_match(self, tmp_path) -> None:
@@ -235,21 +265,28 @@ def _real_artifacts_present() -> bool:
 
 
 @pytest.mark.skipif(not _real_artifacts_present(), reason="real branch1/branch2/branch3 artifacts not present locally")
-class TestSessionCorrelatorBehaviorCoversContentGap:
-    """Regression test for a real finding from this project's diagnostic session:
+class TestSessionCorrelatorContentAndBehaviorBothCoverWeakSteps:
+    """Regression test for a real finding from this project's diagnostic session.
 
-    a session's WEAK-per-content-check steps alone (a boolean_blind session's
+    A boolean_blind session's WEAK-per-content-check steps alone (the
     length-bisection phase — no strong character-extraction steps mixed in)
-    do NOT push the content check over threshold even when concatenated
-    together, but ARE caught by the behavior check alone — this is why the
-    two checks are OR'd rather than relying on either in isolation. See the
-    module docstring and report/plan/data_contract.md SS4.2 for the full
-    account. If this test starts failing, the "OR'd checks cover each
-    other's blind spot" claim in the paper's Limitations no longer holds and
-    must be re-verified before citing it.
+    concatenate to only 0.45-0.46 content probability — below Branch 1's
+    single-query 0.5 threshold, but above the session-level
+    ``content_threshold`` (~0.34) calibrated by ``calibrate()`` once it
+    started separately calibrating this threshold from TRAIN data instead of
+    reusing 0.5 (benign sessions concatenate to <=0.172 — see
+    ``SessionCorrelator.calibrate``'s docstring and
+    ``report/plan/data_contract.md`` SS4.2). The behavior check independently
+    catches the same steps regardless (Branch 2 scores structural shape, not
+    attack type). Both checks now cover this case on their own — this is
+    intentional redundancy, not a coincidence: if this test starts failing,
+    the "OR'd checks are resilient to either one missing a case" claim in the
+    paper's Limitations no longer holds and must be re-verified before citing it.
     """
 
-    def test_weak_content_steps_still_fire_behavior_check(self) -> None:
+    def test_weak_content_steps_fire_both_checks_independently(self) -> None:
+        import copy
+
         import joblib
         import pandas as pd
 
@@ -260,7 +297,9 @@ class TestSessionCorrelatorBehaviorCoversContentGap:
         b2_detector = AnomalyDetector.load("models/branch2_v1")
         correlator = SessionCorrelator.load("models/branch3_v2", vectorizer, clf, b2_detector)
 
-        df = pd.read_csv("data/processed/branch3_sessions_cach_a.csv")
+        # keep_default_na=False: query_canonical can legitimately contain pandas'
+        # default NA sentinel strings (e.g. a fragment literally reading "null").
+        df = pd.read_csv("data/processed/branch3_sessions_cach_a.csv", keep_default_na=False, na_values=[])
         sess = df[(df["session_label"] == 1) & (df["split"] == "test")].sort_values(["session_id", "step_index"])
         sid = sess["session_id"].iloc[0]
         texts = sess.loc[sess["session_id"] == sid, "query_canonical"].tolist()
@@ -271,11 +310,15 @@ class TestSessionCorrelatorBehaviorCoversContentGap:
         weak_texts, weak_scores = texts[:5], b2_scores[:5]
 
         content_only = correlator.score(weak_texts, branch2_scores=[-999.0] * 5)  # force behavior off
-        assert content_only["fires_content"] is False, (
-            "precondition: concatenating only the weak steps should NOT cross "
-            "the content threshold on its own"
-        )
+        assert content_only["fires_content"] is True
+
+        behavior_only_correlator = copy.copy(correlator)
+        behavior_only_correlator.content_threshold = 1.1  # force content off (probs never exceed 1.0)
+        behavior_only = behavior_only_correlator.score(weak_texts, branch2_scores=weak_scores)
+        assert behavior_only["fires_behavior"] is True
+        assert behavior_only["is_attack"] is True
 
         combined = correlator.score(weak_texts, branch2_scores=weak_scores)
+        assert combined["fires_content"] is True
         assert combined["fires_behavior"] is True
         assert combined["is_attack"] is True

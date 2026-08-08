@@ -4,7 +4,7 @@ An AI-based SQL Injection detection system, deployed at the **Database Proxy —
 
 - **Branch 1 (Supervised, multi-class):** classifies `Normal` + SQLi variants (`Union / Error / Boolean-blind / Time-blind / Stacked`). Compares 3 model families: **TF-IDF+GBM**, **DistilBERT**, **CNN + SQL-tokenizer** → selected on **F1-macro vs latency vs size**.
 - **Branch 2 (Anomaly Detection):** learns the "safe zone" from **100% benign traffic**, outputs a **continuous anomaly score** (zero-day flag + feature for Branch 3) via **Isolation Forest / One-Class SVM**.
-- **Branch 3 (Session-level — main contribution):** a sequence model (GRU / lightweight Transformer) over the whole **session**; each step = `[content embedding (Branch 1) ⊕ anomaly score (Branch 2)]`. Catches **Blind SQLi** and **query-splitting** that a per-query classifier misses.
+- **Branch 3 / Session Correlator (main contribution):** not a trained model — re-uses Branch 1's classifier and Branch 2's anomaly detector as-is and correlates their signals across a **session**: a *content check* re-scores the session's concatenated query text with Branch 1, a *behavior check* aggregates Branch 2's per-query anomaly scores (mean / fraction above threshold), OR'd together. Catches **Blind SQLi** and **query-splitting** that a per-query classifier misses, without any session-level gradient training. See [`src/models/branch3_session.py`](src/models/branch3_session.py) and [`report/plan/data_contract.md`](report/plan/data_contract.md) §4.2 for why this replaced an earlier GRU sequence-model design.
 
 ## Decision Logic (branch fusion)
 
@@ -86,10 +86,9 @@ uv run pytest            # smoke test for the config loader
 
 ## API service (FastAPI) — for Streamlit
 
-The backend already has a running app. Branch 1 and Branch 2 run **for real** and are wired end
-to end. Branch 3 is trained and evaluated offline (see [`report/plan/plan.csv`](report/plan/plan.csv)
-for current status) but the live `deploy/routers/branch3.py` route still returns `not_ready` —
-it hasn't been wired to the real model yet.
+The backend already has a running app. Branch 1, Branch 2, and Branch 3 (Session Correlator) all
+run **for real** and are wired end to end — `POST /branch3/session` scores a real session instead
+of returning `not_ready`. See [`report/plan/plan.csv`](report/plan/plan.csv) for current status.
 
 ```bash
 uv run uvicorn deploy.main:app --reload --port 8000   # docs: http://localhost:8000/docs
@@ -172,7 +171,7 @@ The repo's `models/` directory also **only has `metadata.json`** (`.joblib` file
 |---|---|---|
 | `branch1_v1/` | TF-IDF + Logistic Regression | F1-macro = 0.9822 |
 | `branch2_v1/` | One-Class SVM | AUC = 0.90, FPR = 0.3%, detection rate = 20.7% |
-| `branch3_v1/` | GRU over `[Branch-1 embedding ⊕ Branch-2 score]` per session step | F1-macro = 1.0 on a small (n=280) held-out set — eval being strengthened, not yet HF-uploaded |
+| `branch3_v2/` | Session Correlator (no weights — reuses `branch1_v1`/`branch2_v1`, only 4 calibrated thresholds in `metadata.json`) | FPR = 0.0, detection rate = 1.0 on all 3 session-attack classes, 280-session held-out TEST split (see `report/plan/data_contract.md` §4.2 for caveats: self-generated sessions, not independently-captured attacker traffic) |
 
 Quick download:
 ```bash
