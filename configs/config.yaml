@@ -151,16 +151,21 @@ branch2_anomaly:
       contamination: [0.001, 0.005, 0.01, 0.05]
 
 branch3_session:
-  # Session-level sequence model (main contribution). Per-step input =
-  # [content embedding (Branch 1 encoder) ⊕ anomaly score (Branch 2)].
-  # Session = session-id, or (client IP + idle-gap window).
+  # Session Correlator (formerly "Branch 3"). NOT a trained model: it re-uses
+  # Branch 1's classifier (content check, on concatenated session text) and
+  # Branch 2's anomaly detector (behavior check, aggregating its per-query
+  # scores) exactly as already trained, and correlates the two signals per
+  # session. Kept under the `branch3_session` key / `/branch3` API prefix for
+  # backward compatibility (config schema + frontend contract), not because
+  # it is still an independent "branch". See src/models/branch3_session.py
+  # (SessionCorrelator) and report/plan/data_contract.md §4.2 for why the
+  # earlier GRU sequence-model design (kept there for the record) was
+  # replaced. Session = session-id, or (client IP + idle-gap window).
   enabled: true
-  # Model folder under models_dir (created once Branch 3 is trained). Until then
-  # the API reports this branch as "not_ready" instead of crashing.
-  active_version: "branch3_v1"
+  # Model folder under models_dir (created once thresholds are calibrated).
+  # Until then the API reports this branch as "not_ready" instead of crashing.
+  active_version: "branch3_v2"
   session_idle_gap_seconds: 1800   # 30-min inactivity ends a session
-  sequence_model: "gru"            # "gru" | "transformer"
-  max_session_len: 64
   # Session label schema (0=benign; attack types that only appear across queries).
   session_classes:
     benign: 0
@@ -209,12 +214,15 @@ branch3_session:
       # traces repeated ~70x each -> the model memorized instead of
       # generalizing). 100 keeps most of the 350 sessions/class unique.
       synthetic_user_pool_size: 100
-  # GRU training hyperparameters — see train/train_branch3.py.
-  train:
-    hidden_dim: 32
-    epochs: 30
-    learning_rate: 0.001
-    batch_size: 16
+  # SessionCorrelator threshold calibration — see train/calibrate_branch3.py.
+  # Not model hyperparameters (there is no gradient training); the content
+  # check reuses branch1_supervised.decision_threshold directly, only the
+  # behavior-check thresholds below are calibrated from data.
+  aggregate:
+    # Percentile of TRAIN benign per-query Branch-2 scores used as the
+    # per-query "elevated" cutoff for fraction_above_threshold (Experiment B
+    # in this project's diagnostic session used 0.90; kept as the default).
+    b2_benign_score_percentile: 0.90
 
 decision:
   # Overkill policy: SQLi=0 & Anomaly=1 -> hold for Admin review.
