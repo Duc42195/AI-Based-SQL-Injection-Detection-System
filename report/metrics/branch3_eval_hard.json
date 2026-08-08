@@ -1,72 +1,428 @@
 {
-  "description": "Hard-mode: boolean_blind session steps scored by branch1_no_boolean_blind (a Branch-1 variant that has never seen boolean_blind and misses 90.2% of it per-query). Tests whether Branch 3 adds real session-level value vs. just aggregating an already-correct per-step Branch-1 signal.",
-  "metrics": {
-    "n_test_sessions": 280,
-    "confusion_matrix": [
-      [
-        70,
-        0,
-        0,
-        0
-      ],
-      [
-        0,
-        70,
-        0,
-        0
-      ],
-      [
-        0,
-        0,
-        70,
-        0
-      ],
-      [
-        0,
-        0,
-        0,
-        70
-      ]
-    ],
-    "labels": [
-      "benign",
-      "boolean_blind",
-      "time_blind",
-      "query_splitting"
-    ],
-    "f1_macro": 1.0,
-    "accuracy": 1.0,
-    "per_class": {
-      "benign": {
-        "precision": 1.0,
-        "recall": 1.0,
-        "f1": 1.0,
-        "support": 70
-      },
-      "boolean_blind": {
-        "precision": 1.0,
-        "recall": 1.0,
-        "f1": 1.0,
-        "support": 70
-      },
-      "time_blind": {
-        "precision": 1.0,
-        "recall": 1.0,
-        "f1": 1.0,
-        "support": 70
-      },
-      "query_splitting": {
-        "precision": 1.0,
-        "recall": 1.0,
-        "f1": 1.0,
-        "support": 70
-      }
+  "description": "Zero-day ablation for the Session Correlator's content check: boolean_blind TEST sessions re-scored with branch1_no_boolean_blind (never seen boolean_blind, misses 90.2% of it per-query). Reported as a stated limitation, not a strength \u2014 concatenation does not rescue a classifier that never learned the class.",
+  "n_test_sessions": 70,
+  "content_check_detection_rate": 0.0,
+  "mean_attack_prob": 0.220256,
+  "per_session": [
+    {
+      "session_id": "cachA_boolean_blind_0003",
+      "n_steps": 33,
+      "attack_prob": 0.2169,
+      "fires_content": false
     },
-    "fpr_benign": 0.0,
-    "detection_rate": {
-      "boolean_blind": 1.0,
-      "time_blind": 1.0,
-      "query_splitting": 1.0
+    {
+      "session_id": "cachA_boolean_blind_0346",
+      "n_steps": 31,
+      "attack_prob": 0.2346,
+      "fires_content": false
+    },
+    {
+      "session_id": "cachA_boolean_blind_0169",
+      "n_steps": 32,
+      "attack_prob": 0.228,
+      "fires_content": false
+    },
+    {
+      "session_id": "cachA_boolean_blind_0231",
+      "n_steps": 32,
+      "attack_prob": 0.2222,
+      "fires_content": false
+    },
+    {
+      "session_id": "cachA_boolean_blind_0232",
+      "n_steps": 32,
+      "attack_prob": 0.2281,
+      "fires_content": false
+    },
+    {
+      "session_id": "cachA_boolean_blind_0052",
+      "n_steps": 32,
+      "attack_prob": 0.2266,
+      "fires_content": false
+    },
+    {
+      "session_id": "cachA_boolean_blind_0008",
+      "n_steps": 31,
+      "attack_prob": 0.2199,
+      "fires_content": false
+    },
+    {
+      "session_id": "cachA_boolean_blind_0263",
+      "n_steps": 29,
+      "attack_prob": 0.2297,
+      "fires_content": false
+    },
+    {
+      "session_id": "cachA_boolean_blind_0076",
+      "n_steps": 33,
+      "attack_prob": 0.216,
+      "fires_content": false
+    },
+    {
+      "session_id": "cachA_boolean_blind_0288",
+      "n_steps": 30,
+      "attack_prob": 0.2253,
+      "fires_content": false
+    },
+    {
+      "session_id": "cachA_boolean_blind_0221",
+      "n_steps": 33,
+      "attack_prob": 0.2301,
+      "fires_content": false
+    },
+    {
+      "session_id": "cachA_boolean_blind_0174",
+      "n_steps": 31,
+      "attack_prob": 0.2098,
+      "fires_content": false
+    },
+    {
+      "session_id": "cachA_boolean_blind_0295",
+      "n_steps": 31,
+      "attack_prob": 0.2118,
+      "fires_content": false
+    },
+    {
+      "session_id": "cachA_boolean_blind_0270",
+      "n_steps": 33,
+      "attack_prob": 0.2222,
+      "fires_content": false
+    },
+    {
+      "session_id": "cachA_boolean_blind_0102",
+      "n_steps": 32,
+      "attack_prob": 0.2263,
+      "fires_content": false
+    },
+    {
+      "session_id": "cachA_boolean_blind_0329",
+      "n_steps": 33,
+      "attack_prob": 0.2324,
+      "fires_content": false
+    },
+    {
+      "session_id": "cachA_boolean_blind_0115",
+      "n_steps": 32,
+      "attack_prob": 0.2192,
+      "fires_content": false
+    },
+    {
+      "session_id": "cachA_boolean_blind_0114",
+      "n_steps": 30,
+      "attack_prob": 0.2277,
+      "fires_content": false
+    },
+    {
+      "session_id": "cachA_boolean_blind_0334",
+      "n_steps": 32,
+      "attack_prob": 0.2046,
+      "fires_content": false
+    },
+    {
+      "session_id": "cachA_boolean_blind_0286",
+      "n_steps": 32,
+      "attack_prob": 0.2177,
+      "fires_content": false
+    },
+    {
+      "session_id": "cachA_boolean_blind_0177",
+      "n_steps": 30,
+      "attack_prob": 0.2242,
+      "fires_content": false
+    },
+    {
+      "session_id": "cachA_boolean_blind_0257",
+      "n_steps": 31,
+      "attack_prob": 0.2182,
+      "fires_content": false
+    },
+    {
+      "session_id": "cachA_boolean_blind_0156",
+      "n_steps": 31,
+      "attack_prob": 0.2127,
+      "fires_content": false
+    },
+    {
+      "session_id": "cachA_boolean_blind_0341",
+      "n_steps": 30,
+      "attack_prob": 0.2137,
+      "fires_content": false
+    },
+    {
+      "session_id": "cachA_boolean_blind_0011",
+      "n_steps": 30,
+      "attack_prob": 0.2124,
+      "fires_content": false
+    },
+    {
+      "session_id": "cachA_boolean_blind_0262",
+      "n_steps": 28,
+      "attack_prob": 0.2139,
+      "fires_content": false
+    },
+    {
+      "session_id": "cachA_boolean_blind_0059",
+      "n_steps": 31,
+      "attack_prob": 0.229,
+      "fires_content": false
+    },
+    {
+      "session_id": "cachA_boolean_blind_0157",
+      "n_steps": 32,
+      "attack_prob": 0.2214,
+      "fires_content": false
+    },
+    {
+      "session_id": "cachA_boolean_blind_0040",
+      "n_steps": 32,
+      "attack_prob": 0.2322,
+      "fires_content": false
+    },
+    {
+      "session_id": "cachA_boolean_blind_0202",
+      "n_steps": 30,
+      "attack_prob": 0.2214,
+      "fires_content": false
+    },
+    {
+      "session_id": "cachA_boolean_blind_0214",
+      "n_steps": 31,
+      "attack_prob": 0.2202,
+      "fires_content": false
+    },
+    {
+      "session_id": "cachA_boolean_blind_0238",
+      "n_steps": 32,
+      "attack_prob": 0.2135,
+      "fires_content": false
+    },
+    {
+      "session_id": "cachA_boolean_blind_0314",
+      "n_steps": 31,
+      "attack_prob": 0.2142,
+      "fires_content": false
+    },
+    {
+      "session_id": "cachA_boolean_blind_0215",
+      "n_steps": 32,
+      "attack_prob": 0.2214,
+      "fires_content": false
+    },
+    {
+      "session_id": "cachA_boolean_blind_0129",
+      "n_steps": 32,
+      "attack_prob": 0.213,
+      "fires_content": false
+    },
+    {
+      "session_id": "cachA_boolean_blind_0249",
+      "n_steps": 32,
+      "attack_prob": 0.2264,
+      "fires_content": false
+    },
+    {
+      "session_id": "cachA_boolean_blind_0138",
+      "n_steps": 33,
+      "attack_prob": 0.2324,
+      "fires_content": false
+    },
+    {
+      "session_id": "cachA_boolean_blind_0254",
+      "n_steps": 32,
+      "attack_prob": 0.2232,
+      "fires_content": false
+    },
+    {
+      "session_id": "cachA_boolean_blind_0280",
+      "n_steps": 32,
+      "attack_prob": 0.2174,
+      "fires_content": false
+    },
+    {
+      "session_id": "cachA_boolean_blind_0029",
+      "n_steps": 33,
+      "attack_prob": 0.2246,
+      "fires_content": false
+    },
+    {
+      "session_id": "cachA_boolean_blind_0055",
+      "n_steps": 30,
+      "attack_prob": 0.2214,
+      "fires_content": false
+    },
+    {
+      "session_id": "cachA_boolean_blind_0093",
+      "n_steps": 32,
+      "attack_prob": 0.2154,
+      "fires_content": false
+    },
+    {
+      "session_id": "cachA_boolean_blind_0167",
+      "n_steps": 31,
+      "attack_prob": 0.1955,
+      "fires_content": false
+    },
+    {
+      "session_id": "cachA_boolean_blind_0236",
+      "n_steps": 33,
+      "attack_prob": 0.2192,
+      "fires_content": false
+    },
+    {
+      "session_id": "cachA_boolean_blind_0322",
+      "n_steps": 31,
+      "attack_prob": 0.2142,
+      "fires_content": false
+    },
+    {
+      "session_id": "cachA_boolean_blind_0188",
+      "n_steps": 32,
+      "attack_prob": 0.2257,
+      "fires_content": false
+    },
+    {
+      "session_id": "cachA_boolean_blind_0309",
+      "n_steps": 30,
+      "attack_prob": 0.2163,
+      "fires_content": false
+    },
+    {
+      "session_id": "cachA_boolean_blind_0030",
+      "n_steps": 31,
+      "attack_prob": 0.2098,
+      "fires_content": false
+    },
+    {
+      "session_id": "cachA_boolean_blind_0137",
+      "n_steps": 31,
+      "attack_prob": 0.2118,
+      "fires_content": false
+    },
+    {
+      "session_id": "cachA_boolean_blind_0242",
+      "n_steps": 32,
+      "attack_prob": 0.2089,
+      "fires_content": false
+    },
+    {
+      "session_id": "cachA_boolean_blind_0219",
+      "n_steps": 30,
+      "attack_prob": 0.2171,
+      "fires_content": false
+    },
+    {
+      "session_id": "cachA_boolean_blind_0100",
+      "n_steps": 31,
+      "attack_prob": 0.2098,
+      "fires_content": false
+    },
+    {
+      "session_id": "cachA_boolean_blind_0339",
+      "n_steps": 32,
+      "attack_prob": 0.2146,
+      "fires_content": false
+    },
+    {
+      "session_id": "cachA_boolean_blind_0184",
+      "n_steps": 31,
+      "attack_prob": 0.2198,
+      "fires_content": false
+    },
+    {
+      "session_id": "cachA_boolean_blind_0027",
+      "n_steps": 32,
+      "attack_prob": 0.2128,
+      "fires_content": false
+    },
+    {
+      "session_id": "cachA_boolean_blind_0079",
+      "n_steps": 32,
+      "attack_prob": 0.2263,
+      "fires_content": false
+    },
+    {
+      "session_id": "cachA_boolean_blind_0035",
+      "n_steps": 33,
+      "attack_prob": 0.2209,
+      "fires_content": false
+    },
+    {
+      "session_id": "cachA_boolean_blind_0148",
+      "n_steps": 32,
+      "attack_prob": 0.2114,
+      "fires_content": false
+    },
+    {
+      "session_id": "cachA_boolean_blind_0116",
+      "n_steps": 32,
+      "attack_prob": 0.2335,
+      "fires_content": false
+    },
+    {
+      "session_id": "cachA_boolean_blind_0345",
+      "n_steps": 31,
+      "attack_prob": 0.2198,
+      "fires_content": false
+    },
+    {
+      "session_id": "cachA_boolean_blind_0192",
+      "n_steps": 30,
+      "attack_prob": 0.2214,
+      "fires_content": false
+    },
+    {
+      "session_id": "cachA_boolean_blind_0181",
+      "n_steps": 32,
+      "attack_prob": 0.229,
+      "fires_content": false
+    },
+    {
+      "session_id": "cachA_boolean_blind_0198",
+      "n_steps": 32,
+      "attack_prob": 0.2114,
+      "fires_content": false
+    },
+    {
+      "session_id": "cachA_boolean_blind_0053",
+      "n_steps": 31,
+      "attack_prob": 0.2352,
+      "fires_content": false
+    },
+    {
+      "session_id": "cachA_boolean_blind_0098",
+      "n_steps": 31,
+      "attack_prob": 0.2336,
+      "fires_content": false
+    },
+    {
+      "session_id": "cachA_boolean_blind_0007",
+      "n_steps": 30,
+      "attack_prob": 0.2204,
+      "fires_content": false
+    },
+    {
+      "session_id": "cachA_boolean_blind_0075",
+      "n_steps": 32,
+      "attack_prob": 0.2146,
+      "fires_content": false
+    },
+    {
+      "session_id": "cachA_boolean_blind_0004",
+      "n_steps": 32,
+      "attack_prob": 0.2241,
+      "fires_content": false
+    },
+    {
+      "session_id": "cachA_boolean_blind_0310",
+      "n_steps": 32,
+      "attack_prob": 0.2232,
+      "fires_content": false
+    },
+    {
+      "session_id": "cachA_boolean_blind_0164",
+      "n_steps": 32,
+      "attack_prob": 0.2263,
+      "fires_content": false
     }
-  }
+  ]
 }

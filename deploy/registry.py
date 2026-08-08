@@ -22,6 +22,7 @@ import joblib
 import numpy as np
 
 from src.models.branch2_anomaly import AnomalyDetector
+from src.models.branch3_session import SessionCorrelator
 from src.preprocessing.canonicalize import canonicalize
 from src.preprocessing.multiclass_tagger import LABEL_NAMES
 from src.preprocessing.statistical_features import extract_statistical_features
@@ -184,6 +185,8 @@ class ModelRegistry:
         self._branch1_loaded = False  # True once a load has been attempted
         self._branch2: Branch2Model | None = None
         self._branch2_loaded = False
+        self._branch3: SessionCorrelator | None = None
+        self._branch3_loaded = False
 
     def _models_dir(self) -> Path:
         return Path(self._cfg.get_path("paths.models_dir", "models"))
@@ -246,6 +249,8 @@ class ModelRegistry:
             self._branch1_loaded = False
             self._branch2 = None
             self._branch2_loaded = False
+            self._branch3 = None
+            self._branch3_loaded = False
         logger.info("Model registry reloaded (active versions re-read from config)")
 
     def branch2(self) -> Branch2Model | None:
@@ -277,6 +282,48 @@ class ModelRegistry:
         logger.info("Loaded Branch-2 model from %s", model_dir)
         return Branch2Model(detector, max_decode)
 
+    def branch3(self) -> SessionCorrelator | None:
+        """Return the loaded Session Correlator ("Branch 3"), or ``None`` if unavailable.
+
+        Not a trained model — re-uses ``branch1()``/``branch2()``'s raw
+        vectorizer/clf/detector plus thresholds calibrated by
+        ``train/calibrate_branch3.py``. Loaded independently of the
+        Branch1Model/Branch2Model wrappers (which don't expose their raw
+        sklearn objects) via the same joblib paths those loaders use.
+        """
+        if self._branch3_loaded:
+            return self._branch3
+        with self._lock:
+            if self._branch3_loaded:  # re-check inside the lock
+                return self._branch3
+            self._branch3 = self._load_branch3()
+            self._branch3_loaded = True
+        return self._branch3
+
+    def _load_branch3(self) -> SessionCorrelator | None:
+        correlator_dir = self._branch_version_dir("branch3_session.active_version", "branch3_v2")
+        if not (correlator_dir / "metadata.json").exists():
+            logger.warning(
+                "Session Correlator thresholds not found under %s — reporting not_ready", correlator_dir
+            )
+            return None
+
+        b1_dir = self._branch_version_dir("branch1_supervised.active_version", "branch1_v1")
+        b2_dir = self._branch_version_dir("branch2_anomaly.active_version", "branch2_v1")
+        if not (b1_dir / "vectorizer.joblib").exists() or not (b2_dir / "model.joblib").exists():
+            logger.warning("Session Correlator needs Branch 1 + Branch 2 artifacts — reporting not_ready")
+            return None
+        try:
+            vectorizer = joblib.load(b1_dir / "vectorizer.joblib")
+            clf = joblib.load(b1_dir / "model.joblib")
+            b2_detector = AnomalyDetector.load(b2_dir)
+            correlator = SessionCorrelator.load(correlator_dir, vectorizer, clf, b2_detector)
+        except Exception:  # pragma: no cover - corrupt artifact is unexpected
+            logger.exception("Failed to load Session Correlator from %s", correlator_dir)
+            return None
+        logger.info("Loaded Session Correlator (thresholds from %s)", correlator_dir)
+        return correlator
+
     @staticmethod
     def _read_metadata(model_dir: Path) -> dict[str, Any]:
         import json
@@ -303,11 +350,7 @@ class ModelRegistry:
         """
         branch1_ready = self.branch1() is not None
         branch2_ready = self.branch2() is not None
-        # Branch-3 weights exist (models/branch3_v1/model.pt) but the router is
-        # not wired to serve them yet — report not_trained so /health stays
-        # consistent with the branch3 endpoint. Switch to a branch3() loader
-        # (like branch1/branch2) when Branch 3 is integrated.
-        branch3_ready = False
+        branch3_ready = self.branch3() is not None
         as_status = lambda ready: "ready" if ready else "not_trained"
         return {
             "branch1": as_status(branch1_ready),

@@ -18,6 +18,10 @@ def _branch2_ready() -> bool:
     return client.get("/health").json()["branches"]["branch2"] == "ready"
 
 
+def _branch3_ready() -> bool:
+    return client.get("/health").json()["branches"]["branch3"] == "ready"
+
+
 def test_health_lists_all_branches() -> None:
     resp = client.get("/health")
     assert resp.status_code == 200
@@ -70,10 +74,16 @@ def test_branch2_scores_anomaly() -> None:
     assert isinstance(body["is_anomaly"], bool)
 
 
-def test_branch3_is_not_ready_stub() -> None:
+def test_branch3_session_correlator() -> None:
     r3 = client.post("/api/v1/branch3/session", json={"queries": ["a", "b"]})
     assert r3.status_code == 200
-    assert r3.json()["status"] == "not_ready"
+    body = r3.json()
+    if not _branch3_ready():
+        assert body["status"] == "not_ready"
+        return
+    assert body["status"] == "ready"
+    assert isinstance(body["is_attack"], bool)
+    assert isinstance(body["session_label"], str)
 
 
 def test_detect_returns_all_branches_and_decision() -> None:

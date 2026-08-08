@@ -2,12 +2,24 @@
 
 **Target:** RIVF 2026 (IEEE, https://rivf2026.org/) — 2-column IEEEtran `conference` format.
 **Template:** [`report/conf/conference_101719.tex`](conference_101719.tex)
-**Submission deadline:** 31 Jul 2026.
+**Submission deadline:** 30 Aug 2026 (moved from the original 31 Jul).
 **Page budget:** IEEE conference papers are typically **6 pages** (verify RIVF CFP for the exact limit + whether over-length pages are allowed). This is *far* shorter than the internal midterm report [`report/midterm/full_outline.md`](../midterm/full_outline.md) — treat that report as the source pool and compress aggressively.
 
 ---
 
-## STATUS (updated 2026-07-24)
+## STATUS (updated 2026-08-07 — supersedes the 24 Jul status below, kept for the historical record)
+
+**Branch 3 now has a real implementation and real, held-out results — the picture in the 24 Jul status and the "Framing decision" section immediately below (§0) is out of date.** Summary of what changed (full account: `report/plan/data_contract.md` §4.2):
+
+- A GRU sequence-model design for Branch 3 was built and initially reported F1-macro = 1.0. A follow-up diagnostic session found that result was very likely inflated by two real bugs in its own training/eval pipeline, and — independent of those bugs — that its core premise (feeding Branch 1's classifier *probability* output per session step) didn't hold up: it measurably collapsed the content signal that distinguishes consecutive session steps, and the live decision engine blocks most real sessions per-query before a session-level model ever sees enough steps to matter.
+- Branch 3 was redesigned as **`SessionCorrelator`** (`src/models/branch3_session.py`) — not a trained model. It re-uses Branch 1's classifier (content check, on concatenated session text) and Branch 2's anomaly detector (behavior check, aggregating its per-query scores) exactly as already trained, correlating the two signals per session with three calibrated thresholds.
+- **Real, held-out results** (disjoint 280-session TEST split): FPR (benign) = 0.0; detection rate 0.971-1.0 across `boolean_blind`/`time_blind`/`query_splitting`, reported with the mandatory content-only/behavior-only/combined ablation. A zero-day ablation shows the content check's real limitation (0.0 detection rate against a classifier genuinely blind to the class) — reported honestly, not hidden.
+- **Wired into the live API** — `POST /api/v1/branch3/session` returns a real verdict, not the earlier `not_ready` stub.
+- **This changes the framing recommendation:** framing **(B)** (full three-branch, §0 below) is now realistic and arguably the stronger paper — real, honestly-ablated Branch 3 results plus the redesign-diagnosis story itself (§0/§III.E) is a legitimate methodological contribution, not just "session model added." This is a call for whoever is driving the paper (SA/PM) to confirm, not something this update decides unilaterally.
+
+---
+
+## STATUS (updated 2026-07-24 — historical, see above for current status)
 
 **Framing LOCKED = (A)** ship-what's-proven. Full draft written: [`report/conf/rivf2026_paper.tex`](rivf2026_paper.tex) (IEEEtran, compiles on Overleaf; `pdflatex` not installed locally). Full-scope companion document (all 3 branches, tagged done/planned, RIVF milestones, team roles): [`report/conf/research_proposal.md`](research_proposal.md) — not a submission requirement, just the single source of truth for the whole vision. Short Vietnamese version (~3 pages): [`report/conf/research_proposal_vn.md`](research_proposal_vn.md).
 
@@ -47,9 +59,11 @@ Under framing (A), **no further model training or new code is required for the p
 
 ---
 
-## 0. Framing decision (read first)
+## 0. Framing decision (read first) — ⚠️ historical, see STATUS above
 
-The project designs **three branches** (Branch 1 supervised multi-class, Branch 2 anomaly, Branch 3 session-level). As of now:
+**This section reflects the 24 Jul state and is kept for the record. As of 7 Aug, Branch 3 has a real implementation and real held-out results (STATUS above) — the premise "Branch 3 has NO implementation" below no longer holds.**
+
+The project designs **three branches** (Branch 1 supervised multi-class, Branch 2 anomaly, Branch 3 session-level). As of 24 Jul:
 
 - **Branch 1 + Branch 2 + the zero-day leave-one-out study have real experimental results.**
 - **Branch 3 (session-level sequence model) has NO implementation and NO results yet** — `src/models/` contains only `branch2_anomaly.py`; there is no `branch3_*.py`. `deploy/routers/branch3.py` returns `not_ready`.
@@ -60,7 +74,9 @@ The project designs **three branches** (Branch 1 supervised multi-class, Branch 
 - **(A) Ship what's proven.** Paper contribution = a two-branch DB-proxy detector *plus a zero-day generalization study* (the leave-one-out result is the novel empirical hook). Branch 3 + integration presented as **proposed architecture / future work**. Lowest risk — fully backed by existing results, submittable even if Branch 3 slips.
 - **(B) Full three-branch.** Requires Branch 3 trained with real session-level metrics before ~29 Jul. Higher risk given the 31 Jul deadline and that Branch 3 code does not exist yet.
 
-**Recommendation:** write to framing **(A)** as the safe baseline; if Branch 3 produces real numbers in time, promote it from "proposed" to a results subsection. Structure below is built so Branch 3 can be upgraded in place without restructuring.
+**24 Jul recommendation (superseded):** write to framing **(A)** as the safe baseline; if Branch 3 produces real numbers in time, promote it from "proposed" to a results subsection. Structure below is built so Branch 3 can be upgraded in place without restructuring.
+
+**Current recommendation (7 Aug):** Branch 3 has real, held-out, honestly-ablated results (FPR=0.0, DR 0.971-1.0 on a disjoint TEST split) plus a legitimate methodological narrative (an earlier GRU design's suspicious F1=1.0 was diagnosed and replaced — `report/plan/data_contract.md` §4.2). **Framing (B) is now realistic** — upgrade §III.E, §IV.D, §V.D per the inline notes added below. Final call belongs to whoever is driving the paper.
 
 ---
 
@@ -84,7 +100,7 @@ The project designs **three branches** (Branch 1 supervised multi-class, Branch 
 - End with an explicit **contributions bullet list** (3–4 items). Only claim what results back:
   - A multi-branch SQLi detector positioned at the DB proxy (post-build, pre-DB).
   - A **zero-day leave-one-out evaluation** quantifying how query-level anomaly detection recovers attacks unseen by the supervised branch.
-  - (If framing B) a session-level sequence branch for blind/multi-step SQLi.
+  - (Framing B) a session-level detection mechanism (Session Correlator) for blind/multi-step SQLi, with real held-out results and an honest account of an earlier, more complex design that didn't hold up to ablation.
 
 ### II. Related Work — ✍️ WRITABLE NOW
 - Source: [`full_outline.md`](../midterm/full_outline.md) §1.9 + Table 1.1 + §1.10 Research Gap.
@@ -95,7 +111,7 @@ The project designs **three branches** (Branch 1 supervised multi-class, Branch 
 - **B. Canonicalization** — ✍️ `src/preprocessing/canonicalize.py` exists + tested; describe the anti-evasion normalization.
 - **C. Branch 1 — supervised multi-class** — ✍️ TF-IDF + Logistic Regression, 5 classes (normal + union/error/boolean-blind/time-blind). Method writable now.
 - **D. Branch 2 — query-level anomaly** — ✍️ One-Class SVM / Isolation Forest on 4 statistical features (length, special-char ratio, SQL-keyword count, entropy). Writable now.
-- **E. Branch 3 — session-level sequence model** — ⛔/✍️ *design writable now* (GRU/Transformer over `[Branch-1 embedding ⊕ Branch-2 score]` per step). Label it "proposed" until Must-do #1 lands.
+- **E. Branch 3 / Session Correlator** — ✅ **writable now with real content.** Not a trained model: a content check (concatenate session queries, re-score with Branch 1's existing classifier — no retraining) OR'd with a behavior check (aggregate Branch 2's existing per-query scores). Worth including the redesign story itself as a methodological point: an earlier GRU design over `[Branch-1 probability ⊕ Branch-2 score]` per step reported a suspicious F1=1.0, was diagnosed via a concrete information-bottleneck measurement (TF-IDF cosine similarity 0.961 between two session steps vs. near-identical post-classifier probabilities) plus two real evaluation-pipeline bugs, and was replaced. Full account: `report/plan/data_contract.md` §4.2. This subsection is the strongest candidate to also carry a "why simpler beat more complex here" discussion point for §VI.
 - **F. Central decision engine + Overkill policy** — ✍️ decision table (Block/Overkill/Allow) writable now from README; note it is a designed policy, not yet an evaluated component.
 - **G. Continual learning loop** — ✍️ design only; keep to a short paragraph or move entirely to Future Work to save space.
 
@@ -103,7 +119,7 @@ The project designs **three branches** (Branch 1 supervised multi-class, Branch 
 - **A. Data sources** — ✅ D1 SQLiV3, D3 CSIC 2010, D4 payload-box, D7 SR-BH; published on HF. Source: [`data_contract.md`](../plan/data_contract.md), README data table.
 - **B. Branch 1 dataset** — ✅ 68,159 rows, multi-class relabel, `stacked` dropped (100% synthetic). Note in Limitations.
 - **C. Branch 2 dataset** — ✅ 91,935 benign train / 25,065 anomalous eval.
-- **D. Branch 3 dataset** — ⛔ **NOT COLLECTED.** Session data (Cách A simulated / Cách B sqlmap+DVWA) does not exist yet. Blocks any B3 result.
+- **D. Branch 3 / Session Correlator dataset** — ✅ **Cách A collected and used.** 1,400 sessions (1,050 from a real bisection algorithm against a self-hosted demo DB, 350 heuristic query-splitting fragmentation), 1,120 train / 280 test, session-level split (no leakage). Cách B (real `sqlmap` + Dockerized DVWA/WebGoat) still not started — state as the generalization caveat (§VI), not a blocker (§V.D already has real numbers on Cách A).
 - **E. Evaluation protocol** — ✅ metrics defined (F1-macro, precision/recall, FPR, AUC, detection rate, latency). Hardware: RTX 3050 6GB. Seed=42, deterministic.
 
 ### V. Experimental Results — ✅ (core) / ⛔ (B3 + integration)
@@ -113,7 +129,7 @@ The project designs **three branches** (Branch 1 supervised multi-class, Branch 
   Artifacts: [`branch2_eval.json`](../metrics/branch2_eval.json), [`branch2_threshold_sweep.csv`](../metrics/branch2_threshold_sweep.csv), `figures/branch2_*.png`.
 - **C. Zero-day leave-one-out study** — ✅ **THE NOVEL HOOK.** Per excluded class, Branch 1 miss rate vs Branch 2 detection rate vs combined coverage. Key numbers from [`summary.json`](../metrics/zeroday_experiment/summary.json): error_based → B1 miss 0%, but for boolean_blind → B1 miss **90.2%** while combined coverage reaches **94%**; error_based B2 DR **89.7%**. This is the "why two branches beat one" evidence.
   Artifacts: [`zeroday_experiment/`](../metrics/zeroday_experiment/), notebook `train/notebooks/zeroday_experiment_report.ipynb`.
-- **D. Branch 3 results** — ⛔ **MUST BE PRODUCED** (Must-do #1–#3) or the section becomes "proposed / future work."
+- **D. Branch 3 / Session Correlator results** — ✅ **real, held-out numbers exist.** On the disjoint 280-session TEST split, calibrated on TRAIN only: FPR (benign) = 0.0; detection rate `boolean_blind`=1.0, `time_blind`=1.0, `query_splitting`=0.971 (content-only) / 1.0 (behavior-only, combined). Report all three configurations (content-only/behavior-only/combined) — the ablation is the point, not just the headline number (`report/metrics/branch3_eval.json`). Pair with the zero-day ablation (`branch3_eval_hard.json`): content-check detection rate drops to 0.0 against a classifier genuinely blind to `boolean_blind` — a real, stated limitation, include it rather than omit it.
 - **E. End-to-end / decision-engine results** — ⛔ no integrated evaluation exists; either produce a small demo/latency measurement (Must-do #4) or scope out.
 - **F. Illustrative demonstration** — ✍️/✅ can show a worked example (payload → per-branch scores → verdict) using the live API `POST /api/v1/detect` and `train/notebooks/demo_detect.ipynb`.
 
@@ -132,15 +148,15 @@ The project designs **three branches** (Branch 1 supervised multi-class, Branch 
 
 ---
 
-## What MUST be done before the paper is complete
+## What MUST be done before the paper is complete — ⚠️ items #1–#3 DONE as of 7 Aug, kept for the historical record
 
-Ordered by priority for the 31 Jul deadline. Items #5–#7 are required regardless of framing; #1–#4 are only required for framing (B).
+Ordered by priority for the original 31 Jul deadline (now 30 Aug — see STATUS at top). Items #5–#7 are required regardless of framing.
 
-1. **⛔ Implement Branch 3 (session-level model).** No code exists (`src/models/branch3_*.py` missing). Needs: model class (GRU or small Transformer over per-step `[B1 embedding ⊕ B2 score]`), train script, eval script. *Largest single risk item.*
-2. **⛔ Build session-level dataset.** At minimum **Cách A** (simulated sessions scripted from D1). Cách B (sqlmap→DVWA capture) is a bonus/comparison, likely infeasible before deadline. Without this, #1 cannot be evaluated.
-3. **⛔ Produce real Branch 3 metrics.** Session-level detection rate on blind/query-splitting sessions + FPR on benign sessions; ideally show B3 catches sessions that per-query B1/B2 miss. This is what makes framing (B) worthwhile.
+1. **✅ DONE — Implement Branch 3 (`SessionCorrelator`, not a GRU).** `src/models/branch3_session.py`, calibration script `train/calibrate_branch3.py`, zero-day ablation `train/eval_branch3_hard.py`. See STATUS at top / `report/plan/data_contract.md` §4.2 for why the original GRU plan changed.
+2. **✅ DONE — Session-level dataset.** Cách A (1,400 sessions, real bisection algorithm against a self-hosted demo DB + heuristic query-splitting). Cách B (sqlmap→DVWA capture) still not attempted — real remaining gap, not a blocker for framing (B).
+3. **✅ DONE — Real Branch 3 metrics.** FPR=0.0, detection rate 0.971-1.0 on a disjoint TEST split, with the content-only/behavior-only/combined ablation plus a zero-day limitation ablation (`report/metrics/branch3_eval.json`, `branch3_eval_hard.json`).
 4. **⛔ (Optional) End-to-end / decision-engine measurement.** Integrated verdict on a mixed stream + **inference latency** per query (the paper's methodology promises latency; currently unmeasured end-to-end). Even a small latency table strengthens the paper.
-5. **⛔ Real reference list.** Replace all template `\bibitem` placeholders. Verify each citation (per repo TODO note, some report claims need Web-Search verification before submission).
+5. **⛔ Real reference list.** Replace all template `\bibitem` placeholders. Verify each citation (per repo TODO note, some report claims need Web-Search verification before submission). Consider adding 2-3 new citations surfaced while diagnosing Branch 3 (fragmented/split SQLi technique; behavioral session-trace detection for slow/low-and-slow attacks) if §III.E or §VI cites them.
 6. **⛔ Figures for the paper.** (a) System architecture diagram (does not exist as a paper-ready figure). (b) Re-export existing PNGs at IEEE column width / readable font sizes — current figures were made for the internal report, check legibility at 3.5 in width.
 7. **⛔ Author metadata.** Fill IEEEtran author blocks (names, affiliation = VNU, emails/ORCID); write title + abstract; **remove all red template guidance text** (the template warns papers may be rejected if it remains).
 
@@ -156,14 +172,14 @@ Ordered by priority for the 31 Jul deadline. Items #5–#7 are required regardle
 Draft these immediately — they are backed by existing results or are pure design/method:
 
 - Abstract (draft; finalize numbers last), Introduction, Related Work, Discussion & Limitations, Conclusion.
-- Methodology §§ A–D, F (system placement, canonicalization, Branch 1, Branch 2, decision policy).
-- Results §§ A–C (Branch 1, Branch 2, zero-day study) with **real numbers already in `report/metrics/`**.
-- Dataset §§ A–C, E.
+- Methodology §§ A–F (system placement, canonicalization, Branch 1, Branch 2, Session Correlator, decision policy) — all real now, including E.
+- Results §§ A–D (Branch 1, Branch 2, zero-day study, **Branch 3 / Session Correlator**) with **real numbers already in `report/metrics/`**.
+- Dataset §§ A–E — all real now, including D.
 
-That is roughly **70–80% of a 6-page paper** already writable with real content. The remaining 20–30% (Branch 3 results, integration/latency, final figures, references) is the "must do" list above.
+That leaves mainly integration/latency measurement, final figures, and references as the remaining "must do" items above — framing (B) (full three-branch) is realistic for the 30 Aug deadline.
 
 ---
 
-## Open question for the team
+## Open question for the team — ⚠️ largely resolved as of 7 Aug, see STATUS at top
 
-**Framing (A) vs (B)?** If the team commits to (B), Branch 3 code + Cách A dataset + eval must land by ~29 Jul to leave time for writing and internal review. If that timeline is unrealistic, lock framing (A) now and present Branch 3 as the proposed extension / future work — the paper is fully submittable either way on the strength of the Branch 1/2 + zero-day results.
+**Framing (A) vs (B)?** (24 Jul framing, kept for the record.) If the team commits to (B), Branch 3 code + Cách A dataset + eval must land in time for writing and internal review. **As of 7 Aug this has landed** — real, held-out, honestly-ablated Branch 3 results exist. Framing (B) is now the recommended target; confirm with whoever is driving the paper (SA/PM) before finalizing §I's contributions list.

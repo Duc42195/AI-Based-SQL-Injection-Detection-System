@@ -3,7 +3,9 @@
 **Prepared for:** RIVF 2026 (Research, Innovation and Vision for the Future), IEEE, VinUniversity, Hanoi.
 **Status of this document:** internal, full-scope reference — **not** a required RIVF submission artifact. RIVF's only submission requirement is the 6-page IEEE paper via EDAS (confirmed from [rivf2026.org/call-for-papers.html](https://rivf2026.org/call-for-papers.html)); this proposal exists so the team and advisors have one clean, English, formally-structured description of the *entire* project scope — including the parts the paper cannot claim as proven results yet — in one place, superseding the informal running changelog in [`report/plan/De_xuat_SQLi_Detection_AI.md`](../plan/De_xuat_SQLi_Detection_AI.md).
 
-**Relationship to the conference paper:** [`report/conf/rivf2026_paper.tex`](rivf2026_paper.tex) reports only what is experimentally proven — Branch 1, Branch 2, and the zero-day leave-one-out study (**framing (A)**, locked with the team) — and presents Branch 3 and system integration as future work. This proposal describes the **whole intended system**, tags every component as done/in-progress/planned, and gives the roadmap by which the rest gets built. Read the paper for "what we can defend to reviewers today"; read this document for "what the project is".
+**Relationship to the conference paper:** [`report/conf/rivf2026_paper.tex`](rivf2026_paper.tex) reports only what is experimentally proven. As of this document's 7 Aug 2026 update, that now includes **real, held-out Branch 3 (Session Correlator) results** — see §5.6 — so **framing (B)** (full three-branch, per `report/conf/outline.md` §0) is the recommended target, superseding the earlier framing-(A) lock. This proposal describes the **whole intended system**, tags every component as done/in-progress/planned, and gives the roadmap by which the rest gets built. Read the paper for "what we can defend to reviewers today"; read this document for "what the project is".
+
+> **RIVF submission deadline: 30 Aug 2026** (moved from the original 31 Jul; see §12). Everything below dated 24-25 Jul reflects planning done under the old deadline and is kept for the historical record, not as current guidance.
 
 ---
 
@@ -90,33 +92,53 @@ Classifies each query into `normal` or one of four SQLi categories (`union_based
 
 Trained exclusively on benign traffic (no attack labels at all), Branch 2 learns the "normal region" of query behavior from four lightweight statistical features (length, special-character ratio, SQL-keyword count, Shannon entropy) and emits a continuous anomaly score. One-Class SVM was selected over Isolation Forest (AUC 0.90 vs 0.67, at a lower FPR of 0.3% vs 0.63%). Because it never sees attack labels, this branch is, in principle, able to flag attack shapes Branch 1 was never trained on — the property directly measured in Section 8. Its score also feeds Branch 3 as an input feature.
 
-### 5.6 Branch 3 — Session-Level Sequence Model — **[IMPLEMENTED offline; not yet wired into the live API]**
+### 5.6 Branch 3 / Session Correlator — **[IMPLEMENTED, wired into the live API, real held-out results]**
 
 **Why it's needed:** Boolean-blind and time-blind SQLi work by sending many individually-valid-looking queries and inferring database contents from small differences in response content or timing across the sequence. No single query in such a sequence needs to look anomalous; the signal is in the *pattern across queries*. Section 8's zero-day study gives direct evidence for this: when `boolean_blind` is withheld from training, the two query-level branches together still miss the overwhelming majority of its queries.
 
-**Architecture (built):**
+**This section describes the SECOND design.** The first (a GRU sequence model over `[Branch-1 probability ⊕ Branch-2 score]` per step) was built, trained, and reported F1-macro = 1.0 — but a follow-up diagnostic session (7 Aug 2026) found that result was very likely inflated by two real bugs in its own training/eval pipeline (padding direction in `collate_fn`; mask/shuffle logic in the hard-mode eval), and — independently of those bugs — that the GRU's core premise didn't hold up against three checks: (1) Branch 1's probability output collapses the token-level signal that distinguishes consecutive session steps (measured: TF-IDF cosine similarity 0.961 between two bisection steps, vs. near-identical post-classifier probabilities); (2) the live decision engine blocks most real `boolean_blind`/`time_blind` sessions per-query before a session-level model ever sees enough steps to matter; (3) no principled fixed session length exists to pad to (real sessions can legitimately run from ~2 to ~1800 steps). Full account, including the bug details and three targeted diagnostic experiments that informed the redesign: `report/plan/data_contract.md` §4.2. The GRU code is kept in `src/models/branch3_session.py` marked superseded, not deleted, and its F1=1.0 numbers should not be re-cited.
+
+**Current design — `SessionCorrelator` (`src/models/branch3_session.py`), not a trained model:**
+
 ```
-Query 1 ─┐
-Query 2 ─┼─> [Layer 1: per-query encoder, reused from Branch 1 — not retrained]
-Query 3 ─┘                      │
-                                 ▼
-                  [Layer 2: single-layer GRU over the session]
-                  input per step = [Branch-1 embedding ⊕ Branch-2 anomaly score]
-                                 │
-                                 ▼
-                     Session-level attack-type score (4-way: benign /
-                     boolean_blind / time_blind / query_splitting)
+Session queries (raw text, time-ordered)
+        │
+        ├──> Content check: concatenate all queries -> Branch 1's EXISTING
+        │    classifier (no retraining) -> fires if attack_prob >= 0.5
+        │    (the same threshold a single query is judged by)
+        │
+        └──> Behavior check: Branch 2's EXISTING per-query anomaly score,
+             computed independently per query exactly as trained -> aggregate
+             (mean, fraction exceeding a benign-calibrated cutoff) -> fires
+             if either aggregate statistic crosses a threshold calibrated on
+             a labeled TRAIN split of benign sessions
+
+is_attack = content check fired OR behavior check fired
 ```
 
-**Result:** F1-macro = **1.0** on a 280-session held-out test set (`report/metrics/branch3_eval.json`), and F1-macro = **1.0** again in a deliberately harder setting where session steps are scored using a Branch-1 variant that has never seen `boolean_blind` and misses 90.2% of it per-query (`branch3_eval_hard.json`) — evidence the session-level signal is not just inheriting an already-correct per-step Branch-1 call. Model: single-layer GRU, `src/models/branch3_session.py`, trained via `train/train_branch3.py`.
+No gradient training, no session-length padding, no new model artifact beyond three calibrated scalar thresholds (`models/branch3_v2/metadata.json`). Why each check is valid without retraining:
+- **Content check:** TF-IDF is a *relative*-frequency representation, and a real bisection session repeats near-identical SQL structure across steps (only the numeric bound changes) — concatenating more of it reinforces the attack n-grams rather than diluting them with unrelated content, so Branch 1's existing classifier generalizes to the longer concatenated input. Measured directly: a single `boolean_blind` probe can sit just under the 0.5 threshold (0.459 at step 1), but concatenating more real session steps pushes it up (0.593 at 10 steps, 0.666 at 32) — with no sign of classifier degradation even at ~5,800 concatenated characters, far outside Branch 1's single-query training length.
+- **Behavior check:** Branch 2 is called exactly as trained — one query at a time, in its original feature distribution — only the resulting scores are aggregated afterward, so there is no train/inference mismatch to justify at all.
 
-**⚠️ Read this result narrowly.** The test set is small (280 sessions) and self-generated; a perfect 1.0 F1-macro on such a set is a strong proof-of-concept for the architecture, not yet evidence of generalization to real, unseen attacker behavior. Session data was built via `train/attack_simulator.py`, which runs the **real bisection algorithm sqlmap itself uses** (bisect on string length, then per-character on ASCII code point, ~7 probes/character) against a **real, self-hosted SQLite demo database** (`deploy/demo_db.py`) — every probe is a genuine SQL statement with a genuine true/false outcome (real row-count difference, or a real measured `SLEEP()` delay), not a templated guess. This is a substantial upgrade over pure simulation, but it is still **"Cách A"**: attacker and target are both run locally by the team. **"Cách B" — real `sqlmap` driving DVWA/WebGoat in Docker, captured via mitmproxy/Burp — has not been started.** The `query_splitting` class still uses heuristic fragmentation rather than a grounded attack trace, and extraction is capped at 4 characters (kept short to bound session length and, for time-blind, real wall-clock generation time).
+**Real, held-out results** (`train/calibrate_branch3.py`; thresholds calibrated on the 1,120-session TRAIN split of Cách A, evaluated on the disjoint 280-session TEST split):
+
+| Configuration | FPR (benign) | DR `boolean_blind` | DR `time_blind` | DR `query_splitting` |
+|---|---:|---:|---:|---:|
+| Content-only | 0.0 | 1.0 | 1.0 | 0.971 |
+| Behavior-only | 0.0 | 1.0 | 1.0 | 1.0 |
+| Combined | 0.0 | 1.0 | 1.0 | 1.0 |
+
+A mandatory zero-day ablation (`report/metrics/branch3_eval_hard.json`) re-scores the content check on `boolean_blind` TEST sessions using `branch1_no_boolean_blind` (never seen the class) — detection rate drops to **0.0**, mean attack-probability 0.22 regardless of how much of the session is concatenated. Reported as a stated limitation (concatenation cannot rescue a classifier that never learned the attack type), not reframed as a strength the way the superseded GRU's equivalent claim was.
+
+**⚠️ Read the held-out numbers narrowly — same caveat Cách A has always carried.** These are self-generated sessions (a real bisection algorithm against a self-hosted demo DB, not independently-captured attacker traffic). Near-perfect separation is expected given both Branch 1 and Branch 2 were built around this exact generation process; it is evidence the mechanism works as designed, not evidence of generalization to novel evasive traffic. **"Cách B" — real `sqlmap` driving DVWA/WebGoat in Docker, captured via mitmproxy/Burp — has not been started**; it remains the actual validation step, same as it was for the superseded GRU. The `query_splitting` class still uses heuristic fragmentation rather than a grounded attack trace, and its predicted attack-type label reflects whichever real Branch-1 class (`union_based`/`error_based`) the reconstructed fragments happen to contain, since Branch 1 has no `query_splitting` class of its own.
+
+**Wired into the live API** (`deploy/routers/branch3.py`, `deploy/registry.py`) — `POST /api/v1/branch3/session` returns a real verdict, not the earlier `not_ready` stub. Two implementation bugs were found and fixed while wiring this in (a label-schema collision between Branch 1's and the session-level class-id schemes, and a floating-point rounding mismatch between calibration-time and live-scoring Branch-2 scores) — both only surfaced when the live endpoint was exercised end-to-end, not in the offline eval script; see `report/plan/data_contract.md` §4.2 for the full account.
 
 ### 5.6.1 Data plan for Cách B (not yet executed)
 
-Stand up a network-isolated vulnerable lab (DVWA/WebGoat in Docker); drive it with `sqlmap --technique=B` (Boolean-blind) and `--technique=T` (time-blind); capture full request/response traffic through an intermediate proxy (mitmproxy/Burp Suite). Only sessions where `sqlmap` reports **successful data extraction** would be kept as positive, to avoid labeling failed attack attempts as ground truth. Benign sessions would be grouped from CSIC 2010's existing session cookies, or from normal-mode crawling of the same lab. The two-tier label schema already used for Cách A (per-query: 0 = normal, 1 = SQLi; session: 0 = benign, 1 = blind Boolean-based, 2 = blind time-based, 3 = query-splitting/multi-step) carries over unchanged. A **production Session Store** (in-memory for an MVP, Redis if the proxy runs as multiple instances) with a TTL/eviction policy remains a prerequisite for serving Branch 3 live — the offline training pipeline does not need it, but the deployed API does, and it has not been built (Section 10).
+Stand up a network-isolated vulnerable lab (DVWA/WebGoat in Docker); drive it with `sqlmap --technique=B` (Boolean-blind) and `--technique=T` (time-blind); capture full request/response traffic through an intermediate proxy (mitmproxy/Burp Suite). Only sessions where `sqlmap` reports **successful data extraction** would be kept as positive, to avoid labeling failed attack attempts as ground truth. Benign sessions would be grouped from CSIC 2010's existing session cookies, or from normal-mode crawling of the same lab. The two-tier label schema already used for Cách A (per-query: 0 = normal, 1 = SQLi; session: 0 = benign, 1 = blind Boolean-based, 2 = blind time-based, 3 = query-splitting/multi-step) carries over unchanged. `POST /api/v1/branch3/session` already accepts a full session's query list in one call, so `SessionCorrelator` itself needed no session store to go live (Section 5.6). A **production Session Store** (in-memory for an MVP, Redis if the proxy runs as multiple instances) with a TTL/eviction policy is still a separate, not-yet-built prerequisite for the *different* scenario of accumulating a session incrementally across multiple, separate `/detect` calls over time (Section 10) — out of scope for this redesign.
 
-### 5.7 Central Decision Engine and the Overkill Policy — **[fusion logic implemented and wired; Branch 3 input still stubbed]**
+### 5.7 Central Decision Engine and the Overkill Policy — **[fusion logic implemented and wired; Branch 3 input now live]**
 
 | Branch 1 | Branch 2 | Branch 3 (session) | Action |
 |---|---|---|---|
@@ -125,7 +147,7 @@ Stand up a network-isolated vulnerable lab (DVWA/WebGoat in Docker); drive it wi
 | `normal` | Normal | Anomalous sequence | **HOLD the whole session** (extended Overkill), may block the entire session |
 | `normal` | Normal | Normal | **ALLOW** |
 
-`deploy/routers/detect.py:fuse_decision` implements this matrix for real, including Branch-3 session escalation taking precedence when available, and graceful degradation (e.g. `UNKNOWN` if Branch 1 itself is unavailable). It is exercised end-to-end today, but since `deploy/routers/branch3.py` still always returns `not_ready` (Section 10), the live system currently only ever resolves via the first three rows of the table — the Branch-3 escalation path is implemented but dormant until Branch 3 is wired in.
+`deploy/routers/detect.py:fuse_decision` implements this matrix for real, including Branch-3 session escalation taking precedence when available, and graceful degradation (e.g. `UNKNOWN` if Branch 1 itself is unavailable). `deploy/routers/branch3.py` now loads a real, calibrated `SessionCorrelator` (Section 5.6) instead of the earlier `not_ready` stub, so the escalation path is live. One caveat: `/detect` (single-query endpoint) still calls it with just that one query as a 1-element "session" — with no cross-request Session Store (Section 5.6.1) to accumulate real multi-query context there, Branch 3's correlation value is only fully exercised via the dedicated `POST /branch3/session` endpoint, which already accepts a full session's query list in one call.
 
 ### 5.8 Continual Learning — **[implemented and evaluated as a full offline experiment]**
 
@@ -180,7 +202,7 @@ Structurally distinctive unseen attacks (`union_based`, `error_based`, `time_bli
 
 ## 9. Evaluation Protocol
 
-Branch 1: per-class Precision/Recall/F1, F1-macro (headline metric, chosen because Accuracy would be distorted by the underlying class imbalance), confusion matrix, per-class ROC. Branch 2: FPR and detection rate at a fixed operating threshold, AUC, average precision, and a 21-point threshold sweep to support a deployment-time threshold choice. Both: p50 inference latency and on-disk model size as deployment-relevant secondary metrics. All experiments deterministic (seed = 42); hardware: RTX 3050 (6 GB). Branch 3: session-level F1-macro/confusion matrix over the 4-way label (benign/boolean_blind/time_blind/query_splitting) plus the "hard mode" comparison against a Branch-1 variant blind to `boolean_blind`, per the two-tier label schema (Section 5.6) — done for Cách A; repeating this protocol on Cách B data, once collected, is the natural next evaluation.
+Branch 1: per-class Precision/Recall/F1, F1-macro (headline metric, chosen because Accuracy would be distorted by the underlying class imbalance), confusion matrix, per-class ROC. Branch 2: FPR and detection rate at a fixed operating threshold, AUC, average precision, and a 21-point threshold sweep to support a deployment-time threshold choice. Both: p50 inference latency and on-disk model size as deployment-relevant secondary metrics. All experiments deterministic (seed = 42); hardware: RTX 3050 (6 GB). Branch 3 / Session Correlator: FPR (benign) and per-class detection rate, reported for content-only, behavior-only, and combined configurations (the ablation is mandatory — see `report/plan/data_contract.md` §4.2 for why), plus the zero-day content-check ablation against a Branch-1 variant blind to `boolean_blind` (Section 5.6) — done for Cách A; repeating this protocol on Cách B data, once collected, is the natural next evaluation.
 
 ## 10. Current Implementation Status
 
@@ -191,20 +213,19 @@ Branch 1: per-class Precision/Recall/F1, F1-macro (headline metric, chosen becau
 | Branch 2 (query-level anomaly) | ✅ Implemented, trained, evaluated (OCSVM AUC = 0.90, FPR = 0.3%) |
 | Zero-day leave-one-out study | ✅ Complete (Section 8) |
 | Illustrative query→verdict demo | ✅ `train/notebooks/demo_detect.ipynb`, 19/20 correct on a random sample |
-| **Branch 3 (session-level sequence model)** | ✅ Implemented, trained, evaluated **offline** — GRU, F1-macro = 1.0 on both standard and "hard mode" held-out sessions (Section 5.6). Cách A only (real bisection attack against a real self-hosted demo DB); Cách B (real `sqlmap` + Dockerized DVWA/WebGoat) not started. Small (280-session), self-generated test set — a strong proof-of-concept, not yet a generalization claim |
-| **Central Decision Engine (fusion logic)** | ✅ Implemented and wired (`deploy/routers/detect.py:fuse_decision`) — real, not conceptual; Branch-3 escalation path exists but is dormant while Branch 3's router is stubbed |
+| **Branch 3 / Session Correlator** | ✅ Implemented, calibrated, evaluated, and **wired into the live API** — not a trained model (re-uses Branch 1 + Branch 2 as-is, three calibrated thresholds); FPR=0.0, detection rate 0.971-1.0 across `boolean_blind`/`time_blind`/`query_splitting` on a disjoint 280-session TEST split (Section 5.6). Superseded an earlier GRU design whose F1=1.0 result was likely inflated by two now-fixed evaluation bugs (`report/plan/data_contract.md` §4.2). Cách A only (real bisection attack against a real self-hosted demo DB); Cách B (real `sqlmap` + Dockerized DVWA/WebGoat) not started — near-perfect numbers reflect that, not generalization to novel evasive traffic |
+| **Central Decision Engine (fusion logic)** | ✅ Implemented and wired (`deploy/routers/detect.py:fuse_decision`) — real, not conceptual; Branch-3 escalation path is live via `POST /branch3/session`, and via `/detect` for the degenerate 1-query case (no cross-request Session Store yet — Section 5.6.1) |
 | **Continual Learning** (drift, review queue, retrain gate, versioning) | ✅ Implemented and evaluated as a full offline experiment (Section 5.8) — 198 tests passing across `src/continual_learning/`, `src/monitoring/drift.py`, `src/decision/queue.py`. Labelling simulated; traffic is a replay, not live production traffic |
-| Live API: Branch 3 serving (`deploy/routers/branch3.py`) | ⛔ Explicit stub — always returns `not_ready`, not yet loading the trained model via the registry |
 | Live API: Admin overkill queue (`deploy/routers/admin.py`) | ⛔ Explicit stub — empty queue, no persistence, despite the real tested `src/decision/queue.py` existing |
 | Live API: Drift/monitor dashboard (`deploy/routers/monitor.py`) | ⛔ Mock data — deterministic fake series, not reading the real `src/monitoring/drift.py` |
-| Production Session Store (TTL/eviction, Redis) | ⛔ Not started — needed to serve Branch 3 live across multiple requests; not needed for the offline training pipeline above |
+| Production Session Store (TTL/eviction, Redis) | ⛔ Not started — needed to accumulate a session incrementally across multiple, separate `/detect` calls over time; NOT needed for `POST /branch3/session` (already accepts a full query list) or the offline calibration pipeline |
 | Adversarial robustness evaluation (WAF-A-MoLE) | ⛔ Not run — all current results are on clean test splits; treat F1/AUC figures as an upper bound, not evidence of evasion-robustness |
 
 ## 11. Expected Contributions
 
 1. A multi-branch SQLi detector at the database proxy, combining supervised multi-class classification and benign-only anomaly detection under one decision policy, evaluated on a combined public dataset with a documented, measured account of the label-noise problems found during construction.
 2. A leave-one-out zero-day study that quantifies — rather than assumes — how far query-level detection generalizes to attack categories it has never seen, and identifies exactly which category (`boolean_blind`) query-level detection cannot cover.
-3. A session-level sequence model addressing a gap not covered by the surveyed related work — no reviewed source models inter-query relationships within a session for SQLi specifically — trained and evaluated (offline, Cách A) directly against the failure mode Section 8 measures, reaching F1-macro = 1.0 on held-out sessions including a deliberately adversarial "hard mode" evaluation.
+3. A session-level detection mechanism (Session Correlator) addressing a gap not covered by the surveyed related work — no reviewed source models inter-query relationships within a session for SQLi specifically — plus a methodological finding worth reporting on its own: a plausible-looking GRU sequence-model design over per-step classifier probabilities was built, reached a suspicious F1=1.0, and was diagnosed (via a concrete information-bottleneck measurement, a live-decision-engine reality check, and two real evaluation-pipeline bugs) to not actually be exercising the session signal it claimed to — replaced by a simpler, fully-ablated mechanism with honest held-out results (FPR=0.0, DR 0.971-1.0) and a stated zero-day limitation. Full account: `report/plan/data_contract.md` §4.2.
 4. A continual-learning loop evaluated end-to-end (offline replay), with a considered negative result on drift monitoring (misses a rare new class) contrasted against a review queue that catches it, and a measured demonstration that confirmed-pool balancing — not just more data — is what earns safe model promotion.
 5. (Planned) A self-collected, two-tier-labeled session dataset built from real `sqlmap` traffic against a Dockerized vulnerable lab (Cách B), to compare against the current real-bisection-but-self-hosted Cách A data — itself a contribution independent of the modeling work, if completed.
 
@@ -214,9 +235,9 @@ Branch 1: per-class Precision/Recall/F1, F1-macro (headline metric, chosen becau
 
 | Date | Milestone |
 |---|---|
-| 31 Jul 2026, 23:59 | RIVF 2026 paper submission (EDAS) |
+| 30 Aug 2026, 23:59 | RIVF 2026 paper submission (EDAS) — moved from the original 31 Jul |
 | 15 Oct 2026 | RIVF results notification |
-| 11 Nov 2026 | RIVF camera-ready deadline — Branch 3 offline results already exist (Section 5.6); decide whether to upgrade the camera-ready from framing (A) to include them, and whether Cách B data collection is worth attempting before this date |
+| 11 Nov 2026 | RIVF camera-ready deadline — Branch 3 / Session Correlator real, held-out results already exist (Section 5.6); decide whether Cách B data collection is worth attempting before this date |
 | 18–20 Dec 2026 | RIVF 2026 conference, VinUniversity, Hanoi |
 
 **Internal project milestones:**
@@ -224,11 +245,11 @@ Branch 1: per-class Precision/Recall/F1, F1-macro (headline metric, chosen becau
 | Date | Milestone |
 |---|---|
 | 25 Jul 2026 | Branch 1 + Branch 2 code, metrics, model, and course report (Version 1) frozen |
-| 26 Jul 2026 | Buffer day: polish metrics/figures specifically for the conference-facing report (Version 2) — no new code |
-| 31 Jul 2026 | RIVF paper submitted (see `report/conf/outline.md`'s day-by-day plan for the paper-writing critical path) |
-| 31 Dec 2026 | **Full source code deadline** — Branch 3, the integrated system (`deploy/` API, central decision engine, Streamlit demo), Continual Learning, and Concept Drift monitoring, i.e. everything marked ⛔ in Section 10. Far out relative to today, but a hard deadline, not an open-ended aspiration. |
+| 7 Aug 2026 | Branch 3 redesigned (GRU → Session Correlator), calibrated, wired into the live API, real held-out results produced (`report/plan/data_contract.md` §4.2) |
+| 30 Aug 2026 | RIVF paper submitted (see `report/conf/outline.md`'s day-by-day plan for the paper-writing critical path; dates in that plan predate the deadline move and are kept as historical record) |
+| 31 Dec 2026 | **Full source code deadline** — the remaining integrated system pieces (Admin/monitor routers, production Session Store, Streamlit demo), i.e. everything still marked ⛔ in Section 10. Far out relative to today, but a hard deadline, not an open-ended aspiration. |
 
-Between 31 Jul and 11 Nov, the priority order for the remaining ⛔ items (Section 10) is: (1) wire Branch 3's trained model into `deploy/routers/branch3.py` and the Admin/monitor routers into their real `src/` counterparts — the model and the loop already exist, this is integration work, not new research; (2) attempt Cách B (Docker lab + `sqlmap`) if time allows, to validate Branch 3 beyond its self-hosted Cách A data; (3) a production Session Store and adversarial (WAF-A-MoLE) evaluation, which have no external deadline pressure before 31 Dec.
+Priority order for the remaining ⛔ items (Section 10): (1) attempt Cách B (Docker lab + `sqlmap`) if time allows, to validate the Session Correlator beyond its self-hosted Cách A data; (2) wire the Admin/monitor routers into their real `src/` counterparts — the loop already exists, this is integration work, not new research; (3) a production Session Store (for incremental cross-request accumulation, Section 5.6.1) and adversarial (WAF-A-MoLE) evaluation, which have no external deadline pressure before 31 Dec.
 
 ## 13. Team and Roles
 
@@ -242,8 +263,9 @@ Roles as of the most recent internal planning revision (24 Jul 2026); see [`repo
 
 ## 14. Risks and Mitigations
 
-- **Branch 3 generalization risk:** the model exists and scores F1-macro = 1.0 offline, but only on a small, self-generated (Cách A) test set — this is a proof-of-concept result, not yet evidence it generalizes to real, independently-captured attacker traffic. Mitigation: state the result with its caveats plainly wherever it's cited (Section 5.6); treat Cách B collection as the validation step, not as optional polish.
-- **Integration risk:** Branch 3, the review queue, and drift monitoring are all validated offline but not yet wired into the live `deploy/` API (Section 10) — three routers are still explicit stubs. Mitigation: this is scoped, bounded integration work against components that already work and are already tested, not open research risk.
+- **Branch 3 / Session Correlator generalization risk:** FPR=0.0, detection rate 0.971-1.0, but only on a small, self-generated (Cách A) test set — this demonstrates the mechanism works as designed, not yet evidence it generalizes to real, independently-captured attacker traffic. Mitigation: state the result with its caveats plainly wherever it's cited (Section 5.6); treat Cách B collection as the validation step, not as optional polish.
+- **Architecture-choice risk (resolved, kept for the record):** an earlier GRU sequence-model design for Branch 3 reported F1-macro = 1.0 and was nearly reported as final before a follow-up diagnostic session found the result was very likely inflated by two real bugs in its own evaluation pipeline, independent of a separate design flaw (an information bottleneck in its input features). Mitigation applied: the GRU was replaced with a simpler, fully-ablated mechanism (Section 5.6); the incident and both bugs are documented in full (`report/plan/data_contract.md` §4.2) rather than silently corrected, since the same failure mode (a suspiciously perfect score not challenged with ablations) had already occurred twice elsewhere in this project (Branch 1's `stacked` class; Section 7).
+- **Integration risk:** the review queue and drift monitoring are validated offline but not yet wired into the live `deploy/` API (Section 10) — two routers (`admin.py`, `monitor.py`) are still explicit stubs; Branch 3 is no longer in this category (Section 5.6). Mitigation: this is scoped, bounded integration work against components that already work and are already tested, not open research risk.
 - **Dataset licensing (D1):** unresolved provenance. Mitigation: treat the combined dataset as provenance-unclear in any public release until resolved; do not present it as cleanly MIT/CC0-licensed.
 - **Adversarial robustness gap:** no evaluation yet against deliberately evasive input (e.g. WAF-A-MoLE-generated). Mitigation: explicitly flagged as a limitation in the paper rather than implied to be solved; scheduled as future work, not urgent relative to Branch 3.
 - **Label-noise ceiling on reported F1:** the true, clean-label ceiling for Branch 1's task is unknown given the measured noise in `boolean_blind` and the original D7 `normal` pool. Mitigation: both noise sources are reported as measured limitations rather than omitted.

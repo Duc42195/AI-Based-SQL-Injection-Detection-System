@@ -39,8 +39,12 @@ import numpy as np
 import pandas as pd
 
 from src.models.branch2_anomaly import AnomalyDetector
-from src.models.branch3_features import BRANCH1_LABEL_ORDER, branch1_prob_columns, branch1_probabilities
-from src.preprocessing.statistical_features import extract_statistical_features
+from src.models.branch3_features import (
+    BRANCH1_LABEL_ORDER,
+    branch1_prob_columns,
+    branch1_probabilities,
+    branch2_scores_for_texts,
+)
 from src.utils import Config, get_logger, load_config
 from attack_simulator import (
     generate_synthetic_user_pool,
@@ -66,21 +70,6 @@ def _load_branch2(models_dir: Path, version: str) -> AnomalyDetector:
     detector = AnomalyDetector.load(models_dir / version)
     logger.info("Loaded Branch 2 model from %s", models_dir / version)
     return detector
-
-
-def _branch2_scores(texts: list[str], detector: AnomalyDetector, feature_names: list[str]) -> np.ndarray:
-    """Run Branch 2 inference, returning a (n,) anomaly-score vector."""
-    X = np.array(
-        [extract_statistical_features(t).as_list() for t in texts], dtype=np.float64
-    )
-    # extract_statistical_features always returns [length, special_char_ratio,
-    # sql_keyword_count, entropy] in that order, matching the default feature
-    # set — reorder only if config specifies a different order.
-    default_order = ["length", "special_char_ratio", "sql_keyword_count", "entropy"]
-    if feature_names != default_order:
-        idx = [default_order.index(f) for f in feature_names]
-        X = X[:, idx]
-    return detector.score(X)
 
 
 _TOKEN_BOUNDARY_RE = re.compile(r"\s+|(?<=[(),;])|(?=[(),;])")
@@ -257,7 +246,7 @@ def main() -> None:
     logger.info("Running Branch 1 + Branch 2 inference on every step ...")
     texts = [r["query_canonical"] for r in rows]
     probs = branch1_probabilities(texts, vectorizer, clf)
-    scores = _branch2_scores(texts, detector, feature_names)
+    scores = branch2_scores_for_texts(texts, detector, feature_names)
 
     prob_cols = branch1_prob_columns()
     for i, r in enumerate(rows):
