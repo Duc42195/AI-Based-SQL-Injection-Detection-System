@@ -46,7 +46,11 @@ def main() -> None:
     data_path = processed_dir / "branch3_sessions_cach_a.csv"
     if not data_path.exists():
         raise FileNotFoundError(f"{data_path} not found. Run train/build_session_dataset.py first.")
-    df = pd.read_csv(data_path)
+    # keep_default_na=False: query_canonical can legitimately contain pandas'
+    # default NA sentinel strings (e.g. a fragment literally reading "null" in
+    # a query_splitting session) — found when calibrate() started reading
+    # query text and crashed on a silently-NaN'd row.
+    df = pd.read_csv(data_path, keep_default_na=False, na_values=[])
 
     class_names = class_names_from_config(cfg)
     train_df, test_df = df[df["split"] == "train"], df[df["split"] == "test"]
@@ -56,6 +60,10 @@ def main() -> None:
 
     vectorizer, clf = _load_branch1(models_dir, cfg.get_path("branch1_supervised.active_version", "branch1_v1"))
     b2_detector = _load_branch2(models_dir, cfg.get_path("branch2_anomaly.active_version", "branch2_v1"))
+    # Placeholder pre-calibration only — calibrate() below overwrites this with
+    # a session-level value picked from TRAIN data (see SessionCorrelator.calibrate
+    # docstring: benign session content_prob tops out at 0.172, weak boolean_blind
+    # sessions concatenate to 0.45-0.46, so this ends up well below B1's single-query 0.5).
     content_threshold = float(cfg.get_path("branch1_supervised.decision_threshold", 0.5))
     percentile = float(cfg.get_path("branch3_session.aggregate.b2_benign_score_percentile", 0.90))
     max_decode = int(cfg.get_path("preprocessing.max_decode_iterations", 3))
@@ -66,6 +74,8 @@ def main() -> None:
         max_decode_iterations=max_decode,
     )
     correlator.calibrate(train_sessions, percentile=percentile)
+    logger.info("Calibrated content_threshold=%.4f (was %.4f pre-calibration)",
+                correlator.content_threshold, content_threshold)
 
     metrics = evaluate_correlator_sessions(correlator, test_sessions, class_names)
     logger.info("=== Content-only ===  FPR=%s  DR=%s", metrics["content_only"]["fpr_benign"], metrics["content_only"]["detection_rate"])

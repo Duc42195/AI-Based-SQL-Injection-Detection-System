@@ -7,24 +7,33 @@ training, no weights of its own, only two calibrated scalar thresholds.
 
 Two branches, run independently and OR'd together:
   - **Content check:** concatenate the session's raw query text (whole
-    strings, not truncated) and re-score with Branch 1's existing classifier.
+    strings, not truncated) and re-score with Branch 1's existing classifier,
+    against a `content_threshold` calibrated separately for this session-level
+    check (see `calibrate()`'s docstring) — NOT Branch 1's single-query
+    `decision_threshold` (0.5), which was only a placeholder before this
+    calibration was added.
     Validated empirically (Experiment A2, this project's diagnostic session):
     a single `boolean_blind` bisection probe can sit just under Branch 1's
-    0.5 decision threshold (measured: 0.459 at step 1), but concatenating
+    0.5 single-query threshold (measured: 0.459 at step 1), but concatenating
     more of the session's real steps pushes the score up (0.593 at 10 steps,
     0.666 at 32) — because TF-IDF is a *relative*-frequency representation
     and bisection repeats near-identical SQL structure across steps, so
     concatenation reinforces the attack n-grams rather than diluting them
     with unrelated content. No retraining needed or attempted.
     **Precise mechanism (checked, not assumed):** concatenating only the WEAK
-    steps together does NOT cross the threshold on its own (a session's
-    first 5 length-bisection steps, each 0.44-0.47 alone, stay at 0.45-0.46
-    concatenated among themselves). The threshold gets crossed only once
-    growing `k` mixes in the STRONG character-extraction steps (each already
-    0.66-0.70 alone) — the average shifts because strong evidence blends in,
-    not because many weak steps reinforce each other. In isolation, this
-    check would NOT rescue a session that stopped after length-bisection and
-    never reached character extraction.
+    steps together does NOT cross Branch 1's 0.5 single-query threshold on
+    its own (a session's first 5 length-bisection steps, each 0.44-0.47
+    alone, stay at 0.45-0.46 concatenated among themselves) — that threshold
+    only gets crossed once growing `k` mixes in the STRONG
+    character-extraction steps (each already 0.66-0.70 alone). However,
+    benign TEST sessions' own concatenated content probability tops out at
+    0.172 (Experiment D1) — a wide margin below the weak-attack
+    concatenation's 0.45-0.46 — so a session-level `content_threshold`
+    calibrated in that gap (comes out ~0.34-0.38 depending on the TRAIN
+    split) lets the content check catch the weak-only case too, at no
+    measured FPR cost. This threshold is *not* the same thing as retraining
+    Branch 1 to recognize weak signal; it only changes what counts as
+    "enough" attack probability for a whole session's concatenated text.
   - **Behavior check:** aggregate Branch 2's per-query anomaly scores across
     the session (mean, fraction above a benign-calibrated threshold).
     Branch 2 is called exactly as trained — per single query, in its
@@ -32,19 +41,20 @@ Two branches, run independently and OR'd together:
     afterward, so there is no train/inference distribution mismatch here at
     all (unlike the content check, which does venture outside Branch 1's
     single-query training length but is empirically shown not to degrade).
-    **This is exactly what covers the content check's gap above:** taking
-    ONLY those same 5 weak-per-content-check steps and running the behavior
-    check alone gives `mean_score = 2.171` against a calibrated
-    `mean_threshold = -4.465` — fires clearly. Branch 2 scores structural
-    shape (length, special-char ratio, keyword count, entropy), not attack
-    type, so a length-bisection query's nested `OR`/subquery syntax reads as
-    anomalous regardless of whether Branch 1's classifier is confident about
-    the specific attack class. This is *why* the two checks are OR'd rather
-    than relying on either alone — each covers the other's blind spot. The
-    one gap genuinely not covered: an attacker evading BOTH simultaneously
-    (lexically benign-looking AND structurally benign-shaped) — a real,
-    acknowledged limitation of reusing only Branch 1 + Branch 2's existing
-    signals, not something fixable by reconfiguring this class.
+    **Independently catches the same weak-step case as the (now-calibrated)
+    content check above:** taking ONLY those same 5 weak-per-content-check
+    steps and running the behavior check alone gives `mean_score = 2.171`
+    against a calibrated `mean_threshold = -4.465` — fires clearly. Branch 2
+    scores structural shape (length, special-char ratio, keyword count,
+    entropy), not attack type, so a length-bisection query's nested
+    `OR`/subquery syntax reads as anomalous regardless of Branch 1's
+    confidence about the specific attack class. Both checks now cover this
+    particular case on their own — intentional redundancy from OR'ing them,
+    not a single point of failure. The one gap genuinely not covered: an
+    attacker evading BOTH simultaneously (lexically benign-looking AND
+    structurally benign-shaped) — a real, acknowledged limitation of reusing
+    only Branch 1 + Branch 2's existing signals, not something fixable by
+    reconfiguring this class.
     Validated empirically (Experiment B): benign vs. attack separates with
     AUC 0.998-1.0 using only these two aggregate statistics.
 
@@ -108,10 +118,13 @@ class SessionCorrelator:
             b1_clf: Branch 1's fitted classifier.
             b2_detector: A fitted ``src.models.branch2_anomaly.AnomalyDetector``.
             content_threshold: Attack-probability cutoff for the content
-                check on concatenated session text. Defaults to
-                ``branch1_supervised.decision_threshold`` (reused, not a new
-                threshold) so the content check fires under exactly the same
-                rule a single query would.
+                check on concatenated session text. The constructor default
+                is ``branch1_supervised.decision_threshold`` (reused as a
+                placeholder pre-calibration); ``calibrate()`` overwrites it
+                with a session-level value picked from TRAIN data, which
+                empirically comes out lower than 0.5 (see ``calibrate()``'s
+                docstring) — a session's concatenated text is held to a
+                different, separately-justified cutoff than a single query.
             per_query_threshold: Branch-2 score above which one query counts
                 toward ``fraction_above`` — calibrated from benign per-query
                 scores in ``calibrate()``.
@@ -150,7 +163,7 @@ class SessionCorrelator:
         train_sessions: list[tuple[list[str], list[float], int]],
         percentile: float = 0.90,
     ) -> None:
-        """Pick the 3 behavior thresholds from labeled TRAIN sessions only.
+        """Pick the content + 3 behavior thresholds from labeled TRAIN sessions only.
 
         Args:
             train_sessions: List of ``(query_texts, branch2_scores, label)``
@@ -160,21 +173,44 @@ class SessionCorrelator:
             percentile: Percentile of benign per-query Branch-2 scores used
                 as ``per_query_threshold`` (a query "counts as elevated" if
                 its score exceeds this many benign queries' scores).
+
+        Also calibrates ``self.content_threshold`` on the same TRAIN split,
+        replacing the constructor's default (Branch 1's single-query
+        ``decision_threshold``, reused as a placeholder). Found via
+        diagnostic experiments after the initial merge: benign TEST
+        sessions' concatenated content probability tops out at 0.172, while
+        a `boolean_blind` session containing ONLY its weak length-bisection
+        steps concatenates to 0.45-0.46 — comfortably below Branch 1's 0.5
+        single-query threshold, so the content check missed exactly the
+        sessions the behavior check was relied on to catch alone. A
+        session-level threshold calibrated in this gap lets the content
+        check independently catch that case too, at no measured FPR cost
+        (see ``report/plan/data_contract.md`` §4.2).
         """
         from src.models.branch3_features import branch1_probabilities
+        from src.preprocessing.canonicalize import canonicalize
 
         benign_scores = np.concatenate(
             [scores for _, scores, label in train_sessions if label == 0]
         )
         self.per_query_threshold = float(np.quantile(benign_scores, percentile))
 
-        mean_vals, frac_vals, labels = [], [], []
-        for _, scores, label in train_sessions:
+        mean_vals, frac_vals, content_vals, labels = [], [], [], []
+        for texts, scores, label in train_sessions:
             scores_arr = np.asarray(scores, dtype=np.float64)
             mean_vals.append(scores_arr.mean())
             frac_vals.append(float((scores_arr > self.per_query_threshold).mean()))
+
+            canonical_texts = [canonicalize(t, self.max_decode_iterations).query_canonical for t in texts]
+            concat_text = " ".join(canonical_texts)
+            probs = branch1_probabilities([concat_text], self.b1_vectorizer, self.b1_clf)[0]
+            content_vals.append(1.0 - probs[0])  # column 0 = "normal"
+
             labels.append(label)
-        mean_vals, frac_vals, labels = np.array(mean_vals), np.array(frac_vals), np.array(labels)
+        mean_vals = np.array(mean_vals)
+        frac_vals = np.array(frac_vals)
+        content_vals = np.array(content_vals)
+        labels = np.array(labels)
 
         def _best_threshold(values: np.ndarray) -> float:
             """Max (TPR - FPR) over observed values — simple 1-D threshold search."""
@@ -188,9 +224,11 @@ class SessionCorrelator:
 
         self.mean_threshold = _best_threshold(mean_vals)
         self.fraction_threshold = _best_threshold(frac_vals)
+        self.content_threshold = _best_threshold(content_vals)
         logger.info(
-            "Calibrated SessionCorrelator: per_query_threshold=%.4f mean_threshold=%.4f fraction_threshold=%.4f",
-            self.per_query_threshold, self.mean_threshold, self.fraction_threshold,
+            "Calibrated SessionCorrelator: content_threshold=%.4f per_query_threshold=%.4f "
+            "mean_threshold=%.4f fraction_threshold=%.4f",
+            self.content_threshold, self.per_query_threshold, self.mean_threshold, self.fraction_threshold,
         )
 
     def score(self, texts: list[str], branch2_scores: list[float] | None = None) -> dict:

@@ -47,10 +47,18 @@ def main() -> None:
     models_dir = Path(cfg.get_path("paths.models_dir", "models"))
     processed_dir = Path(cfg.get_path("paths.data_processed", "data/processed"))
     reports_dir = Path(cfg.get_path("paths.reports_dir", "report/metrics"))
-    content_threshold = float(cfg.get_path("branch1_supervised.decision_threshold", 0.5))
+    # Use the session-level content_threshold actually calibrated for
+    # SessionCorrelator (train/calibrate_branch3.py), not B1's single-query
+    # decision_threshold — this ablation re-checks the SAME threshold the
+    # live content check applies, just with a zero-day classifier swapped in.
+    with (models_dir / "branch3_v2" / "metadata.json").open("r", encoding="utf-8") as f:
+        content_threshold = float(json.load(f)["content_threshold"])
 
     data_path = processed_dir / "branch3_sessions_cach_a.csv"
-    df = pd.read_csv(data_path)
+    # keep_default_na=False: query_canonical can legitimately contain pandas'
+    # default NA sentinel strings (e.g. a fragment literally reading "null" in
+    # a query_splitting session) — see train/calibrate_branch3.py for the same fix.
+    df = pd.read_csv(data_path, keep_default_na=False, na_values=[])
     class_names = class_names_from_config(cfg)
     test_df = df[(df["split"] == "test") & (df["session_label"] == 1)]  # boolean_blind only
     logger.info("Re-scoring %d boolean_blind TEST sessions with the zero-day content model",

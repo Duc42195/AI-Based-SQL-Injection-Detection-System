@@ -21,7 +21,7 @@
 An AI-based **SQL Injection** detection system, deployed at the Database Proxy layer. **Three-branch** architecture (details in [README.md](README.md)):
 - **Branch 1** — Supervised multi-class classifier (Normal + SQLi variants).
 - **Branch 2** — Anomaly detection (trained on benign traffic only).
-- **Branch 3** — Session-level sequence model (main contribution).
+- **Branch 3 / Session Correlator** — session-level detection (main contribution). Not a trained model: re-uses Branch 1 + Branch 2 as-is and correlates their signals across a session (content check + behavior check, OR'd). See `report/plan/data_contract.md` §4.2 for why this replaced an earlier GRU sequence-model design.
 
 Tight deadline (14 days) → **prioritize an end-to-end MVP** over perfecting every individual part.
 
@@ -196,6 +196,13 @@ data/  models/           # DO NOT commit contents (only .gitkeep)
 ---
 
 ## Branch 3 (session-level) — how to build this data correctly
+
+> **Note:** the mechanism that *consumes* this session data changed after this section was
+> written — Branch 3 is now `SessionCorrelator` (content check + behavior check over Branch
+> 1/Branch 2's existing signals, no gradient training), not a GRU. The data-generation lessons
+> below (bisection must be executed for real, memorization trap, per-query blocking reachability)
+> still apply unchanged — only the model architecture that reads this data was replaced. Full
+> story: `report/plan/data_contract.md` §4.2.
 
 Session-level attacks (boolean-blind / time-blind) have a real, executable algorithm behind them — bisection search, ~7 requests per character (full mechanism: `report/plan/data_contract.md` Section 4.0). Learned the hard way, more than once, building this branch:
 

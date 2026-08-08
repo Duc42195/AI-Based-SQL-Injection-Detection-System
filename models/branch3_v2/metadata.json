@@ -1,6 +1,6 @@
 {
   "mechanism": "session_correlator",
-  "content_threshold": 0.5,
+  "content_threshold": 0.33832529251072563,
   "per_query_threshold": -4.532069,
   "mean_threshold": -4.465326,
   "fraction_threshold": 0.25,
