@@ -278,6 +278,12 @@ We evaluate the continual-learning loop --- drift monitoring, a review queue, an
 
 \textbf{Drift monitoring: a negative result, not a failure.} Five PSI-based signals were tracked against a reference window at a 0.2 alert threshold; none fired, including the closest (confidence on flagged traffic, peaking at 0.19). A new class at $\sim$1\% of overall traffic is invisible to distribution drift even at a $\sim$20$\times$ concentration among flagged queries. In this experiment, it is the \textbf{review queue}, not the drift monitor, that surfaces the novel class: of 21{,}934 flagged and reviewed queries (46.0\% pre-label acceptance rate), all 727 \texttt{stacked} occurrences were caught. We read this as evidence that drift monitoring and a review queue are complementary, not redundant --- one is suited to gradual population shift, the other to a rare new class.
 
+\begin{figure}[t]
+\centerline{\includegraphics[width=\columnwidth]{cl_drift_windows.png}}
+\caption{PSI drift signals across replay-stream windows; none cross the 0.2 alert threshold even as the new class enters.}
+\label{fig:cl-drift}
+\end{figure}
+
 \textbf{The validation gate.} \texttt{stacked} entering the label space is a \emph{major} version bump; the gate declines a same-scale comparison against a differently-labeled predecessor and promotes directly rather than reporting a number that would measure the benchmark, not the model. The subsequent \emph{minor}-bump decision --- three retrain candidates built from the same confirmed traffic but different pool compositions, compared against the champion re-evaluated on the updated validation set --- is summarized in Table~\ref{tab:cl}.
 
 % TODO (owner Bach, plan.csv Sprint 1 Day 1 "Data & Results Validity Audit"):
@@ -307,6 +313,12 @@ Starved rehearsal (1\% old) & 469    & 0.8315 & 0.1284 & REJECT \\
 Retraining on raw confirmed traffic \emph{degrades} the model: most flagged queries are benign false positives, so the naive pool skews toward \texttt{normal} and attack recall falls (\texttt{boolean\_blind} recall $-0.109$, \texttt{stacked} recall $-0.055$). Balancing the confirmed pool before retraining is what earns promotion, cutting FPR by \textbf{64\%} (0.0631~$\rightarrow$~0.0225) with no per-class regression. The starved-rehearsal arm is a deliberate negative control (only 1\% old data retained): it forgets \texttt{boolean\_blind} almost entirely ($-0.508$ recall) and is correctly rejected --- a gate that only ever approves would demonstrate nothing.
 
 \textbf{Ablation: is the gain from the class, or just from more data?} A control retrained on the same +254 rows drawn only from already-known classes reaches \textbf{0.000} recall on \texttt{stacked}, versus \textbf{0.726} for the candidate that actually saw the new class. The gain is attributable to learning the class, not to data volume; without this control the headline result would not stand on its own.
+
+\begin{figure}[t]
+\centerline{\includegraphics[width=\columnwidth]{cl_control_ablation.png}}
+\caption{Ablation control: recall on the \texttt{stacked} class with (0.726) vs.\ without (0.000) the class present in the +254-row retrain sample.}
+\label{fig:cl-ablation}
+\end{figure}
 
 \textbf{Shadow deployment.} Replaying the post-promotion traffic with the champion enforced and the candidate logged in parallel shows 98.85\% agreement, with the candidate allowing only 13 queries the champion would have blocked --- no unsafe divergence observed before promotion.
 
