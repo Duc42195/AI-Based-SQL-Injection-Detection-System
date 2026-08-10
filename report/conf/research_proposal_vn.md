@@ -46,9 +46,11 @@ SQL Injection (SQLi) là một trong những lỗ hổng web nguy hiểm và ph�
 |---|---|---|
 | **Nhánh 1** — Supervised đa lớp | Phân loại `normal` + 4 loại SQLi. Đã so sánh 4 kiến trúc, chọn **TF-IDF + Logistic Regression** (F1-macro tốt nhất/độ trễ/kích thước) | ✅ Đã train, đánh giá |
 | **Nhánh 2** — Anomaly detection | Chỉ học từ benign; 4 đặc trưng thống kê (độ dài, tỉ lệ ký tự đặc biệt, số từ khóa SQL, entropy). Chọn **One-Class SVM** | ✅ Đã train, đánh giá |
-| **Nhánh 3** — Session-level sequence model | Kiến trúc 2 tầng: Tầng 1 tái dùng embedding Nhánh 1; Tầng 2 là **GRU 1 lớp** trên `[embedding Nhánh 1 ⊕ điểm Nhánh 2]` mỗi bước, phân loại 4 lớp (benign/boolean_blind/time_blind/query_splitting) | ✅ **Đã train + đánh giá offline** — F1-macro = **1.0** trên tập test 280 session, kể cả ở chế độ "hard" (chấm bằng biến thể Nhánh 1 chưa từng thấy boolean_blind). Dữ liệu là tấn công bisection **thật** (thuật toán y hệt sqlmap) nhắm vào DB SQLite tự host thật — không phải template — nhưng vẫn là **Cách A**; **Cách B (sqlmap thật + DVWA/WebGoat qua Docker) chưa làm.** ⚠️ F1=1.0 tuyệt đối trên tập test nhỏ, tự sinh — là bằng chứng proof-of-concept mạnh, chưa phải bằng chứng tổng quát hóa |
+| **Nhánh 3 / Session Correlator** | **KHÔNG phải model có train** — tái dùng nguyên bộ phân loại Nhánh 1 + bộ dò bất thường Nhánh 2 đã train sẵn, OR 2 kiểm tra độc lập: *content check* (ghép toàn bộ text session, chấm lại bằng Nhánh 1, ngưỡng hiệu chỉnh riêng ~0.338) và *behavior check* (gộp điểm Nhánh 2 theo mean/tỉ lệ vượt ngưỡng). Đã **thay thế hoàn toàn thiết kế GRU trước đó** (xem dưới) | ✅ **Đã hiệu chỉnh + đánh giá + nối vào API thật**. Kết quả trên 280 session TEST tách biệt: FPR benign = 0/70, detection rate = 1.0 cho cả 3 lớp tấn công (boolean_blind/time_blind/query_splitting), đo riêng cho content-only/behavior-only/combined. Ablation zero-day: content check rơi về 0% detection khi chấm bằng biến thể Nhánh 1 chưa từng thấy boolean_blind — báo cáo trung thực như một giới hạn, không giấu. ⚠️ Vẫn là **Cách A** (tấn công bisection thật nhắm DB tự host, không phải Cách B sqlmap+DVWA thật); FPR=0/70 có độ tin cậy thống kê yếu (CI Wilson cho phép FPR thật tới ~4%) |
 
-**Bộ xử lý trung tâm (fuse_decision):** ✅ đã cài đặt thật trong `deploy/routers/detect.py`, không phải logic khái niệm — nhưng nhánh Nhánh 3 trong API (`deploy/routers/branch3.py`) **vẫn là stub**, luôn trả `not_ready`, nên đường leo thang session hiện chưa hoạt động trên hệ thống chạy thật.
+**Vì sao bỏ GRU (chẩn đoán 7/8):** đo trực tiếp thấy 2 bước bisection khác nhau có TF-IDF cosine similarity 0.961 nhưng xác suất sau classifier gần như giống hệt — output xác suất của Nhánh 1 làm mất tín hiệu nội dung phân biệt các bước. Ngoài ra: hệ thống chặn hầu hết session boolean_blind/time_blind thật ngay từ bước 1-2 (Nhánh 1 đã bắt được per-query) nên GRU hiếm khi có đủ bước để phát huy; và không có độ dài session cố định hợp lý (session thật có thể dài 2-1800 bước). Kết quả "F1=1.0" trước đó của GRU còn dính 2 bug thật trong pipeline train/eval (đã tìm ra, không nên trích dẫn lại). Code GRU vẫn giữ lại trong `src/models/branch3_session.py` (đánh dấu superseded), không xóa.
+
+**Bộ xử lý trung tâm (fuse_decision):** ✅ đã cài đặt thật trong `deploy/routers/detect.py` và **Nhánh 3 đã nối thật vào API** (`deploy/routers/branch3.py` load SessionCorrelator đã hiệu chỉnh, không còn trả `not_ready`). Lưu ý: endpoint `/detect` (từng query) chỉ gọi Nhánh 3 với **1 query duy nhất** mỗi lần — chưa có Session Store để tự gom nhiều request thành 1 session, nên cơ chế correlation chỉ thật sự phát huy khi có bên ngoài chủ động gọi `POST /branch3/session` với cả session đã gom sẵn.
 
 **Continual Learning + Concept Drift:** ✅ **đã cài đặt và chạy thực nghiệm offline đầy đủ** (`src/continual_learning/`, `src/monitoring/drift.py`, `src/decision/queue.py`, 198 test pass). Phát hiện chính: drift monitor **không** bắt được lớp mới hiếm (~1% traffic), nhưng review queue bắt được toàn bộ; cân bằng lại pool nhãn đã xác nhận trước khi retrain mới là điều giúp model được promote (F1 tăng, FPR giảm 64%); ablation xác nhận lợi ích đến từ việc học lớp mới, không chỉ từ có thêm dữ liệu. Gán nhãn **mô phỏng** (chưa phải người thật), traffic là **replay** dữ liệu cũ chứ không phải traffic production thật. Riêng 3 router API — Admin queue, drift dashboard, Nhánh 3 serving — **vẫn là stub/mock**, chưa nối vào các module `src/` thật ở trên.
 
@@ -97,11 +99,11 @@ Dữ liệu đã xử lý public trên Hugging Face (`Jason-42195/VNU-SQLi-Detec
 | Nhánh 1 + Nhánh 2 | ✅ Xong, đã đánh giá |
 | Nghiên cứu zero-day | ✅ Xong |
 | Demo query→verdict | ✅ `demo_detect.ipynb` (19/20 đúng) |
-| **Nhánh 3 (GRU session-level)** | ✅ **Đã train + đánh giá offline** (F1-macro=1.0, Cách A) — xem mục 4. Cách B chưa làm; tập test còn nhỏ/tự sinh |
-| **Bộ xử lý trung tâm (fuse_decision)** | ✅ Đã cài đặt và nối thật trong `deploy/routers/detect.py` — đường leo thang Nhánh 3 có sẵn nhưng "ngủ" vì router Nhánh 3 còn stub |
+| **Nhánh 3 / Session Correlator** | ✅ **Đã hiệu chỉnh + đánh giá + nối vào API thật** (FPR=0/70, DR=1.0, Cách A) — xem mục 4. Cách B chưa làm; tập test còn nhỏ/tự sinh; ngưỡng content_threshold hạ thấp (0.338) chưa test với benign traffic đa dạng thật |
+| **Bộ xử lý trung tâm (fuse_decision)** | ✅ Đã cài đặt và nối thật trong `deploy/routers/detect.py`, kể cả đường leo thang Nhánh 3 — nhưng `/detect` (per-query) chỉ gọi Nhánh 3 với 1 query/lần, chưa có Session Store để tự gom session |
 | **Continual Learning / Concept Drift** | ✅ Đã cài đặt + chạy thực nghiệm offline đầy đủ (198 test pass) — xem mục 4. Gán nhãn còn mô phỏng, traffic là replay |
-| API sống: phục vụ Nhánh 3, hàng đợi Admin, dashboard drift | ⛔ Cả 3 router này vẫn là stub/mock, chưa nối vào các module `src/` đã có ở trên |
-| Session Store production (Redis/TTL) | ⛔ Chưa bắt đầu — chỉ cần cho việc phục vụ Nhánh 3 trên hệ thống sống, không cần cho pipeline train offline |
+| API sống: hàng đợi Admin, dashboard drift | ⛔ 2 router này vẫn là stub/mock, chưa nối vào các module `src/` đã có ở trên |
+| Session Store production (Redis/TTL) | ⛔ Chưa bắt đầu — cần để tự động gom nhiều request `/detect` thành 1 session cho Nhánh 3; `POST /branch3/session` (nhận cả session 1 lần) đã sống, không cần Session Store |
 | Đánh giá adversarial (WAF-A-MoLE) | ⛔ Chưa chạy — số liệu hiện tại là cận trên, chưa chứng minh độ bền vững trước né tránh |
 
 ## 8. Lộ trình / mốc thời gian
@@ -120,8 +122,9 @@ Dữ liệu đã xử lý public trên Hugging Face (`Jason-42195/VNU-SQLi-Detec
 
 ## 10. Rủi ro chính
 
-- **Nhánh 3 mới chỉ chứng minh được ở quy mô nhỏ** — F1-macro=1.0 nhưng trên tập test 280 session tự sinh (Cách A); chưa có bằng chứng tổng quát hóa với traffic thật độc lập (Cách B). Cần nêu rõ giới hạn này ở bất kỳ đâu trích dẫn kết quả.
-- **Rủi ro tích hợp:** Nhánh 3, hàng đợi review, và drift monitoring đều đã kiểm chứng offline nhưng 3 router API tương ứng vẫn là stub — đây là việc tích hợp có phạm vi rõ ràng trên các thành phần đã chạy tốt, không phải rủi ro nghiên cứu mở.
+- **Nhánh 3 mới chỉ chứng minh được ở quy mô nhỏ** — FPR=0/70, DR=1.0 nhưng trên 280 session tự sinh (Cách A); chưa có bằng chứng tổng quát hóa với traffic thật độc lập (Cách B), và ngưỡng content_threshold hạ thấp chưa test với benign traffic đa dạng thật. Cần nêu rõ giới hạn này ở bất kỳ đâu trích dẫn kết quả.
+- **Gap vận hành:** `/detect` (per-query) chưa tự động gom session — cơ chế correlation chỉ phát huy khi có thành phần bên ngoài chủ động gọi `POST /branch3/session` với session đã gom sẵn; cần Session Store (Redis/TTL) mới tự động hóa được trong luồng chính.
+- **Rủi ro tích hợp còn lại:** hàng đợi review và drift monitoring đã kiểm chứng offline nhưng 2 router API tương ứng vẫn là stub (Nhánh 3 đã xong) — việc tích hợp có phạm vi rõ ràng trên các thành phần đã chạy tốt, không phải rủi ro nghiên cứu mở.
 - **Giấy phép D1 chưa rõ** — coi dữ liệu gộp là "chưa rõ nguồn gốc" cho tới khi xác minh, không công bố như MIT/CC0 sạch.
 - **Chưa đánh giá adversarial** — nêu rõ là hạn chế trong bài báo, không mặc định đã giải quyết.
 - **Trần F1 thật của Nhánh 1 chưa rõ** do nhiễu nhãn đo được ở `boolean_blind` và pool `normal` gốc — đã báo cáo là hạn chế đo được, không giấu.
