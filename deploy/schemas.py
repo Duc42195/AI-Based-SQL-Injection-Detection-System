@@ -65,7 +65,7 @@ class Branch2Response(BaseModel):
 
 
 class Branch3Response(BaseModel):
-    """Branch-3 session-level result (stub until the model is trained)."""
+    """Branch-3 session-level result (Session Correlator — see src/models/branch3_session.py)."""
 
     status: BranchStatus = "not_ready"
     session_label: str | None = None

@@ -4,11 +4,10 @@
 > [`report/docs/streamlit_ui_spec.md`](../report/docs/streamlit_ui_spec.md). The doc below covers
 > the core surface (health / detect / branch 1-3 / metrics / admin).
 
-> FastAPI backend for the SQLi detection system. **Branch 1 and Branch 2 run FOR REAL**
-> right now; Branch 3 returns `status:"not_ready"` (HTTP 200, **not an error**) until
-> its router is wired to `models/branch3_v1/`. **The response shape stays stable** → Minh
-> builds the UI once, and once the real model lands the data just shows up —
-> **no code changes needed**.
+> FastAPI backend for the SQLi detection system. **Branch 1, Branch 2, and Branch 3
+> all run FOR REAL** — Branch 3 is `SessionCorrelator` (`models/branch3_v2/`), which
+> re-uses Branch 1 + Branch 2 rather than a separately-trained model, and returns a
+> real `is_attack`/`session_label` verdict instead of `not_ready`.
 >
 > A Streamlit UI already consumes this API: see [`app/README.md`](../app/README.md).
 
@@ -33,7 +32,7 @@ calling from a different port (default 8501) isn't blocked.
 | POST | `/api/v1/detect` | `{"query": "..."}` | **query test page + 3-branch results page** (one call, returns a verdict) |
 | POST | `/api/v1/branch1/predict` | `{"query": "..."}` | Branch 1 debug only |
 | POST | `/api/v1/branch2/score` | `{"query": "..."}` | Branch 2 debug only (real anomaly score) |
-| POST | `/api/v1/branch3/session` | `{"queries": ["...","..."]}` | (stub) Branch 3 |
+| POST | `/api/v1/branch3/session` | `{"queries": ["...","..."]}` | Branch 3 (Session Correlator) — real verdict |
 | GET  | `/api/v1/metrics/{branch}` | – | **Metrics page** (P/R/F1) — `branch1`/`branch2`/`branch3` |
 | GET  | `/api/v1/admin/overkill-queue` | – | **Admin page** (queue — currently empty) |
 | POST | `/api/v1/admin/overkill/{id}/confirm` | – | Approve button (stub) |
@@ -88,7 +87,7 @@ Two behaviours worth knowing before integrating:
     "anomaly_score": -3.94,       // higher = more anomalous
     "is_anomaly": false
   },
-  "branch3": {"status": "not_ready", "session_label": null, "is_attack": null},
+  "branch3": {"status": "ready", "session_label": "boolean_blind", "is_attack": true, "detail": "..."},
   "decision": {"action": "BLOCK", "reason": "Branch-1 detected attack class 'boolean_blind' ..."}
 }
 ```
@@ -148,9 +147,12 @@ if n2["status"] == "ready":
     st.metric("Anomalous", "YES" if n2["is_anomaly"] else "NO")
     st.caption(f"score = {n2['anomaly_score']:+.3f} (higher = more anomalous)")
 
-# Branch 3 — render a placeholder while not_ready; no changes needed once it lands
-if res["branch3"]["status"] == "not_ready":
-    st.caption("branch3: not wired up yet")
+n3 = res["branch3"]
+if n3["status"] == "ready":
+    st.metric("Session verdict", n3["session_label"])
+    st.caption("Attack" if n3["is_attack"] else "Benign")
+else:
+    st.info("Branch 3 not ready yet")
 ```
 
 ## 5. Conventions for backend devs (Duc/Bach)

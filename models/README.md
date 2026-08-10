@@ -17,7 +17,7 @@ the Database Proxy layer:
 
 - **Branch 1** — supervised multi-class classifier (Normal + SQLi variants), per query.
 - **Branch 2** — anomaly detector trained on benign traffic only (generalises to unseen syntax).
-- **Branch 3** — session-level sequence model over a stream of requests (the main contribution).
+- **Branch 3** — Session Correlator: not a separately-trained model, re-uses Branch 1 + Branch 2 and correlates their signals over a session (the main contribution).
 
 Training data: [Jason-42195/VNU-SQLi-Detection](https://huggingface.co/datasets/Jason-42195/VNU-SQLi-Detection).
 
@@ -30,7 +30,7 @@ Training data: [Jason-42195/VNU-SQLi-Detection](https://huggingface.co/datasets/
 | `branch1_no_*/` | 1 | Leave-one-class-out ablations (zero-day coverage) | F1 ~0.98 on remaining |
 | `branch2_v1/` | 2 | One-Class SVM (4 structural features) | avg-precision **0.982** |
 | `branch2_zeroday/` | 2 | One-Class SVM (zero-day coverage variant) | — |
-| `branch3_v1/` | 3 | GRU session-sequence classifier (4 classes) | see project repo |
+| `branch3_v2/` | 3 | Session Correlator (no weights — reuses `branch1_v1`/`branch2_v1`, 4 calibrated thresholds) | FPR=0.0, detection rate=1.0 on 3 session-attack classes, 280-session held-out test set |
 
 Download everything: `hf download Jason-42195/VNU-SQLi-Detection-Models --local-dir models/`
 
@@ -113,12 +113,16 @@ detector.anomaly_flags(X)  # boolean flag
 One-Class SVM with the same config as `branch2_v1`, used in the zero-day coverage experiment
 (pairs with the `branch1_no_*` ablations). Same loader as `branch2_v1`.
 
-## `branch3_v1/` — Branch 3 (session-level sequence model)
+## `branch3_v2/` — Branch 3 (Session Correlator)
 
-A GRU over a session's stream of per-request feature vectors (`input_dim=7`, `hidden_dim=32`,
-`max_len=64` requests/session). Classifies a **session** into 4 classes: `benign`,
-`boolean_blind`, `time_blind`, `query_splitting`. Files: `model.pt` (state dict), `metadata.json`.
-See the project repo for the model definition and the session-feature extractor needed to load it.
+Not a trained model — no weights, just `metadata.json` holding 4 calibrated scalar thresholds
+(`content_threshold`, `per_query_threshold`, `mean_threshold`, `fraction_threshold`). At inference
+time it re-uses `branch1_v1`'s classifier (re-scores the session's concatenated query text) and
+`branch2_v1`'s anomaly detector (aggregates its per-query scores), OR'ing the two checks together.
+Classifies a **session** into 4 classes: `benign`, `boolean_blind`, `time_blind`,
+`query_splitting`. See the project repo's `src/models/branch3_session.py`
+(`SessionCorrelator`) for the scoring logic, and `report/plan/data_contract.md` §4.2 for why
+this replaced an earlier trained GRU design (`branch3_v1`, removed).
 
 ---
 

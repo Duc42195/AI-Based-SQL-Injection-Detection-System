@@ -5,18 +5,17 @@ Used by train/build_session_dataset.py (data generation), train/calibrate_branch
 hard-mode check) — extracted here once a 4th consumer (train/attack_simulator.py's
 caller) would otherwise have made this a 4th copy-paste of the same ~5 functions.
 
-``sessions_to_arrays``/``evaluate_sessions`` are the SUPERSEDED GRU-era helpers
-(kept for the record — operate on padded per-step feature arrays, see
-``src/models/branch3_session.py``'s superseded ``SessionSequenceDetector``).
 ``sessions_to_correlator_inputs``/``evaluate_correlator_sessions`` are the
-active helpers for ``SessionCorrelator``.
+active helpers for ``SessionCorrelator``. (The GRU-era ``sessions_to_arrays``/
+``evaluate_sessions`` helpers that operated on padded per-step feature arrays
+were removed once the GRU design itself was — see git history or
+``report/plan/data_contract.md`` §4.2.)
 """
 
 from __future__ import annotations
 
 import numpy as np
 import pandas as pd
-from sklearn.metrics import classification_report, confusion_matrix
 
 from src.preprocessing.multiclass_tagger import LABEL_NAMES
 from src.preprocessing.statistical_features import extract_statistical_features
@@ -94,72 +93,10 @@ def prob_columns_in(df: pd.DataFrame) -> list[str]:
     return sorted(c for c in df.columns if c.startswith("branch1_prob_"))
 
 
-def sessions_to_arrays(df: pd.DataFrame, feature_cols: list[str]) -> tuple[list[np.ndarray], np.ndarray]:
-    """Group rows by session_id (in step order) into per-session feature sequences.
-
-    Returns:
-        Tuple of (list of (seq_len, n_features) arrays, (n_sessions,) int labels).
-    """
-    X: list[np.ndarray] = []
-    y: list[int] = []
-    for session_id, group in df.sort_values("step_index").groupby("session_id", sort=False):
-        X.append(group[feature_cols].to_numpy(dtype=np.float32))
-        y.append(int(group["session_label"].iloc[0]))
-    return X, np.array(y, dtype=np.int64)
-
-
-def evaluate_sessions(detector, X_test: list[np.ndarray], y_test: np.ndarray, class_names: list[str]) -> dict:
-    """Compute confusion matrix, per-class P/R/F1, detection rate, and FPR.
-
-    Args:
-        detector: A fitted SessionSequenceDetector (or compatible ``.predict``).
-        X_test: Per-session feature sequences.
-        y_test: True session labels.
-        class_names: Ordered class names, index 0 assumed to be "benign".
-    """
-    y_pred = detector.predict(X_test)
-
-    labels = list(range(len(class_names)))
-    cm = confusion_matrix(y_test, y_pred, labels=labels)
-    report = classification_report(
-        y_test, y_pred, labels=labels, target_names=class_names,
-        output_dict=True, zero_division=0,
-    )
-
-    benign_mask = y_test == 0
-    fpr = float((y_pred[benign_mask] != 0).mean()) if benign_mask.any() else None
-
-    detection_rate = {
-        name: round(report[name]["recall"], 6)
-        for name in class_names
-        if name != "benign"
-    }
-
-    return {
-        "n_test_sessions": int(len(y_test)),
-        "confusion_matrix": cm.tolist(),
-        "labels": class_names,
-        "f1_macro": round(report["macro avg"]["f1-score"], 6),
-        "accuracy": round(report["accuracy"], 6),
-        "per_class": {
-            name: {
-                "precision": round(report[name]["precision"], 6),
-                "recall": round(report[name]["recall"], 6),
-                "f1": round(report[name]["f1-score"], 6),
-                "support": int(report[name]["support"]),
-            }
-            for name in class_names
-        },
-        "fpr_benign": round(fpr, 6) if fpr is not None else None,
-        "detection_rate": detection_rate,
-    }
-
-
 def sessions_to_correlator_inputs(df: pd.DataFrame) -> list[tuple[list[str], list[float], int]]:
     """Group rows by session_id (in step order) for ``SessionCorrelator``.
 
-    Unlike ``sessions_to_arrays`` (padded feature matrices for the superseded
-    GRU), this returns raw ``query_canonical`` text and Branch-2's per-query
+    Returns raw ``query_canonical`` text and Branch-2's per-query
     ``branch2_anomaly_score`` — exactly the inputs ``SessionCorrelator.score()``
     and ``.calibrate()`` expect, with no padding or fixed length at all.
 
