@@ -43,14 +43,13 @@ Otherwise the URL is derived from `api.host`/`api.port` in
 
 ### What's real vs. not
 
-- **Real:** Branch 1 (supervised multiclass) and Branch 2 (One-Class SVM anomaly)
+- **Real:** Branch 1 (supervised multiclass), Branch 2 (One-Class SVM anomaly), and
+  Branch 3 (Session Correlator — re-uses Branch 1 + Branch 2, no training of its own)
   inference, the fused BLOCK/OVERKILL/ALLOW decision, the vulnerable demo
   database (injections genuinely succeed when the model is off), and all
   evaluation metrics.
-- **Not yet:** Branch 3 returns `not_ready` — the weights exist
-  (`models/branch3_v1/model.pt`) but the router isn't wired to them yet.
-  Monitor/Data pages serve mock data; the Train page simulates a run rather than
-  retraining the real models (real training lives in `train/train_branch*.py`).
+- **Not yet:** Monitor/Data pages serve mock data; the Train page simulates a run
+  rather than retraining the real models (real training lives in `train/train_branch*.py`).
 
 Pages degrade gracefully: a branch that isn't ready renders a placeholder
 instead of erroring, and the sidebar always shows live backend status.
