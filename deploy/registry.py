@@ -6,9 +6,12 @@ production model lives under ``models/<active_version>/`` (see the per-branch
 a model is a one-line config change — no code edit.
 
 Branch 1 (``tfidf_logreg``) and Branch 2 (One-Class SVM) are served from their
-trained weights; Branch 3 is not wired up yet. The registry loads whatever is
-present and reports the rest as *not ready* instead of crashing the app, so the
-frontend can be built against a stable contract before those models land.
+trained weights. Branch 3 (``SessionCorrelator``) is not a trained model — it
+re-uses Branch 1's + Branch 2's already-loaded artifacts plus thresholds
+calibrated by ``train/calibrate_branch3.py`` (see ``branch3()`` below). The
+registry loads whatever is present and reports the rest as *not ready* instead
+of crashing the app, so the frontend stays on a stable contract even if a
+branch's artifacts are missing.
 """
 
 from __future__ import annotations

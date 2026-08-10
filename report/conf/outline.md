@@ -7,6 +7,18 @@
 
 ---
 
+## STATUS (updated 2026-08-09 — supersedes the 7 Aug status below, kept for the historical record)
+
+**Framing (B) is now executed, not just recommended.** Since the 7 Aug status below flagged framing (B) as realistic, three things landed:
+
+1. **Branch-3 test/experiment coverage audit.** `tests/test_branch3_session.py` and the offline ablation pipeline (`train/calibrate_branch3.py`, `train/eval_branch3_hard.py`) cover `SessionCorrelator` well at the unit and self-hosted-data level, including two real regression tests for bugs found via the live API. Gaps found — none of which need Cách B to fix, all live-API-robustness, not data: empty session, single-query session via the live endpoint, sessions with mixed attack types, concurrent/overlapping sessions, malformed/adversarial input to `/branch3/session`, thread-safety of the registry's lazy loader under concurrency, and — notably — `session_idle_gap_seconds` (config) is currently **dead code**, with no live session-boundary logic anywhere in `deploy/`. Assigned to Bách (see `plan.csv` Sprint 1, Task 76/80/84/88/92) alongside a real Cách B attempt (Docker DVWA/WebGoat + `sqlmap` + mitmproxy), time-boxed with an explicit fallback to the robustness track if Cách B doesn't produce usable traffic by Sprint-1 Day 3.
+2. **A "will a reviewer trust this data?" audit was added ahead of the above**, since it's cheaper and de-risks numbers already written into the paper: (a) checking the Branch-3 1,120/280 TRAIN/TEST split for near-duplicate/same-target session leakage; (b) checking the Continual-Learning `stacked` class (363 templates sampled *with replacement* to 727 occurrences) for template overlap across the training/eval split — if any instance leaks across the split, the CL gate-comparison numbers in the paper need to be re-run, not just re-caveated; (c) spot-checking the re-tagger's noise rate on the specific classes used in the zero-day leave-one-out study, not just the one class (`boolean_blind`) already audited. This is Sprint-1 Day-1 for Bách, ahead of Cách B.
+3. **The Continual-Learning results subsection has been drafted directly into `rivf2026_paper.tex`** (§V "Continual Learning," between Branch 3 and Latency Budget), adapted from `research_proposal.md` §5.8/5.9's already-written prose and `report/metrics/continual_learning/RESULTS.md`'s exact numbers — ahead of the original Sprint 1-2 schedule that had Diệp originating it from scratch. Diệp's task is now review/polish (`plan.csv` Task 77), not drafting. A `% TODO` comment sits directly above the CL gate table in the `.tex` flagging that its numbers are pending Bách's leakage audit (item 2 above).
+
+Full detail on all three: `report/plan/plan.csv` (Bách Sprint 1/2 rows, Diệp Sprint 1 rows).
+
+---
+
 ## STATUS (updated 2026-08-07 — supersedes the 24 Jul status below, kept for the historical record)
 
 **Branch 3 now has a real implementation and real, held-out results — the picture in the 24 Jul status and the "Framing decision" section immediately below (§0) is out of date.** Summary of what changed (full account: `report/plan/data_contract.md` §4.2):
@@ -37,26 +49,9 @@
 
 ---
 
-## Day-by-day plan to the 31 Jul deadline
+## Day-by-day plan — superseded, see `plan.csv`
 
-**⚠️ Scheduling note:** the RIVF deadline (31 Jul) overlaps the *separate* course deliverables — **midterm report due Sat 25 Jul**, **presentation Tue 28 Jul** (slides + code + model demo). Days 25–28 below are shared with those deadlines.
-
-**⚠️ Role split (added 2026-07-24, run in parallel, not sequentially):**
-- **Diep + Minh → midterm report** (urgent, due Sat 25 Jul), **then also slides** for the Tue 28 Jul presentation, working at the same time as Bach's track below — not blocked on it.
-- **Bach → rerun `train/run_zeroday_experiment.py`** (bug just fixed, see STATUS above): regenerates the 5 missing zero-day model weights AND produces the corrected `combined_coverage` numbers. Then push all 7 models (2 production + 5 zero-day variants) to HF (`Jason-42195/VNU-SQLi-Detection-Models`) so the presentation demo doesn't depend on local-only files. Fast (~a few minutes total per earlier timing: branch1 ~15s/variant, branch2 ~75s).
-
-Under framing (A), **no further model training or new code is required for the paper's core claims** — Branch 1/2 results and the zero-day study (miss-rate/detection-rate columns) are already final regardless of the rerun above. The rerun only upgrades `combined_coverage` from "known-buggy, unused" to "correct, citable" — a strengthening, not a blocker. The remaining paper work is otherwise writing/design/admin. If Branch 3 unexpectedly produces real results before 29 Jul, it can be added as a Results subsection (see Section 0 framing note) — but do not plan on it; it is not on this critical path.
-
-| Day | Date | Paper (writing/design) | Code / other |
-|---|---|---|---|
-| 1 | Fri 24 Jul | Author block locked (done today); outline + full draft exist; **`combined_coverage` bug found + fixed in code** (this session) | — |
-| 2 | Sat 25 Jul | Diep/Minh: **midterm report** (due tonight — top priority). Architecture diagram + author dept/email/ORCID collection continue in spare cycles if any | **Bach: rerun zero-day experiment** (fixed script) → corrected `combined_coverage` + regenerate 5 missing model weights → push all 7 models to HF |
-| 3 | Sun 26 Jul | Compile on Overleaf, fix any LaTeX errors, check actual page count against RIVF's limit (confirm exact number from CFP — template default 6 pages). Decide whether to cite the corrected `combined_coverage` in §V-C now that it's available | Verify rerun results look sane (spot-check against the old miss-rate/DR columns, which don't change) |
-| 4 | Mon 27 Jul | Diep/Minh: continue midterm report polish + **start slides** in parallel (architecture, B1/B2 results, zero-day findings, live demo pulling models from HF) | — |
-| 5 | Tue 28 Jul | **Presentation** (slides + code + model demo) — *competing priority with paper track* | — |
-| 6 | Wed 29 Jul | Incorporate advisor feedback (Linh Dinh-Van, Thai Kim-Dinh); final citation/format check against IEEE style; remove all remaining template guidance text | If Branch 3 has real numbers by now, decide whether to upgrade Section V-D — otherwise leave as-is |
-| 7 | Thu 30 Jul | Buffer day: proofread once more, verify all `[TODO:]` placeholders are filled, test-compile the exact submission package (PDF + any required source files) | — |
-| 8 | Fri 31 Jul | **Submit** (check RIVF's submission-portal timezone / AoE cutoff ahead of time, don't assume) | — |
+This section used to hold a day-by-day table for the original 31 Jul deadline. It's now fully superseded: the deadline moved to 30 Aug, and the live, per-person, per-sprint plan lives in [`report/plan/plan.csv`](../plan/plan.csv) — use the **`/check-plan`** skill to check current status against it rather than reading either file cold (it personalizes the report to who's asking). Don't reconstruct a day-by-day table here again; it just goes stale a second time.
 
 ---
 
@@ -114,7 +109,7 @@ The project designs **three branches** (Branch 1 supervised multi-class, Branch 
 - **D. Branch 2 — query-level anomaly** — ✍️ One-Class SVM / Isolation Forest on 4 statistical features (length, special-char ratio, SQL-keyword count, entropy). Writable now.
 - **E. Branch 3 / Session Correlator** — ✅ **writable now with real content.** Not a trained model: a content check (concatenate session queries, re-score with Branch 1's existing classifier — no retraining) OR'd with a behavior check (aggregate Branch 2's existing per-query scores). Worth including the redesign story itself as a methodological point: an earlier GRU design over `[Branch-1 probability ⊕ Branch-2 score]` per step reported a suspicious F1=1.0, was diagnosed via a concrete information-bottleneck measurement (TF-IDF cosine similarity 0.961 between two session steps vs. near-identical post-classifier probabilities) plus two real evaluation-pipeline bugs, and was replaced. Full account: `report/plan/data_contract.md` §4.2. This subsection is the strongest candidate to also carry a "why simpler beat more complex here" discussion point for §VI.
 - **F. Central decision engine + Overkill policy** — ✍️ decision table (Block/Overkill/Allow) writable now from README; note it is a designed policy, not yet an evaluated component.
-- **G. Continual learning loop** — ✍️ design only; keep to a short paragraph or move entirely to Future Work to save space.
+- **G. Continual learning loop** — ✅ **written up as a real §V results subsection now, not design-only.** Drift monitoring (PSI, 5 signals), a review queue, and a validation gate were run as a full offline experiment (`report/metrics/continual_learning/RESULTS.md`) and drafted directly into `rivf2026_paper.tex`'s new "Continual Learning" subsection under §V — see STATUS above. Only the production wiring of the queue/drift dashboard into `deploy/` (not the offline mechanism) remains Future Work.
 
 ### IV. Dataset & Experimental Setup — ✅ (B1/B2) / ⛔ (B3)
 - **A. Data sources** — ✅ D1 SQLiV3, D3 CSIC 2010, D4 payload-box, D7 SR-BH; published on HF. Source: [`data_contract.md`](../plan/data_contract.md), README data table.
