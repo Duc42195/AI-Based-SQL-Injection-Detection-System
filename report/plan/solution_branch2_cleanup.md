@@ -49,6 +49,17 @@ Tuy nhiên, đo thực tế trên `branch2_data.csv` cho thấy **việc bỏ 92
 
 Chuỗi ngắn là benign thật (web log luôn có), **không thể xóa 100%**. Vấn đề là tỷ trọng **18.2%** quá cao so với production [5](#ref5). Vì OCSVM kéo mô hình về phía vùng đông dữ liệu, một tỷ lệ lệch như vậy làm vùng normal **thắt lẹo về phía chuỗi siêu ngắn** (`length≈6.6`, `entropy≈2.3`, 0 keyword) → các dòng benign dài/đủ phức tạp bị đẩy ra **rìa ngưỡng** → **FPR tăng trên traffic thật**. Trên eval hiện tại (cùng phân phối méo) con số vẫn "đẹp", nhưng đây là **số tự tham chiếu (self-confirming)**, không phản ánh generalization [1](#ref1),[7](#ref7).
 
+**Khảo sát gốc d1_sqliv3 — KHÔNG khả thi ở thời điểm này:** thư mục `data/` (chứa `raw/`, `processed/`) đã bị gitignore và **rỗng cục bộ**; không còn file nguồn `d1_sqliv3` để đo trực tiếp tỷ lệ dòng ngắn. → Chuyển sang **literature review** (mục 2.3) để định mục tiêu.
+
+### 2.3. Literature review — mục tiêu tỷ lệ dòng ngắn có cơ sở
+
+Do không khảo sát được data gốc, dùng bằng chứng học thuật về phân phối HTTP request:
+
+- **Mah 1997** (đo packet trace HTTP thật): độ dài request **bimodal**, mean ≈ **320 bytes**, median ≈ **240 bytes**, có một mốc nhỏ ~1 KB cho form phức tạp [12](#ref12). Không thấy dải "2–6 ký tự vô nghĩa" chiếm đa số như 18% hiện tại.
+- **Zuech et al.** (CSE-CIC-IDS2018): web traffic thật **cực kỳ mất cân bằng** giữa normal và attack (SQLi tới ~153,911:1); phần lớn dòng normal là traffic thực, không phải chuỗi cực ngắn [13](#ref13).
+
+**Đề xuất mục tiêu:** thay vì áp một con số %, đặt ngưỡng độ dài tối thiểu dựa trên phân phối thật — ví dụ **hạ tỷ lệ các dòng `length ≤ 10` xuống gần mức ~trung vị request thật**, sao cho phân phối `length` của train tiến gần dạng bimodal như Mah [12](#ref12). Con số chính xác nên đo lại từ file nguồn `d1_sqliv3` khi có data.
+
 ---
 
 ## 3. Đề xuất giải pháp
@@ -80,7 +91,7 @@ Bất kỳ bước nào ở trên thay đổi dataset → phải chạy lại to
 ## 4. Quyết định cần Duc chốt
 
 - [ ] **1.** Có loại SSRF/OS-cmd khỏi benign train (chuyển sang eval) không?
-- [ ] **2.** Có cân lại tỷ trọng chuỗi ngắn không? — nếu có, mức mục tiêu bao nhiêu % (đề xuất khảo sát gốc d1_sqliv3 trước).
+- [ ] **2.** Có cân lại tỷ trọng chuỗi ngắn không? — trong trường hợp **không khảo sát được data gốc** (`data/` rỗng) thì dùng mục tiêu từ literature review (mục 2.3): đưa phân phối `length` của train về gần dạng **bimodal** như đo thực tế của Mah [12](#ref12), thay vì 18% hiện tại.
 - [ ] **3.** Có chấp nhận retrain + regenerate toàn bộ metrics (Bước 3) không?
 
 > Lưu ý đối trọng: vì SSRF đã đo là ~ không đổi hiệu năng hiện tại, nếu deadline gấp và không cần con số khác, có thể **chỉ làm Bước 1 (nguyên tắc) + ghi disclaimer**, tạm hoãn Bước 2 (cân tỷ trọng).
@@ -107,6 +118,10 @@ Bất kỳ bước nào ở trên thay đổi dataset → phải chạy lại to
 **SQLi detection bằng ML (bối cảnh của hệ thống — 3 branch):**
 - <span id="ref5"></span>**[5]** M. Alghawazi, D. Alghazzawi, S. Alarifi, "Detection of SQL Injection Attack Using Machine Learning Techniques: A Systematic Literature Review," *Journal of Cybersecurity and Privacy*, 2(2):764–777, 2022.
 - <span id="ref11"></span>**[11]** M. A. Oudah, M. F. Marhusin, "SQL Injection Detection Using Machine Learning with Different TF-IDF Feature Extraction Approaches," in *Int. Conf. on Information Systems and Intelligent Applications (ICISIA) 2022*, Springer, pp. 707–720, 2022. DOI: 10.1007/978-3-031-16865-9_57.
+
+**Phân phối & cân bằng web traffic (cơ sở mục tiêu tỉ lệ dòng ngắn):**
+- <span id="ref12"></span>**[12]** B. A. Mah, "An Empirical Model of HTTP Network Traffic," in *Proc. IEEE INFOCOM '97*, Kobe, Japan, pp. 592–600, 1997.
+- <span id="ref13"></span>**[13]** R. Zuech, T. M. Khoshgoftaar, N. Seliya, "Investigating rarity in web attacks with ensemble learners," *Journal of Big Data*, 2021. DOI: 10.1186/s40537-021-00462-6.
 
 ---
 

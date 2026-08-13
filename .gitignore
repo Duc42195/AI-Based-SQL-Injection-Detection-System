@@ -43,3 +43,6 @@ report/metrics/continual_learning/experiment_queue.db
 report/metrics/continual_learning/experiment_confirmed_labels.jsonl
 # Demo-reset archive: models moved aside by POST /mlops/reset
 models/_archive/
+
+# Personal knowledge/notes accumulated while working (not part of the deliverable)
+terms/
