@@ -350,11 +350,24 @@ class TrainStatusResponse(BaseModel):
 # MLOps lifecycle
 # --------------------------------------------------------------------------- #
 class VersionsResponse(BaseModel):
-    """The data-version registry with lineage."""
+    """Data-version lineage plus which model is actually being served."""
 
     dataset: str
+    # What is serving now: a promoted version if one exists, else the baseline.
     active_model: str
+    # The baseline declared in config.yaml — what a reset falls back to.
+    baseline_model: str = ""
     versions: list[dict] = Field(default_factory=list)
+    # Model-version history with stages (production / staging / archived).
+    models: list[dict] = Field(default_factory=list)
+
+
+class RollbackResponse(BaseModel):
+    """Result of restoring the previously-served model."""
+
+    ok: bool
+    active: str
+    detail: str | None = None
 
 
 class ReplayRequest(BaseModel):

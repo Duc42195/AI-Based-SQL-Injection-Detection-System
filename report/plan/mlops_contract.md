@@ -356,9 +356,37 @@ champion's verdict is enforced, the candidate's is logged only. Reported: agreem
 disagreement matrix (especially *candidate allows / champion blocks*), per-class deltas, and
 latency p50/p95.
 
-**Promotion and rollback** are each **one config change** — write `models/branch1_<ver>/` and
-flip `branch1_supervised.active_version`. `deploy/registry.py` already resolves models through
-that key, so no serving code is touched in either direction.
+**Promotion and rollback** are recorded in a **model registry** — `models/registry.json`
+(runtime state, gitignored) — with MLflow-style stages:
+
+```
+production  — currently served
+staging     — trained and evaluated, not serving
+archived    — previously served, retained for rollback
+```
+
+Resolution order when loading a model:
+
+1. the `production` entry in the model registry, if there is one;
+2. otherwise `<branch>.active_version` from `config.yaml` — the declared baseline.
+
+So a fresh clone with no registry serves exactly what config declares, rollback restores the
+most recently archived version, and clearing the registry (what `/mlops/reset` does) is a full
+revert to the baseline. No serving code is touched in any direction.
+
+> **Superseded design (kept on record).** Promotion originally rewrote
+> `branch1_supervised.active_version` *inside `configs/config.yaml`* at runtime. That conflated
+> a committed declaration with runtime state: every promotion dirtied the git working tree
+> (observed during testing), and rollback was a regex substitution on a tracked file. The
+> registry replaces it. Config is now read-only at runtime.
+
+**Why not MLflow?** MLflow's Model Registry would cover the stage/promotion mechanics above,
+and its tracking UI would cover run comparison. It does **not** provide dataset versioning with
+label-space semantics (§1), the cross-major comparison refusal (§7), drift measurement (§5) or
+the review queue (§6) — those are ~1,400 of the ~1,700 lines here and would remain custom
+regardless. Adopting MLflow would replace roughly 250 lines of persistence plumbing at the cost
+of a heavy dependency and a tracking server. Reasonable for a later iteration; not worth a
+rewrite of a verified system before the paper deadline.
 
 ---
 

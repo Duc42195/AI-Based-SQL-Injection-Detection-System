@@ -24,6 +24,7 @@ from typing import Any
 import joblib
 import numpy as np
 
+from src.continual_learning.model_registry import resolve_active
 from src.models.branch2_anomaly import AnomalyDetector
 from src.models.branch3_session import SessionCorrelator
 from src.preprocessing.canonicalize import canonicalize
@@ -194,8 +195,19 @@ class ModelRegistry:
     def _models_dir(self) -> Path:
         return Path(self._cfg.get_path("paths.models_dir", "models"))
 
-    def _branch_version_dir(self, active_version_key: str, default: str) -> Path:
-        version = self._cfg.get_path(active_version_key, default)
+    def _branch_version_dir(
+        self, active_version_key: str, default: str, branch: str | None = None
+    ) -> Path:
+        """Resolve a branch's model directory.
+
+        A promoted version in the model registry wins; ``config.yaml`` holds the
+        declared baseline and is the fallback, so a fresh clone with no registry
+        serves exactly what config says.
+        """
+        if branch:
+            version = resolve_active(branch, active_version_key, default, self._cfg)
+        else:
+            version = self._cfg.get_path(active_version_key, default)
         return self._models_dir() / str(version)
 
     def branch1(self) -> Branch1Model | None:
@@ -215,7 +227,7 @@ class ModelRegistry:
 
     def _load_branch1(self) -> Branch1Model | None:
         model_dir = self._branch_version_dir(
-            "branch1_supervised.active_version", "branch1_v1"
+            "branch1_supervised.active_version", "branch1_v1", branch="branch1"
         )
         vec_path = model_dir / "vectorizer.joblib"
         clf_path = model_dir / "model.joblib"
@@ -269,7 +281,7 @@ class ModelRegistry:
 
     def _load_branch2(self) -> Branch2Model | None:
         model_dir = self._branch_version_dir(
-            "branch2_anomaly.active_version", "branch2_v1"
+            "branch2_anomaly.active_version", "branch2_v1", branch="branch2"
         )
         if not (model_dir / "model.joblib").exists():
             logger.warning(

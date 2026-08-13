@@ -49,6 +49,7 @@ Full specification: [`report/plan/mlops_contract.md`](../report/plan/mlops_contr
 |---|---|---|
 | POST | `/api/v1/mlops/replay` | Replay held-out traffic → writes the drift record, fills the review queue. Use ≥ 20k or every window is drift *reference*. |
 | POST | `/api/v1/mlops/reset` | Restore the protected baseline; archives (never deletes) models the round created |
+| POST | `/api/v1/mlops/rollback` | Restore the previously-served model (returns `ok:false` if none is archived) |
 | GET  | `/api/v1/mlops/versions` | Data-version registry + lineage |
 | GET  | `/api/v1/mlops/runs` | Training runs, keyed by `run_id` |
 | GET  | `/api/v1/mlops/decisions` | Promotion decision log |
@@ -62,8 +63,13 @@ Two behaviours worth knowing before integrating:
 
 - **Training is idempotent.** `run_id = hash(config, data, seed)`. An identical run returns
   `run_status: "exists"` and retrains nothing.
-- **Promotion is one config flip** (`branch1_supervised.active_version`), so rollback is the
-  same operation reversed. The service reloads its model cache in place.
+- **Promotion writes `models/registry.json`, never `config.yaml`.** That file is runtime state
+  (gitignored) holding stages `production` / `staging` / `archived`. Resolution order when
+  loading a model: the `production` entry if there is one, otherwise
+  `<branch>.active_version` from config — the declared baseline. So a fresh clone with no
+  registry serves exactly what config says, rollback restores the last archived version, and
+  `/mlops/reset` clears the registry to return to the baseline. The service reloads its model
+  cache in place; no restart needed.
 
 ## 3. Response shape
 
