@@ -54,17 +54,20 @@ dùng **cùng** một anomaly eval set:
 
 | Chỉ số | Trước (dirty) | Sau (clean) | Chênh lệch |
 |---|---:|---:|---:|
-| Train benign | 12,000 | 9,164 | −2,836 (bỏ 928 SSRF + cắt chuỗi ngắn) |
-| Threshold P95 | −0.8980 | −0.3154 | +0.5826 |
-| Detection rate | 41.87% | 24.92% | −16.95pp |
-| FPR (P95) | 5.00% | 5.00% | 0 |
-| KS statistic | 0.7044 | 0.4723 | −0.2321 |
+| Train benign | 12,000 | 9,164 | −2,836 (bỏ SSRF + cắt chuỗi ngắn) |
+| Test benign | 3,000 | 2,775 | −225 (bỏ SSRF khỏi test) |
+| Threshold P95 | −0.8980 | −0.4629 | +0.4351 |
+| Detection rate | 41.87% | 31.19% | −10.68pp |
+| FPR (P95) | 5.00% | 4.76% | −0.24pp |
+| KS statistic | 0.7044 | 0.5216 | −0.1828 |
 
-**Diễn giải:** sau khi dọn, DR giảm còn ~25%, KS giảm — nghĩa là phân phối anomaly và normal
+**Diễn giải:** sau khi dọn, FPR giảm 5.00% → 4.76% (225 dòng SSRF từng nằm trong test nhóm
+"benign" giờ đã được gỡ, nên model không còn bị tính oan false positive khi phát hiện đúng chúng)
+và DR tăng 24.92% → 31.19% (test sạch hơn). Dù vậy DR vẫn < 1/3 và phân phối anomaly và normal
 vẫn **trùng đáng kể**. Điều này khớp nhận định của Duc: **Branch 2 không phải là lớp chính để
 bắt các attack đã biết** (chúng nằm chung vùng với normal) — vai trò của Branch 2 là **zero-day**,
-còn attack đã biết để Branch 1 xử lý. Việc dọn chủ yếu cải thiện **tính sạch khái niệm**, không
-làm DR tăng trên eval set attack-đã-biết này.
+còn attack đã biết để Branch 1 xử lý. Việc dọn cải thiện **tính sạch khái niệm** của benign pool
+(loại hẳn SSRF khỏi cả train lẫn test, `id` unique toàn cục).
 
 > Lưu ý: bước này là audit/evaluation — re-fit OCSVM để so sánh, **không** đổi model deploy.
 
