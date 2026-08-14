@@ -28,20 +28,15 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 os.chdir(Path(__file__).resolve().parents[1])
 
 from src.utils import get_logger  # noqa: E402
+from src.utils.ssrf import is_leaky_row as _is_leaky, read_csv_keep_na  # noqa: E402
 
 logger = get_logger(__name__)
 
-SSRF_PATTERNS = ["owasp.org", "/etc/passwd", "shellshock"]
 SHORT_LEN = 10
 DATA_COLUMNS = [
     "id", "query_raw", "query_canonical", "has_comment_marker",
     "length", "special_char_ratio", "sql_keyword_count", "entropy",
 ]
-
-
-def _is_leaky(row) -> bool:
-    t = str(row["query_canonical"]).lower()
-    return any(p in t for p in SSRF_PATTERNS)
 
 
 def _rebalance_short(df: pd.DataFrame, target_ratio: float, rng: np.random.Generator) -> pd.DataFrame:
@@ -78,7 +73,7 @@ def main() -> None:
     args = parser.parse_args()
 
     processed = Path(__file__).resolve().parents[1] / "data" / "processed"
-    df = pd.read_csv(processed / "branch2_data.csv", keep_default_na=False, na_values=[])
+    df = read_csv_keep_na(processed / "branch2_data.csv")
     train_df = df[df["split"] == "train"].reset_index(drop=True)
     test_df = df[df["split"] == "test"].reset_index(drop=True)
 
@@ -103,7 +98,7 @@ def main() -> None:
 
     # ---- 3) append moved SSRF to the anomalous eval set ----
     anom_path = processed / "branch2_anomalous_eval.csv"
-    anom_df = pd.read_csv(anom_path) if anom_path.exists() else pd.DataFrame()
+    anom_df = read_csv_keep_na(anom_path) if anom_path.exists() else pd.DataFrame()
     ssrf_rows = ssrf_rows[DATA_COLUMNS].copy()
     ssrf_rows["source"] = "ssrf_moved_from_benign"
     merged_anom = pd.concat([anom_df, ssrf_rows], ignore_index=True)

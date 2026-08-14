@@ -28,17 +28,25 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 os.chdir(Path(__file__).resolve().parents[1])
 
 from src.models.branch2_anomaly import AnomalyDetector  # noqa: E402
-from src.utils import get_logger  # noqa: E402
+from src.utils import get_logger, load_config  # noqa: E402
+from src.utils.ssrf import is_leaky_row as _is_leaky, read_csv_keep_na  # noqa: E402
 
 logger = get_logger(__name__)
 
 FEATURES = ["length", "special_char_ratio", "sql_keyword_count", "entropy"]
-SSRF_PATTERNS = ["owasp.org", "/etc/passwd", "shellshock"]
 
 
-def _is_leaky(row) -> bool:
-    t = str(row["query_canonical"]).lower()
-    return any(p in t for p in SSRF_PATTERNS)
+def _detector_params(cfg) -> dict:
+    """Build AnomalyDetector kwargs from config (branch2_anomaly), no hardcoding."""
+    b2 = cfg.get("branch2_anomaly")
+    return dict(
+        algorithm=b2["algorithm"],
+        contamination=b2["ocsvm_nu"] if b2["algorithm"] == "one_class_svm" else b2["contamination"],
+        gamma=b2["ocsvm_gamma"],
+        scale_features=b2["scale_features"],
+        log_transform_features=list(b2["log_transform_features"]),
+        feature_names=list(b2["features"]),
+    )
 
 
 def _fit(detector, X):
@@ -57,13 +65,14 @@ def _score_stats(scores: np.ndarray) -> dict:
 
 
 def main() -> None:
+    cfg = load_config()
     processed = Path(__file__).resolve().parents[1] / "data" / "processed"
-    df = pd.read_csv(processed / "branch2_data.csv", keep_default_na=False, na_values=[])
+    df = read_csv_keep_na(processed / "branch2_data.csv")
     train_df = df[df["split"] == "train"].reset_index(drop=True)
     test_df = df[df["split"] == "test"].reset_index(drop=True)
 
     anom_path = processed / "branch2_anomalous_eval.csv"
-    anom_df = pd.read_csv(anom_path) if anom_path.exists() else pd.DataFrame()
+    anom_df = read_csv_keep_na(anom_path) if anom_path.exists() else pd.DataFrame()
     X_anom = anom_df[FEATURES].to_numpy(np.float64) if not anom_df.empty else None
 
     leaky_mask = train_df.apply(_is_leaky, axis=1)
@@ -76,14 +85,7 @@ def main() -> None:
     X_clean = train_df[~leaky_mask][FEATURES].to_numpy(np.float64)
     X_benign_test = test_df[FEATURES].to_numpy(np.float64)
 
-    params = dict(
-        algorithm="one_class_svm",
-        contamination=0.005,  # ocsvm_nu (config branch2_anomaly.ocsvm_nu)
-        gamma=0.01,           # ocsvm_gamma
-        scale_features=False, # config branch2_anomaly.scale_features
-        log_transform_features=["length"],
-        feature_names=FEATURES,
-    )
+    params = _detector_params(cfg)
 
     # ---- (a) current pool ----
     det_full = _fit(AnomalyDetector(**params), X_full)
@@ -139,7 +141,7 @@ def main() -> None:
         },
     }
 
-    out_dir = Path(__file__).resolve().parents[1] / "report" / "metrics" / "audit_branch3"
+    out_dir = Path(__file__).resolve().parents[1] / "report" / "metrics" / "zeroday_experiment"
     out_dir.mkdir(parents=True, exist_ok=True)
     with (out_dir / "branch2_ssrf_impact.json").open("w", encoding="utf-8") as f:
         json.dump(out, f, indent=2, ensure_ascii=False)
