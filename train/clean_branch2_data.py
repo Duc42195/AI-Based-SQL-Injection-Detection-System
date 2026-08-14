@@ -59,6 +59,17 @@ def _rebalance_short(df: pd.DataFrame, target_ratio: float, rng: np.random.Gener
     return out.sample(frac=1.0, random_state=int(rng.integers(0, 2**32 - 1))).reset_index(drop=True)
 
 
+def _reset_global_id(df: pd.DataFrame, source_col: str) -> pd.DataFrame:
+    """Rebuild `id` to be globally unique using a source-prefixed index.
+
+    Original ids are per-source internal indices (non-unique across merged
+    sources), so after concatenation we regenerate them as ``<source>:<row>``.
+    """
+    df = df.copy()
+    df["id"] = [f"{src}:{i}" for src, i in zip(df[source_col].astype(str), range(len(df)))]
+    return df
+
+
 def main() -> None:
     parser = argparse.ArgumentParser()
     parser.add_argument("--target-short-ratio", type=float, default=0.03,
@@ -71,11 +82,14 @@ def main() -> None:
     train_df = df[df["split"] == "train"].reset_index(drop=True)
     test_df = df[df["split"] == "test"].reset_index(drop=True)
 
-    # ---- 1) move SSRF out of benign train ----
-    leaky_mask = train_df.apply(_is_leaky, axis=1)
-    ssrf_rows = train_df[leaky_mask].copy()
-    clean_train = train_df[~leaky_mask].reset_index(drop=True)
-    logger.info("Moved %d SSRF rows out of benign train", len(ssrf_rows))
+    # ---- 1) move SSRF out of benign TRAIN and benign TEST ----
+    leaky_train = train_df.apply(_is_leaky, axis=1)
+    leaky_test = test_df.apply(_is_leaky, axis=1)
+    ssrf_rows = pd.concat([train_df[leaky_train], test_df[leaky_test]], ignore_index=True)
+    clean_train = train_df[~leaky_train].reset_index(drop=True)
+    clean_test = test_df[~leaky_test].reset_index(drop=True)
+    logger.info("Moved %d SSRF rows out of benign (train=%d, test=%d)",
+                len(ssrf_rows), int(leaky_train.sum()), int(leaky_test.sum()))
 
     # ---- 2) rebalance short strings in train ----
     before_short = int((clean_train["length"] <= SHORT_LEN).sum())
@@ -93,15 +107,18 @@ def main() -> None:
     ssrf_rows = ssrf_rows[DATA_COLUMNS].copy()
     ssrf_rows["source"] = "ssrf_moved_from_benign"
     merged_anom = pd.concat([anom_df, ssrf_rows], ignore_index=True)
-    logger.info("Anomalous eval: %d -> %d (added %d SSRF)",
+    # rebuild id globally-unique across the two merged sources
+    merged_anom = _reset_global_id(merged_anom, "source")
+    logger.info("Anomalous eval: %d -> %d (added %d SSRF), id now globally unique",
                 len(anom_df), len(merged_anom), len(ssrf_rows))
 
     # ---- write outputs ----
     clean_train_out = clean_train.copy()
     clean_train_out["split"] = "train"
-    clean_test_out = test_df.copy()
+    clean_test_out = clean_test.copy()
     clean_test_out["split"] = "test"
     clean_all = pd.concat([clean_train_out, clean_test_out], ignore_index=True)
+    clean_all = _reset_global_id(clean_all, "split")
 
     clean_all.to_csv(processed / "branch2_data_clean.csv", index=False, encoding="utf-8")
     merged_anom.to_csv(processed / "branch2_anomalous_eval_clean.csv", index=False, encoding="utf-8")
