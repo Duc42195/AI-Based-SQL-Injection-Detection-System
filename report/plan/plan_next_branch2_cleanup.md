@@ -45,7 +45,8 @@ chứng lại bằng số liệu.
 | Script dọn data (SSRF + cân chuỗi ngắn) | `train/clean_branch2_data.py` |
 | Data sạch (train/test + anomaly eval) | `data/processed/branch2_data_clean.csv`, `branch2_anomalous_eval_clean.csv` |
 | Visualize phân phối (IEEE style) | `train/notebooks/branch2_normal_anomaly_dist.ipynb` |
-| Figures | `report/metrics/zeroday_experiment/branch2_dist_before_after.png`, `branch2_overlap_before_after.png` |
+| Figures | `report/metrics/zeroday_experiment/branch2_dist_before_after.png`, `branch2_overlap_before_after.png` (bản mới — test đã lọc SSRF) |
+| Figures (bản cũ, giữ để so sánh) | `report/metrics/zeroday_experiment/branch2_dist_before_after_v1.png`, `branch2_overlap_before_after_v1.png` (test = 3,000, chưa lọc SSRF) |
 
 ## Kết quả đo (fair comparison — cùng anomaly eval 25,065 dòng)
 
