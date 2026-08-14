@@ -85,8 +85,11 @@ def check_ssrf_mislabels(df: pd.DataFrame) -> dict:
             for p in _SSRF_PATTERNS
         },
         "note": "Rows matching SSRF/OS-cmd callbacks inside boolean_blind are label "
-                "noise (doc data_contract.md ~13% hand-sample estimate); rows inside "
-                "normal are benign-pool contamination analogous to the Branch 2 SSRF leak.",
+                "noise (doc data_contract.md ~13% measured limitation); rows inside "
+                "normal are benign-pool contamination analogous to the Branch 2 SSRF leak. "
+                "Per data_contract.md, SSRF leaking into normal is 'acceptable for Branch 1 "
+                "(SQLi-only concern)' - SSRF cleaning is prioritized for Branch 2 (already "
+                "done). Not a default fix for Branch 1.",
     }
 
 
