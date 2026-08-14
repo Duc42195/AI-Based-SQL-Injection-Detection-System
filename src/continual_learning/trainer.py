@@ -31,6 +31,7 @@ from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.linear_model import LogisticRegression
 
 from src.continual_learning.gate import ModelEvaluation, compute_evaluation
+from src.continual_learning.model_registry import load_model_registry
 from src.continual_learning.versioning import (
     compute_run_id,
     content_hash,
@@ -341,28 +342,34 @@ def evaluate_on_golden(
     )
 
 
-def promote(model_version: str, cfg=None) -> None:
-    """Make a model the active one by updating config (promotion == one flip).
+def promote(
+    model_version: str,
+    cfg=None,
+    *,
+    branch: str = "branch1",
+    data_version: str | None = None,
+    run_id: str | None = None,
+    metrics: dict[str, Any] | None = None,
+    note: str = "",
+) -> None:
+    """Make a model the production one for a branch.
 
-    ``deploy.registry`` resolves models through
-    ``branch1_supervised.active_version``, so promotion and rollback are the
-    same operation in opposite directions and touch no serving code.
+    Writes only to the model registry (``models/registry.json``), which is
+    runtime state. ``configs/config.yaml`` stays untouched: it declares the
+    *baseline* to fall back to, and rewriting a committed file at runtime made
+    every promotion dirty the git working tree.
     """
     cfg = cfg or load_config()
-    config_path = Path("configs/config.yaml")
-    text = config_path.read_text(encoding="utf-8")
-
-    import re
-
-    updated, count = re.subn(
-        r'(branch1_supervised:(?:.|\n)*?\n  active_version: )"[^"]*"',
-        rf'\1"{model_version}"',
-        text,
-        count=1,
+    registry = load_model_registry(cfg)
+    registry.promote(
+        branch,
+        model_version,
+        data_version=data_version,
+        run_id=run_id,
+        metrics=metrics,
+        note=note,
     )
-    if count != 1:  # pragma: no cover - config shape changed
-        raise RuntimeError("Could not locate branch1_supervised.active_version in config")
-    config_path.write_text(updated, encoding="utf-8")
+    registry.save()
 
     model_dir = Path(cfg.get_path("paths.models_dir", "models")) / model_version
     meta_path = model_dir / "metadata.json"
@@ -371,4 +378,18 @@ def promote(model_version: str, cfg=None) -> None:
         metadata.update({"state": "promoted", "promoted_at": _now()})
         meta_path.write_text(json.dumps(metadata, indent=2), encoding="utf-8")
 
-    logger.info("Promoted %s (branch1_supervised.active_version updated)", model_version)
+
+def rollback(branch: str = "branch1", cfg=None) -> str | None:
+    """Restore the previously-served model for a branch.
+
+    Returns:
+        The restored version, or ``None`` when there is no archived model — in
+        which case clearing the registry reverts to the config baseline.
+    """
+    cfg = cfg or load_config()
+    registry = load_model_registry(cfg)
+    restored = registry.rollback(branch)
+    if restored is None:
+        return None
+    registry.save()
+    return restored.version

@@ -24,10 +24,12 @@ from deploy.schemas import (
     MlopsResetResponse,
     ReplayRequest,
     ReplayResponse,
+    RollbackResponse,
     VersionsResponse,
 )
 from src.continual_learning.gate import read_decisions
-from src.continual_learning.trainer import RUNS_LOG
+from src.continual_learning.model_registry import load_model_registry, resolve_active
+from src.continual_learning.trainer import RUNS_LOG, rollback
 from src.continual_learning.versioning import load_registry
 from src.decision.queue import (
     ReviewItem,
@@ -61,14 +63,40 @@ def _artifacts(cfg) -> Path:
 
 @router.get("/versions", response_model=VersionsResponse)
 def versions() -> VersionsResponse:
-    """Return the data-version registry with lineage."""
+    """Return the data-version registry plus the served model and its history."""
     cfg = load_config()
     registry = load_registry("branch1", cfg)
+    models = load_model_registry(cfg)
     return VersionsResponse(
         dataset="branch1",
-        active_model=str(cfg.get_path("branch1_supervised.active_version", "")),
+        active_model=resolve_active(
+            "branch1", "branch1_supervised.active_version", "branch1_v1", cfg
+        ),
+        baseline_model=str(cfg.get_path("branch1_supervised.active_version", "")),
         versions=[v.to_dict() for v in registry.versions],
+        models=[e.to_dict() for e in models.history("branch1")],
     )
+
+
+@router.post("/rollback", response_model=RollbackResponse)
+def rollback_model() -> RollbackResponse:
+    """Restore the previously-served model.
+
+    With no archived model there is nothing to restore; clearing the registry
+    (which ``/reset`` does) reverts to the config baseline instead.
+    """
+    cfg = load_config()
+    restored = rollback("branch1", cfg)
+    if restored is None:
+        return RollbackResponse(
+            ok=False,
+            active=resolve_active(
+                "branch1", "branch1_supervised.active_version", "branch1_v1", cfg
+            ),
+            detail="No previously-served model to roll back to.",
+        )
+    get_registry().reload()
+    return RollbackResponse(ok=True, active=restored, detail=f"Rolled back to {restored}.")
 
 
 @router.get("/runs")
@@ -307,10 +335,12 @@ def reset() -> MlopsResetResponse:
     for name in ("drift.json", RUNS_LOG):
         (artifacts / name).unlink(missing_ok=True)
 
-    # 5. Restore the baseline active version.
-    from src.continual_learning.trainer import promote
-
-    promote(baseline_model, cfg)
+    # 5. Clear the model registry so resolution falls back to the config
+    #    baseline. Clearing (rather than promoting the baseline) is what makes a
+    #    reset return the system to the state a fresh clone would be in.
+    models = load_model_registry(cfg)
+    models.clear()
+    models.save()
     get_registry().reload()
 
     logger.info(

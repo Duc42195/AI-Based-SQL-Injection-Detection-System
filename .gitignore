@@ -43,6 +43,11 @@ report/metrics/continual_learning/experiment_queue.db
 report/metrics/continual_learning/experiment_confirmed_labels.jsonl
 # Demo-reset archive: models moved aside by POST /mlops/reset
 models/_archive/
+# Local run artifacts
+.run/
+
+# MLOps: promotion registry (lineage-critical, not weights)
+models/registry.json
 
 # Personal knowledge/notes accumulated while working (not part of the deliverable)
 terms/

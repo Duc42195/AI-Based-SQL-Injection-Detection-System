@@ -91,7 +91,14 @@ run **for real** and are wired end to end — `POST /branch3/session` scores a r
 of returning `not_ready`. See [`report/plan/plan.csv`](report/plan/plan.csv) for current status.
 
 ```bash
+./run.sh          # starts BOTH: API on :8000 and Streamlit on :8501, Ctrl-C stops both
+```
+
+Or run them separately:
+
+```bash
 uv run uvicorn deploy.main:app --reload --port 8000   # docs: http://localhost:8000/docs
+uv run streamlit run app/streamlit_app.py             # http://localhost:8501
 ```
 
 Main endpoint: `POST /api/v1/detect` (runs all 3 branches + returns one verdict:
@@ -116,7 +123,8 @@ SQLIDS_LOGGING_LEVEL=DEBUG
 
 - **Continual Learning:** Admin confirms a query in the Overkill queue → label it, store in the new-data pool → a retrain script uses **rehearsal** (mixing new + old data to avoid catastrophic forgetting) → **validation gate** (only promotes if F1/FPR ≥ the current model on a fixed test set).
 - **Concept Drift:** periodically logs **PSI/KL-divergence** over the feature distribution + FPR/Recall over time; fixed retrain schedule (weekly) + manual trigger; versioned under `models/vN/`; fast **rollback** to the previous version.
-- **Status:** ✅ implemented (`src/continual_learning/`, `src/monitoring/drift.py`, `src/decision/queue.py`) and run as a full offline experiment — drift monitoring alone misses a rare new attack class, but the review queue catches it; naive retraining on raw confirmed data degrades the model, balancing the pool first is what earns promotion (FPR down 64%). Full write-up: [`report/metrics/continual_learning/RESULTS.md`](report/metrics/continual_learning/RESULTS.md). Not yet wired into the live API (`deploy/routers/admin.py`/`monitor.py` are still stubs).
+- **Status:** ✅ implemented (`src/continual_learning/`, `src/monitoring/drift.py`, `src/decision/queue.py`) and run as a full offline experiment — drift monitoring alone misses a rare new attack class, but the review queue catches it; naive retraining on raw confirmed data degrades the model, balancing the pool first is what earns promotion (FPR down 64%). Full write-up: [`report/metrics/continual_learning/RESULTS.md`](report/metrics/continual_learning/RESULTS.md).
+- **Wired into the live API for Branch 1:** `/mlops/replay` writes a real drift record and fills the review queue, `/data/*` serves AI-pre-labelled items for approve/correct/reject, `/train/*` seals a data version and runs the promotion gate, and `/mlops/rollback` + `/mlops/reset` restore earlier state. Promotion is recorded in `models/registry.json` (runtime state), **not** by editing `config.yaml` — config declares the baseline to fall back to. Branch 2/3 have no drift or queue pipeline yet; `deploy/routers/admin.py` is still a stub.
 
 ---
 

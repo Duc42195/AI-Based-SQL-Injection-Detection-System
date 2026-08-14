@@ -35,24 +35,35 @@ Otherwise the URL is derived from `api.host`/`api.port` in
 
 | Page | What it does | Data |
 |---|---|---|
-| 🧪 **Test** | Demo DB table; run a query with/without the model; 2-query session test | **real** (Branch 1 + 2) |
-| 📊 **Monitor** | Drift chart, alert badge, retrain button, logs — per branch | mock |
-| 🏷️ **Data** | Annotated/unannotated pools, labelling form — per branch | mock |
-| 🎓 **Train** | Split selection, live loss curve + logs, confusion matrix + metrics | simulated |
-| 📈 **Metrics** | Real evaluation reports from `report/metrics/*_eval.json` | **real** |
+| 🧪 **Test** | Demo DB table; run a query with/without the model; 2-query session test | **real** (Branch 1 + 2 + 3) |
+| 📊 **Monitor** | Measured PSI per signal, replay control, retrain, run/decision log | **real** (Branch 1) |
+| 🏷️ **Data** | Review queue with AI pre-labels; approve / correct / reject | **real** (Branch 1) |
+| 🎓 **Train** | Seals a data version, trains, runs the gate, promotes; demo reset | **real** (Branch 1) |
+| 📈 **Metrics** | Evaluation reports from `report/metrics/*_eval.json` | **real** |
 
 ### What's real vs. not
 
-- **Real:** Branch 1 (supervised multiclass), Branch 2 (One-Class SVM anomaly), and
+- **Real:** Branch 1 (supervised multiclass), Branch 2 (One-Class SVM anomaly) and
   Branch 3 (Session Correlator — re-uses Branch 1 + Branch 2, no training of its own)
-  inference, the fused BLOCK/OVERKILL/ALLOW decision, the vulnerable demo
-  database (injections genuinely succeed when the model is off), and all
-  evaluation metrics.
-- **Not yet:** Monitor/Data pages serve mock data; the Train page simulates a run
-  rather than retraining the real models (real training lives in `train/train_branch*.py`).
+  inference, the fused BLOCK/OVERKILL/ALLOW decision, the vulnerable demo database
+  (injections genuinely succeed when the model is off), all evaluation metrics, and the
+  **whole MLOps loop for Branch 1** — measured drift, the SQLite review queue, real
+  retraining, the promotion gate, and promote/rollback via the model registry.
+- **Not yet:** the Monitor/Data/Train **tabs for Branch 2 and 3** — no drift pipeline, no
+  review queue, and training there is still simulated. Each says so on screen rather than
+  showing invented numbers. The Admin overkill-queue endpoints remain stubs.
 
 Pages degrade gracefully: a branch that isn't ready renders a placeholder
 instead of erroring, and the sidebar always shows live backend status.
+
+## Running
+
+```bash
+./run.sh     # backend + frontend together (Ctrl-C stops both)
+```
+
+`API_PORT` / `UI_PORT` override the ports. The frontend only starts once the backend
+answers `/health`, so the UI never opens pointing at a dead API.
 
 ## Files
 
