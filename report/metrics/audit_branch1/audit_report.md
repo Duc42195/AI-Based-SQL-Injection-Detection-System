@@ -6,7 +6,7 @@
 
 ---
 
-## Mảng 1 — Phân phối data: ✅ 5 lớp, cân bằng, không còn `stacked`
+## Mảng 1 — Phân phối data: OK, 5 lớp, cân bằng, không còn `stacked`
 
 File kiểm: `data/processed/branch1_train.csv` (67,796 dòng; train 54,236 / test 13,560, split stratified seed 42).
 
@@ -22,7 +22,7 @@ File kiểm: `data/processed/branch1_train.csv` (67,796 dòng; train 54,236 / te
 
 ---
 
-## Mảng 2 — Duplicate / leakage cross-split: ❌ CÓ cross-split leakage (cần dedup)
+## Mảng 2 — Duplicate / leakage cross-split: CÓ cross-split leakage (cần dedup)
 
 | Metric | Giá trị |
 |---|---:|
@@ -38,7 +38,7 @@ File kiểm: `data/processed/branch1_train.csv` (67,796 dòng; train 54,236 / te
 
 ---
 
-## Mảng 3 — SSRF/OS-cmd mislabel & benign-pool contamination: ⚠️ CÓ — nhưng theo note mentor, SSRF trong `normal` là *acceptable for Branch 1*
+## Mảng 3 — SSRF/OS-cmd mislabel & benign-pool contamination: CÓ — nhưng theo note mentor, SSRF trong `normal` là *acceptable for Branch 1*
 
 | Pattern | Total | normal | boolean_blind |
 |---|---:|---:|---:|
@@ -51,7 +51,7 @@ File kiểm: `data/processed/branch1_train.csv` (67,796 dòng; train 54,236 / te
 - **487 dòng SSRF/OS-cmd bị gán nhầm vào `boolean_blind`** (lớp SQLi) — label noise, **đã được ghi nhận là measured limitation (~13%)** trong `data_contract.md` §3.1.
 - **1,153 dòng SSRF/OS-cmd nằm trong `normal`** (pool benign) — nhiễm bẩn tương tự vấn đề Nhánh 2 (chi tiết: `report/metrics/zeroday_experiment/branch2_ssrf_impact.json`).
 
-**⚠️ Lưu ý quan trọng từ note mentor (`data_contract.md` §3.1):**
+**Lưu ý quan trọng từ note mentor (`data_contract.md` §3.1):**
 > *"SSRF callbacks (`owasp.org`) still leak into the `normal` pool. **Acceptable for Branch 1 (SQLi-only concern)**, but needs more rigor when building the benign pool for Branch 2."*
 
 Tức là: **SSRF trong `normal` được mentor chấp nhận cho Branch 1** (Branch 1 chỉ quan tâm phân biệt SQLi vs not-SQLi, không phải benchmark benign). Việc **lọc SSRF nghiêm túc là ưu tiên của Branch 2** (anomaly detector nhạy với benign noise) — và đã được làm cho Branch 2.
@@ -62,7 +62,7 @@ Tức là: **SSRF trong `normal` được mentor chấp nhận cho Branch 1** (B
 
 ---
 
-## Mảng 4 — Content-format duplication `/blog/index.php/2020/03`: ⚠️ rất nặng (17.6%)
+## Mảng 4 — Content-format duplication `/blog/index.php/2020/03`: rất nặng (17.6%)
 
 | Metric | Giá trị |
 |---|---:|
