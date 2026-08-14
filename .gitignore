@@ -48,6 +48,3 @@ models/_archive/
 
 # MLOps: promotion registry (lineage-critical, not weights)
 models/registry.json
-
-# Personal knowledge/notes accumulated while working (not part of the deliverable)
-terms/
