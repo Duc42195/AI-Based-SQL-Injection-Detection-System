@@ -38,7 +38,7 @@ File kiểm: `data/processed/branch1_train.csv` (67,796 dòng; train 54,236 / te
 
 ---
 
-## Mảng 3 — SSRF/OS-cmd mislabel & benign-pool contamination: ⚠️ CÓ, cần lọc
+## Mảng 3 — SSRF/OS-cmd mislabel & benign-pool contamination: ⚠️ CÓ — nhưng theo note mentor, SSRF trong `normal` là *acceptable for Branch 1*
 
 | Pattern | Total | normal | boolean_blind |
 |---|---:|---:|---:|
@@ -48,10 +48,17 @@ File kiểm: `data/processed/branch1_train.csv` (67,796 dòng; train 54,236 / te
 | **Tổng SSRF** | **1,640** | **1,153** | **487** |
 
 **Chẩn đoán:**
-- **487 dòng SSRF/OS-cmd bị gán nhầm vào `boolean_blind`** (lớp SQLi) — đây là label noise, khớp ước lượng ~13% thủ công trong `data_contract.md` §3.1.
-- **1,153 dòng SSRF/OS-cmd nằm trong `normal`** (pool benign) — nhiễm bẩn giống hệt vấn đề SSRF mà Nhánh 2 đã lọc (chi tiết: `report/metrics/zeroday_experiment/branch2_ssrf_impact.json`).
+- **487 dòng SSRF/OS-cmd bị gán nhầm vào `boolean_blind`** (lớp SQLi) — label noise, **đã được ghi nhận là measured limitation (~13%)** trong `data_contract.md` §3.1.
+- **1,153 dòng SSRF/OS-cmd nằm trong `normal`** (pool benign) — nhiễm bẩn tương tự vấn đề Nhánh 2 (chi tiết: `report/metrics/zeroday_experiment/branch2_ssrf_impact.json`).
 
-**Hành động đề xuất:** áp dụng cùng cách Nhánh 2 — dùng `src/utils/ssrf.py` (`is_leaky_row`) để lọc SSRF/OS-cmd khỏi `normal` (benign pool) và khỏi `boolean_blind` (label noise), rồi rebuild dataset.
+**⚠️ Lưu ý quan trọng từ note mentor (`data_contract.md` §3.1):**
+> *"SSRF callbacks (`owasp.org`) still leak into the `normal` pool. **Acceptable for Branch 1 (SQLi-only concern)**, but needs more rigor when building the benign pool for Branch 2."*
+
+Tức là: **SSRF trong `normal` được mentor chấp nhận cho Branch 1** (Branch 1 chỉ quan tâm phân biệt SQLi vs not-SQLi, không phải benchmark benign). Việc **lọc SSRF nghiêm túc là ưu tiên của Branch 2** (anomaly detector nhạy với benign noise) — và đã được làm cho Branch 2.
+
+**Vì vậy KHÔNG mặc định lọc SSRF cho Branch 1.** Đây là quyết định **cần mentor chốt**:
+- **Không lọc** (mặc định theo note): giữ nguyên 1,153 SSRF trong `normal` — chấp nhận như limitation đã ghi. Chỉ cần re-caveat con số eval.
+- **Có lọc** (nếu mentor muốn sạch khái niệm như Branch 2): dùng `src/utils/ssrf.py` (`is_leaky_row`) bỏ SSRF khỏi `normal` và `boolean_blind`, rebuild dataset — nhưng sẽ làm giảm một phần `normal` pool.
 
 ---
 
@@ -71,6 +78,9 @@ File kiểm: `data/processed/branch1_train.csv` (67,796 dòng; train 54,236 / te
 
 1. **Con số cần re-caveat:** `branch1_eval.json` (F1-macro ~0.9822) chưa dedup cross-split (Mảng 2) → con số **lạc quan nhẹ**; chưa phản ánh label noise (Mảng 3) và content-format trùng (Mảng 4).
 2. **Sạch & đáng tin:** phân phối 5 lớp cân bằng (Mảng 1), không phantom `stacked`.
-3. **Hướng xử lý tiếp:** dedup theo `query_canonical` trước split (Mảng 2) + lọc SSRF/OS-cmd khỏi benign & `boolean_blind` (Mảng 3) — cùng chuẩn đã làm cho Nhánh 2.
+3. **Hướng xử lý tiếp (cần mentor chốt):**
+   - **Mảng 2 (cross-split dup):** đề xuất dedup `query_canonical` trước split — đây là điểm cần sửa rõ ràng (949 text trùng cả train & test là leakage vector).
+   - **Mảng 3 (SSRF):** theo note mentor, SSRF trong `normal` là *acceptable for Branch 1* — **không lọc mặc định**; chỉ lọc nếu mentor muốn sạch khái niệm giống Branch 2. `boolean_blind` ~13% noise là measured limitation đã ghi nhận.
+   - **Mảng 4 (`/blog` 17.6%):** content-format duplication — không phải lỗi data; cần ghi nhận để tránh đánh giá sai độ đa dạng.
 
 **Deliverable Day 1:** báo cáo này + `findings.json`. Chưa sửa model; chỉ báo cáo & đề xuất để làm sạch data trước vòng train tiếp.

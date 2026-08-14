@@ -97,5 +97,8 @@ còn attack đã biết để Branch 1 xử lý. Việc dọn cải thiện **t�
 | Mảng 4 — `/blog/index.php/2020/03` | ⚠️ 11,920 dòng (17.58%), chủ yếu union/error/time_blind |
 
 **Kết luận & bước tiếp:** phân phối sạch (Mảng 1), nhưng eval hiện tại (`branch1_eval.json`, F1 ~0.9822)
-cần re-caveat vì chưa dedup cross-split (Mảng 2) và chưa lọc SSRF (Mảng 3). Đề xuất áp dụng cùng chuẩn
-Nhánh 2: dedup theo `query_canonical` trước split + lọc SSRF/OS-cmd bằng `src/utils/ssrf.py`.
+cần re-caveat vì chưa dedup cross-split (Mảng 2). Về SSRF (Mảng 3): **theo note mentor trong
+`data_contract.md` §3.1, SSRF trong `normal` là "acceptable for Branch 1" (Branch 1 chỉ lo SQLi)** —
+việc lọc SSRF nghiêm túc là ưu tiên của Branch 2 (đã làm). Vì vậy **không lọc SSRF mặc định cho
+Branch 1**; chỉ lọc nếu mentor chốt muốn sạch khái niệm giống Branch 2. Điểm cần sửa rõ ràng là
+**Mảng 2**: dedup `query_canonical` trước split để bỏ 949 text trùng cả train & test.

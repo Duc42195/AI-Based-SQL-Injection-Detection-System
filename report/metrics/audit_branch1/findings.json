@@ -54,7 +54,7 @@
       "/etc/passwd": 364,
       "shellshock": 197
     },
-    "note": "Rows matching SSRF/OS-cmd callbacks inside boolean_blind are label noise (doc data_contract.md ~13% hand-sample estimate); rows inside normal are benign-pool contamination analogous to the Branch 2 SSRF leak."
+    "note": "Rows matching SSRF/OS-cmd callbacks inside boolean_blind are label noise (doc data_contract.md ~13% measured limitation); rows inside normal are benign-pool contamination analogous to the Branch 2 SSRF leak. Per data_contract.md, SSRF leaking into normal is 'acceptable for Branch 1 (SQLi-only concern)' - SSRF cleaning is prioritized for Branch 2 (already done). Not a default fix for Branch 1."
   },
   "branch1_blog_duplication": {
     "rows": 11920,
