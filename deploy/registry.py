@@ -163,7 +163,12 @@ class Branch2Model:
             A :class:`Branch2Prediction` with the continuous score and flag.
         """
         canonical = canonicalize(query, self._max_decode_iterations).query_canonical
-        features = extract_statistical_features(canonical).as_list()
+        feats_by_name = extract_statistical_features(canonical).as_dict()
+        # Select/reorder by the detector's own feature_names (from training
+        # config), NOT the full StatisticalFeatures field list — the two can
+        # differ (e.g. branch2_anomaly.features dropping/reordering columns).
+        feature_names = self._detector.feature_names or list(feats_by_name)
+        features = [feats_by_name[name] for name in feature_names]
         X = np.array([features], dtype=float)
         score = float(self._detector.score(X)[0])
         is_anomaly = bool(self._detector.anomaly_flags(X)[0])

@@ -18,12 +18,9 @@ import numpy as np
 import pandas as pd
 
 from src.preprocessing.multiclass_tagger import LABEL_NAMES
+from src.preprocessing.statistical_features import FEATURE_ORDER as _DEFAULT_B2_FEATURE_ORDER
 from src.preprocessing.statistical_features import extract_statistical_features
 from src.utils import Config
-
-# extract_statistical_features always returns features in this fixed order —
-# reorder only if config (branch2_anomaly.features) specifies a different one.
-_DEFAULT_B2_FEATURE_ORDER = ["length", "special_char_ratio", "sql_keyword_count", "entropy"]
 
 
 def branch2_scores_for_texts(texts: list[str], detector, feature_names: list[str] | None = None) -> np.ndarray:
@@ -32,7 +29,8 @@ def branch2_scores_for_texts(texts: list[str], detector, feature_names: list[str
     Shared by train/build_session_dataset.py (scoring dataset rows) and
     ``SessionCorrelator.score()`` (scoring a live session's raw queries) —
     the single place that knows how to turn query text into Branch-2's
-    4-feature input.
+    feature input (selected/reordered from FEATURE_ORDER by ``feature_names``,
+    i.e. whatever the loaded detector was actually trained on).
 
     Rounded to 6 decimals (matching the precision already persisted in
     ``data/processed/branch3_sessions_cach_a.csv``, see
@@ -48,7 +46,12 @@ def branch2_scores_for_texts(texts: list[str], detector, feature_names: list[str
     steps — a real false positive observed via the live API, not a
     hypothetical.
     """
-    feature_names = feature_names or _DEFAULT_B2_FEATURE_ORDER
+    # Prefer the loaded detector's own trained feature list — it's always
+    # correct for THIS detector, unlike the caller-supplied default below
+    # (a bug this exact fallback caused once already: SessionCorrelator.score()
+    # omitted feature_names, silently defaulting to all of FEATURE_ORDER,
+    # which shape-mismatched against a detector trained on a subset).
+    feature_names = feature_names or getattr(detector, "feature_names", None) or _DEFAULT_B2_FEATURE_ORDER
     X = np.array([extract_statistical_features(t).as_list() for t in texts], dtype=np.float64)
     if feature_names != _DEFAULT_B2_FEATURE_ORDER:
         idx = [_DEFAULT_B2_FEATURE_ORDER.index(f) for f in feature_names]

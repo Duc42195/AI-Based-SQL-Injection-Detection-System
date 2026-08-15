@@ -2,7 +2,7 @@
   "version": "branch3_v2",
   "branch": "branch3_session",
   "mechanism": "session_correlator",
-  "trained_at": "2026-08-08T16:31:29Z",
+  "trained_at": "2026-08-15T18:43:10Z",
   "dataset": "data/processed/branch3_sessions_cach_a.csv",
   "dataset_source": {
     "A_real_db": 1050,
@@ -10,8 +10,8 @@
   },
   "calibration": {
     "content_threshold": 0.33832529251072563,
-    "per_query_threshold": -4.532069,
-    "mean_threshold": -4.465326,
+    "per_query_threshold": -0.632886,
+    "mean_threshold": -0.632183,
     "fraction_threshold": 0.25
   },
   "train_sessions": 1120,
@@ -30,7 +30,7 @@
       "detection_rate": {
         "boolean_blind": 1.0,
         "time_blind": 1.0,
-        "query_splitting": 1.0
+        "query_splitting": 0.971429
       }
     },
     "combined": {

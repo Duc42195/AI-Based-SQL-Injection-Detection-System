@@ -148,11 +148,16 @@ def load_branch2_model_and_data():
     logger.info("[Branch 2] Loading model from models/branch2_v1/")
     detector = AnomalyDetector.load(PROJECT / "models" / "branch2_v1")
 
-    logger.info("[Branch 2] Loading eval data ...")
+    cfg = load_config()
+    b2 = cfg.get("branch2_anomaly")
+    data_file = b2.get("data_file", "branch2_data.csv")
+    anomalous_file = b2.get("anomalous_eval_file", "branch2_anomalous_eval.csv")
+
+    logger.info("[Branch 2] Loading eval data (%s / %s) ...", data_file, anomalous_file)
     data_dir = PROJECT / "data" / "processed"
-    benign_df = pd.read_csv(data_dir / "branch2_data.csv")
+    benign_df = pd.read_csv(data_dir / data_file)
     test_benign = benign_df[benign_df["split"] == "test"].copy()
-    anom_df = pd.read_csv(data_dir / "branch2_anomalous_eval.csv")
+    anom_df = pd.read_csv(data_dir / anomalous_file)
 
     logger.info("[Branch 2] Test benign: %d | Anomalous: %d", len(test_benign), len(anom_df))
     return detector, test_benign, anom_df
@@ -160,7 +165,10 @@ def load_branch2_model_and_data():
 
 def compute_branch2_metrics(detector, test_benign, anom_df):
     logger.info("[Branch 2] Computing features ...")
-    feat_names = ["length", "special_char_ratio", "sql_keyword_count", "entropy"]
+    # Match whatever the loaded detector was actually trained on, not a
+    # hardcoded list — branch2_anomaly.features has changed before (see
+    # configs/config.yaml 15/08 retune) and will again.
+    feat_names = detector.feature_names
 
     X_benign = test_benign[feat_names].to_numpy()
     X_anom = anom_df[feat_names].to_numpy()
@@ -324,7 +332,8 @@ def update_branch2_eval(new_metrics):
     report["threshold_sweep_file"] = new_metrics["threshold_sweep"]
     report["eval_note"] = (
         "PR curve, confusion matrix, per-class DR, and threshold sweep "
-        "added on 21/7 for report. Model retrained with same config."
+        "regenerated 16/08 against the retuned model (3 features + "
+        "bigram_entropy, see configs/config.yaml branch2_anomaly)."
     )
     with eval_path.open("w", encoding="utf-8") as f:
         json.dump(report, f, indent=2)

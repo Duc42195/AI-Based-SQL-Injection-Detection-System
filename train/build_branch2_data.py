@@ -8,6 +8,14 @@ This replaces the old build_branch2_dataset.py approach (which built from raw
 D1/D3/D7 sources). The HF dataset already includes properly canonicalized text
 and stratified splits, so we skip de-novo cleaning and reuse split+label
 directly.
+
+Always computes/writes the FULL canonical feature set (statistical_features.
+FEATURE_ORDER), not just whatever subset branch2_anomaly.features currently
+trains the model on: downstream data-curation tooling (e.g.
+train/clean_branch2_data.py's short-string rebalancing) needs columns like
+`length` to exist regardless of whether the model itself uses them. Which
+columns actually feed the model is a train/train_branch2.py-time decision
+(it selects the branch2_anomaly.features subset from whatever's in the CSV).
 """
 
 from __future__ import annotations
@@ -17,18 +25,14 @@ from pathlib import Path
 
 from datasets import load_dataset
 
-from src.preprocessing.statistical_features import extract_statistical_features
+from src.preprocessing.statistical_features import FEATURE_ORDER, extract_statistical_features
 from src.utils import get_logger, load_config
 
 logger = get_logger(__name__)
 
-def _get_feature_names(cfg) -> list[str]:
-    return list(cfg.get_path("branch2_anomaly.features", ["length", "special_char_ratio", "sql_keyword_count", "entropy"]))
-
 
 def main() -> None:
     cfg = load_config()
-    features = _get_feature_names(cfg)
     processed_dir = Path(cfg.get_path("paths.data_processed", "data/processed"))
     processed_dir.mkdir(parents=True, exist_ok=True)
 
@@ -42,19 +46,17 @@ def main() -> None:
     rows: list[dict] = []
     for i, row in enumerate(normal):
         canonical = row["query_canonical"]
-        feats = extract_statistical_features(canonical)
-        rows.append({
+        feats_by_name = extract_statistical_features(canonical).as_dict()
+        row_out = {
             "id": i,
             "query_raw": row["query_raw"],
             "query_canonical": canonical,
             "has_comment_marker": row["has_comment_marker"],
-            "length": feats.length,
-            "special_char_ratio": round(feats.special_char_ratio, 6),
-            "sql_keyword_count": feats.sql_keyword_count,
-            "entropy": round(feats.entropy, 6),
+            **{name: round(feats_by_name[name], 6) for name in FEATURE_ORDER},
             "source": row["source"],
             "split": row["split"],
-        })
+        }
+        rows.append(row_out)
 
     train_count = sum(1 for r in rows if r["split"] == "train")
     test_count = sum(1 for r in rows if r["split"] == "test")
@@ -63,7 +65,7 @@ def main() -> None:
     out_path = processed_dir / "branch2_data.csv"
     fieldnames = [
         "id", "query_raw", "query_canonical", "has_comment_marker",
-        *features, "source", "split",
+        *FEATURE_ORDER, "source", "split",
     ]
     with out_path.open("w", newline="", encoding="utf-8") as f:
         writer = csv.DictWriter(f, fieldnames=fieldnames)
@@ -76,17 +78,18 @@ def main() -> None:
         anom_ds = load_dataset(
             "Jason-42195/VNU-SQLi-Detection", data_files="branch2_anomalous_eval.csv", split="train"
         )
+        # Recompute features locally rather than trusting the HF-hosted columns:
+        # that file predates newer entries in branch2_anomaly.features (e.g.
+        # bigram_entropy), so its stat columns would otherwise be missing/stale.
         anom_rows: list[dict] = []
         for i, row in enumerate(anom_ds):
+            feats_by_name = extract_statistical_features(row["query_canonical"]).as_dict()
             anom_rows.append({
                 "id": i,
                 "query_raw": row["query_raw"],
                 "query_canonical": row["query_canonical"],
                 "has_comment_marker": row["has_comment_marker"],
-                "length": row["length"],
-                "special_char_ratio": row["special_char_ratio"],
-                "sql_keyword_count": row["sql_keyword_count"],
-                "entropy": row["entropy"],
+                **{name: round(feats_by_name[name], 6) for name in FEATURE_ORDER},
                 "source": row["source"],
             })
         anom_out = processed_dir / "branch2_anomalous_eval.csv"
