@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from src.preprocessing.statistical_features import extract_statistical_features
+from src.preprocessing.statistical_features import FEATURE_ORDER, extract_statistical_features
 
 
 def test_empty_string() -> None:
@@ -11,6 +11,7 @@ def test_empty_string() -> None:
     assert f.special_char_ratio == 0.0
     assert f.sql_keyword_count == 0
     assert f.entropy == 0.0
+    assert f.bigram_entropy == 0.0
 
 
 def test_length_matches_input() -> None:
@@ -35,8 +36,23 @@ def test_entropy_higher_for_more_varied_text() -> None:
     assert varied.entropy > uniform.entropy
 
 
-def test_as_list_returns_four_floats() -> None:
+def test_bigram_entropy_zero_for_short_strings() -> None:
+    assert extract_statistical_features("a").bigram_entropy == 0.0
+
+
+def test_bigram_entropy_lower_for_repeated_bigrams() -> None:
+    repeated = extract_statistical_features(")))))))))" * 3)
+    varied = extract_statistical_features("select id from users where name='a'")
+    assert repeated.bigram_entropy < varied.bigram_entropy
+
+
+def test_as_list_returns_five_floats_in_feature_order() -> None:
     f = extract_statistical_features("select 1")
     values = f.as_list()
-    assert len(values) == 4
+    assert len(values) == len(FEATURE_ORDER) == 5
     assert all(isinstance(v, float) for v in values)
+
+
+def test_as_dict_keys_match_feature_order() -> None:
+    f = extract_statistical_features("select 1")
+    assert list(f.as_dict().keys()) == FEATURE_ORDER

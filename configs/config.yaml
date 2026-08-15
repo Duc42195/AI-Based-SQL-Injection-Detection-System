@@ -100,40 +100,71 @@ branch2_anomaly:
   # Trained on BENIGN ONLY. Output is a continuous anomaly score used both as a
   # per-query zero-day flag and as an extra feature dim fed into Branch 3.
   # "isolation_forest" | "one_class_svm"
-  # CHOSEN (training audit 16/7): OCSVM (gamma=0.01, nu=0.005) AUC=0.887
-  #   — significantly out-performs IF (AUC=0.734) and the untuned OCSVM (0.805).
   algorithm: "one_class_svm"
   # Model folder under models_dir (created once Branch 2 is trained). Until then
   # the API reports this branch as "not_ready" instead of crashing.
   active_version: "branch2_v1"
+  # Benign-pool CSVs (under paths.data_processed). Post-cleanup (14/08, see
+  # report/plan/solution_branch2_cleanup.md) these point at the SSRF-removed /
+  # short-string-rebalanced files, not the originals build_branch2_data.py
+  # writes directly — run train/clean_branch2_data.py after
+  # train/build_branch2_data.py to (re)generate them.
+  data_file: "branch2_data_clean.csv"
+  anomalous_eval_file: "branch2_anomalous_eval_clean.csv"
   # Expected fraction of anomalies in the (Normal) training data.
   # NOTE: training data is 100 % benign (0 % anomaly), so this should be very
   # small — IF='auto' uses the algorithm's own estimate; OCSVM default nu=0.001.
   # Shared contamination (used for Isolation Forest). One-Class SVM uses its
   # own ocsvm_nu below — each algorithm independently tuned.
   contamination: 0.01
-  # One-Class SVM specific hyperparameters (tuned via grid search 16/7).
-  ocsvm_nu: 0.005
+  # One-Class SVM specific hyperparameters — retuned 15/08 via grid search
+  # (branch2_anomaly.tune below) on the CLEAN data + the 3-feature set below.
+  # nu=0.001 beat nu=0.005 on BOTH validation AUC (0.943) and P95-matched-FPR=5%
+  # DR (63.6% vs 62.1%) — not just an AUC-only pick that happens to hurt DR.
+  # See train/explore_branch2_new_features.py / report/metrics/branch2_feature_exploration.json.
+  ocsvm_nu: 0.001
   ocsvm_gamma: 0.01
-  # Scale all features with StandardScaler before training.  EMPIRICAL NOTE
-  # (training audit 16/7): scaling all features *hurt* AUC for both algorithms
-  # (IF 0.734→0.678, OCSVM 0.805→0.533) because length carries most of the
-  # discriminative power (permutation-importance drop 0.288) while other features
-  # (e.g. special_char_ratio, mean 0.039 for both groups) are noisy.  Scaling
-  # equalises their influence and dilutes the length signal.  Keep disabled
-  # unless feature selection is applied first.
-  scale_features: false
-  # Feature names to apply log1p-transform before scaling (handles extreme
-  # right-skewed distributions — "length" has max 5 370 vs mean 47).
-  log_transform_features:
-    - "length"
+  # Scale all features with StandardScaler before training. EMPIRICAL NOTE
+  # (retuned 15/08, post-cleanup): with `length` dropped (see `features`
+  # below), the remaining 3 features are on comparable raw scales, so
+  # scaling now HELPS (DR 56.8%->62.1% at matched FPR=5%) instead of hurting
+  # like it did in the original 16/7 audit — that finding was specific to
+  # `length` dominating raw magnitude, which no longer applies once `length`
+  # itself is out of the feature set.
+  scale_features: true
+  # No feature currently needs log1p — `length` (the only right-skewed one)
+  # was dropped; sql_keyword_count/entropy/bigram_entropy are all reasonably
+  # bounded/unimodal (tested both ways, see explore_branch2_new_features.py).
+  log_transform_features: []
   # Statistical/structural features extracted per query (not TF-IDF - Branch 2
   # needs to generalize to unseen syntax, so features describe SHAPE not content).
+  #
+  # RETUNED 15/08 after the SSRF/short-string cleanup regressed separation
+  # (DR 41.87%->31.19% at matched FPR=5%, see solution_branch2_cleanup.md).
+  # Root cause: removing the short-string benign cluster left only complex
+  # JOIN/subquery benign rows, which overlap attack payloads in `length` once
+  # that cluster is gone — `length` used to be ~80% of permutation importance
+  # precisely BECAUSE of the short-string cluster it no longer has. Ablation
+  # (train/explore_branch2_new_features.py) over all 2^4 subsets of the
+  # original 4 features + the new bigram_entropy candidate found:
+  #   - `length` now HURTS every combination it's in (confound, not signal).
+  #   - `special_char_ratio` is inert (identical results with/without it in
+  #     every combo tested — near-identical distribution both groups).
+  #   - `sql_keyword_count` + `entropy` + `bigram_entropy` together: best AUC
+  #     among all subsets tried; after also retuning ocsvm_nu/gamma for this
+  #     subset (below), final AUC=0.949, DR=63.6% at matched FPR=5% (vs 31.2%
+  #     with the old 4-feature set on the same clean data — recovers AND
+  #     exceeds the pre-cleanup 41.87%).
+  # CAVEAT: this subset was chosen by scoring all 16 candidate subsets
+  # directly against branch2_anomalous_eval_clean.csv (no separate
+  # feature-selection validation split) — the reported DR/AUC for the winning
+  # subset is therefore somewhat optimistic (selection-on-test bias). Treat
+  # as a strong signal, not a final number for the paper without a
+  # confirmatory re-split.
   features:
-    - "length"
-    - "special_char_ratio"
     - "sql_keyword_count"
     - "entropy"
+    - "bigram_entropy"
   # Held-out split of the benign pool for evaluating FPR (build_branch2_dataset.py).
   test_fraction: 0.2
   # Hyperparameter tuning via grid search (disabled by default; enable for

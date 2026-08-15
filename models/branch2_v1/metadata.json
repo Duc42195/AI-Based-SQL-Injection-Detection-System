@@ -1,15 +1,12 @@
 {
   "algorithm": "one_class_svm",
-  "contamination": 0.005,
+  "contamination": 0.001,
   "random_seed": 42,
-  "scale_features": false,
-  "log_transform_features": [
-    "length"
-  ],
+  "scale_features": true,
+  "log_transform_features": [],
   "feature_names": [
-    "length",
-    "special_char_ratio",
     "sql_keyword_count",
-    "entropy"
+    "entropy",
+    "bigram_entropy"
   ]
 }

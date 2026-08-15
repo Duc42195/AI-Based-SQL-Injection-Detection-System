@@ -27,16 +27,14 @@ import pandas as pd
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 os.chdir(Path(__file__).resolve().parents[1])
 
+from src.preprocessing.statistical_features import FEATURE_ORDER  # noqa: E402
 from src.utils import get_logger  # noqa: E402
 from src.utils.ssrf import is_leaky_row as _is_leaky, read_csv_keep_na  # noqa: E402
 
 logger = get_logger(__name__)
 
 SHORT_LEN = 10
-DATA_COLUMNS = [
-    "id", "query_raw", "query_canonical", "has_comment_marker",
-    "length", "special_char_ratio", "sql_keyword_count", "entropy",
-]
+DATA_COLUMNS = ["id", "query_raw", "query_canonical", "has_comment_marker", *FEATURE_ORDER]
 
 
 def _rebalance_short(df: pd.DataFrame, target_ratio: float, rng: np.random.Generator) -> pd.DataFrame:

@@ -39,16 +39,20 @@ def _load_data(cfg: Config) -> tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame]:
     """
     processed_dir = Path(cfg.get_path("paths.data_processed", "data/processed"))
 
-    normal_path = processed_dir / "branch2_data.csv"
+    data_file = cfg.get_path("branch2_anomaly.data_file", "branch2_data.csv")
+    normal_path = processed_dir / data_file
     if not normal_path.exists():
         raise FileNotFoundError(
-            f"{normal_path} not found. Run train/build_branch2_data.py first."
+            f"{normal_path} not found. Run train/build_branch2_data.py "
+            "(and train/clean_branch2_data.py if branch2_anomaly.data_file "
+            "points at the cleaned CSV) first."
         )
     df = pd.read_csv(normal_path)
     train_df = df[df["split"] == "train"].reset_index(drop=True)
     test_benign_df = df[df["split"] == "test"].reset_index(drop=True)
 
-    anomalous_path = processed_dir / "branch2_anomalous_eval.csv"
+    anomalous_file = cfg.get_path("branch2_anomaly.anomalous_eval_file", "branch2_anomalous_eval.csv")
+    anomalous_path = processed_dir / anomalous_file
     if anomalous_path.exists():
         test_anomalous_df = pd.read_csv(anomalous_path)
     else:
@@ -132,6 +136,20 @@ def _eval_detector(
     scores_benign = detector.score(X_benign)
     preds_benign = detector.anomaly_flags(X_benign)
 
+    # NOTE on the two thresholds reported here — kept explicit after a past
+    # incident (report/plan/solution_branch2_cleanup.md) where "detection
+    # rate" got quoted from two different threshold definitions and produced
+    # opposite before/after conclusions in the same document:
+    #   - fpr/detection_rate below: the model's OWN threshold, implied by
+    #     `contamination`/`nu` at fit time. NOT guaranteed to land on any
+    #     particular test-set FPR — it can drift across data/hyperparameter
+    #     changes even when nu is unchanged, because nu bounds the TRAIN
+    #     margin-violation fraction, not the held-out test FPR directly.
+    #   - matched_fpr_5pct below: threshold explicitly calibrated so TEST FPR
+    #     = 5% (P95 of benign-test scores), for apples-to-apples comparison
+    #     across model/data versions. Prefer this one when comparing DR
+    #     across different runs; use fpr/detection_rate for describing THIS
+    #     model's actual deployed behavior at its configured nu.
     fpr = float(preds_benign.mean())
     results["fpr"] = round(fpr, 6)
     results["n_benign"] = int(len(X_benign))
@@ -171,10 +189,22 @@ def _eval_detector(
         except ValueError:
             auc = None
 
+        # Matched-FPR=5% operating point (P95 of benign-test scores) — see
+        # note above. Independent of `contamination`/nu; always comparable
+        # across runs.
+        matched_threshold = float(np.percentile(scores_benign, 95))
+        matched_fpr = float((scores_benign > matched_threshold).mean())
+        matched_dr = float((scores_anom > matched_threshold).mean())
+        results["matched_fpr_5pct"] = {
+            "threshold": round(matched_threshold, 6),
+            "actual_fpr": round(matched_fpr, 6),
+            "detection_rate": round(matched_dr, 6),
+        }
+
         logger.info(
-            "[%s] Detection-rate=%.4f (%d/%d)  AUC=%s",
+            "[%s] Detection-rate=%.4f (%d/%d)  AUC=%s  |  matched-FPR=5%%: FPR=%.4f DR=%.4f",
             label, detection_rate, int(preds_anom.sum()), len(X_anomalous),
-            f"{auc:.4f}" if auc else "N/A",
+            f"{auc:.4f}" if auc else "N/A", matched_fpr, matched_dr,
         )
 
     return results
