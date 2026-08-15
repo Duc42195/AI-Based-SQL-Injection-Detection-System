@@ -1,0 +1,59 @@
+{
+  "config": {
+    "algorithm": "one_class_svm",
+    "contamination": 0.005,
+    "gamma": 0.01,
+    "scale_features": false,
+    "log_transform_features": [
+      "length"
+    ],
+    "feature_names": [
+      "length",
+      "special_char_ratio",
+      "sql_keyword_count",
+      "entropy"
+    ]
+  },
+  "sizes": {
+    "train_total": 12000,
+    "leaky_train_rows": 928,
+    "leaky_train_pct": 7.733,
+    "test_leaky_rows": 225,
+    "anomalous_eval_rows": 25065
+  },
+  "current_pool": {
+    "fpr_benign": 0.003,
+    "detection_rate": 0.207301,
+    "benign_score": {
+      "p50": -3.1617,
+      "p90": -1.30372,
+      "p99": -0.3867,
+      "max": 8.1294,
+      "mean": -3.10269
+    },
+    "leaky_train_rows_flag_anomalous_pct": 0.539,
+    "leaky_train_score": {
+      "p50": -1.05116,
+      "p90": -0.55682,
+      "p99": -0.21648,
+      "max": 1.65354,
+      "mean": -1.15278
+    }
+  },
+  "cleaned_pool": {
+    "fpr_benign": 0.003667,
+    "detection_rate": 0.23084,
+    "benign_score": {
+      "p50": -2.83167,
+      "p90": -0.99921,
+      "p99": -0.14621,
+      "max": 6.94904,
+      "mean": -2.78154
+    }
+  },
+  "delta": {
+    "fpr_diff": 0.000667,
+    "dr_diff": 0.023539,
+    "p90_diff": 0.30451
+  }
+}
