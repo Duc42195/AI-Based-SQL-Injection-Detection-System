@@ -260,6 +260,10 @@ class SessionCorrelator:
         fires_content = attack_prob >= self.content_threshold
 
         if branch2_scores is None:
+            # feature_names intentionally omitted: branch2_scores_for_texts
+            # defaults to self.b2_detector.feature_names internally (falls
+            # back further to FEATURE_ORDER for detector stand-ins that don't
+            # carry it, e.g. this module's tests).
             branch2_scores = branch2_scores_for_texts(canonical_texts, self.b2_detector)
         scores_arr = np.asarray(branch2_scores, dtype=np.float64)
         mean_score = float(scores_arr.mean())

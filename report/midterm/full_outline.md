@@ -737,13 +737,21 @@ Branch 1 classifies each canonicalized query into one of five classes: `normal`,
 
 ## **2.5 Branch 2 — Query-Level Anomaly Detection: Methodology and Dataset**
 
-Branch 2 is trained exclusively on benign traffic and produces a continuous anomaly score for each query, rather than a class label. Because the goal is to generalize to attack syntax that has never been observed, Branch 2 deliberately avoids TF-IDF (which is tied to vocabulary seen during training) and instead uses four generic statistical/structural features computed directly from the canonicalized query string: length, ratio of special characters, count of SQL keywords, and Shannon entropy. Two unsupervised algorithms were compared — Isolation Forest and One-Class SVM — under the same feature set and preprocessing (Section 2.9).
+> **⚠ NEEDS RECONCILING (16/08):** this section's dataset paragraph below still describes the *original* raw-source pipeline (`train/build_branch2_dataset.py`, 91,935 benign rows pooled directly from SQLiV3/CSIC 2010/SR-BH 2020). The codebase has since switched to a smaller HF-hosted pool (`train/build_branch2_data.py`, ~15,000 benign rows from the published `Jason-42195/VNU-SQLi-Detection` dataset; 12,000 train/3,000 test before the SSRF/short-string cleanup below, 9,164/2,775 after) — every result actually produced today (this section's feature/hyperparameter update, `models/branch2_v1/`, `report/metrics/branch2_eval.json`) is on the SMALLER pool. Not resolved here: is the 91,935-row paragraph stale text that should be deleted, or does it describe a real, separate experiment that should be kept and re-run alongside the HF-pool one? Needs a call from Duc before camera-ready — flagging rather than silently picking one.
 
-Branch 2 pools clean benign rows from SQLiV3, CSIC 2010, and SR-BH 2020, using the same content-based filtering described in Section 2.4 to reject rows resembling any known attack category (SQLi and, incidentally, OS command injection, SSI, and XSS) rather than only SQLi — a broader filter than Branch 1 needs, because an anomaly detector's training pool has to be clean of *any* abnormal traffic, not just SQLi. After filtering (~7.4% of candidates rejected) and de-duplication (roughly 113,000 duplicate rows removed, largely repeated static-asset requests present in CSIC 2010/SR-BH 2020), the benign pool contains 91,935 rows (73,548 train / 18,387 test). The four statistical features above are pre-computed as columns on this dataset.
+Branch 2 is trained exclusively on benign traffic and produces a continuous anomaly score for each query, rather than a class label. Because the goal is to generalize to attack syntax that has never been observed, Branch 2 deliberately avoids TF-IDF (which is tied to vocabulary seen during training) and instead uses generic statistical/structural features computed directly from the canonicalized query string.
+
+**Feature set revised 15–16/08** after a post-cleanup regression (below) exposed that the original 4-feature set no longer separated benign from anomalous well. An ablation over all subsets of {length, special_char_ratio, sql_keyword_count, entropy} plus one new candidate feature — **bigram entropy** (Shannon entropy over adjacent-character pairs rather than single characters, sensitive to local structural repetition such as `))`, `--`, or runs of quotes/parens that unigram entropy misses) — found `length` and `special_char_ratio` no longer contribute (see below) and `{sql_keyword_count, entropy, bigram_entropy}` gives the best separation of every subset tried. The deployed feature set is now these **three** features, not four. Two unsupervised algorithms were compared — Isolation Forest and One-Class SVM — under the same feature set and preprocessing (Section 2.9).
+
+Branch 2 pools clean benign rows from SQLiV3, CSIC 2010, and SR-BH 2020, using the same content-based filtering described in Section 2.4 to reject rows resembling any known attack category (SQLi and, incidentally, OS command injection, SSI, and XSS) rather than only SQLi — a broader filter than Branch 1 needs, because an anomaly detector's training pool has to be clean of *any* abnormal traffic, not just SQLi. After filtering (~7.4% of candidates rejected) and de-duplication (roughly 113,000 duplicate rows removed, largely repeated static-asset requests present in CSIC 2010/SR-BH 2020), the benign pool contains 91,935 rows (73,548 train / 18,387 test). The four statistical features above are pre-computed as columns on this dataset. *(See reconciliation note above — the pipeline actually producing today's results uses a different-sized pool.)*
 
 A separate, held-out set of 25,065 anomalous rows from CSIC 2010 is kept exclusively for evaluation (never used in training) to measure false-positive rate and detection rate. This set is not SQLi-exclusive — it mixes multiple CSIC 2010 attack categories (buffer overflow, XSS, path traversal, in addition to SQLi) — so its average `sql_keyword_count` is, counter-intuitively, *lower* than the benign pool's (0.13 vs. 0.35). Results on this set (Section 2.9) should therefore be read as "general anomaly detection rate," not a SQLi-specific detection rate, unless the SQLi subset is isolated separately.
 
-For the model reported in Section 2.9, the One-Class SVM was fit on a 12,000-row sample of the benign training pool rather than the full 73,548 rows; this reflects the practical scaling limits of One-Class SVM on the available hardware and is noted here as an open methodological point worth revisiting (Section 2.12.6) rather than glossed over.
+**Benign-pool audit (14/08, `report/plan/solution_branch2_cleanup.md`):** manual review found 1,153 rows in the benign pool were mislabeled SSRF/OS-command-callback payloads (`owasp.org` callbacks, `/etc/passwd`, Shellshock strings) rather than genuine benign traffic, and that rows with length ≤ 10 made up 18.2% of train — disproportionate versus real HTTP-request length distributions (Mah 1997). Both were fixed: the 1,153 mislabeled rows were moved into the anomalous eval set instead of deleted, and the length ≤ 10 rows were rebalanced (not deleted, since they are genuine benign traffic) down to 3% of train. This is a **data-quality fix, not a retrain of the deployed model by itself** — see the regression it exposed, next.
+
+**A cleanup can regress a model even when it fixes a real bug — this happened here and is worth reporting as-is.** Re-fitting the (then-4-feature) One-Class SVM on the cleaned pool, using one fixed comparison methodology throughout (detection rate at a threshold explicitly calibrated to a matched 5% FPR on held-out benign test — see the boxed methodology note in Section 2.9, added for exactly this reason), detection rate **fell** from 41.9% to 31.2%. Root cause: the removed length ≤ 10 rows had been acting as an "anchor" cluster that made the *rest* of the length distribution look separable from attack payloads; once removed, the remaining benign rows (genuine but longer, syntactically complex — JOIN/subquery-style) overlap attack-payload length almost completely, and `length` — previously ~80% of permutation importance — became a net-negative confound rather than a signal. This is what motivated the feature-set ablation above: `bigram_entropy` plus dropping `length`/`special_char_ratio` recovers separation past the pre-cleanup number (Section 2.9).
+
+For the model reported in Section 2.9, the One-Class SVM was fit on the benign training pool actually available in `data/processed/` (9,164 rows post-cleanup — see reconciliation note above for why this differs from the 73,548-row figure elsewhere in this section); this reflects the practical scaling limits of One-Class SVM on the available hardware and is noted here as an open methodological point worth revisiting (Section 2.12.6) rather than glossed over.
 
 ## **2.6 Decision Rule and the Overkill Policy (Midterm Scope)**
 
@@ -796,38 +804,46 @@ The confusion matrix shows the only material confusion is between `normal` and `
 
 ## **2.9 Branch 2 Results**
 
-Table 2.4 compares the two candidate algorithms.
+**Numbers below updated 16/08** for the retuned 3-feature model (Section 2.5); `report/metrics/branch2_eval.json` and `report/metrics/branch2_threshold_sweep.csv` are the regenerated source-of-truth files.
+
+> **Methodology note — two threshold definitions, kept explicit after a past mix-up.** An earlier internal write-up (`report/plan/solution_branch2_cleanup.md`) quoted a "detection rate" that turned out to blend two different threshold definitions across a before/after comparison and produced an inverted conclusion (looked like an improvement; the same-methodology comparison showed a regression — see Section 2.5). To prevent recurrence, every result below distinguishes: **(a) native threshold** — the model's own decision boundary implied by its `contamination`/`nu` at fit time, not guaranteed to land on any particular test-set FPR across data/hyperparameter changes; and **(b) matched-FPR=5% threshold** — explicitly calibrated so held-out benign-test FPR = 5% (the 95th percentile of benign-test scores), used whenever comparing detection rate *across* model/data versions.
+
+Table 2.4 compares the two candidate algorithms at their native threshold.
 
 ### **Table 2.4 Branch 2 Algorithm Comparison**
 
-| Algorithm | Contamination | FPR | Detection Rate | AUC |
-| :---- | :---- | :---- | :---- | :---- |
-| Isolation Forest | 0.01 | 0.63% | 3.19% | 0.670 |
-| **One-Class SVM (chosen)** | 0.005 | **0.30%** | **20.73%** | **0.902** |
+| Algorithm | Contamination (nu) | FPR (native) | Detection Rate (native) | Detection Rate (matched FPR=5%) | AUC |
+| :---- | :---- | :---- | :---- | :---- | :---- |
+| Isolation Forest | 0.01 | 2.77% | 4.77% | 27.4% | 0.644 |
+| **One-Class SVM (chosen)** | 0.001 | **0.07%** | **22.5%** | **63.6%** | **0.949** |
 
-One-Class SVM was selected for its substantially higher AUC and detection rate at a comparable (in fact lower) false-positive rate. On the held-out evaluation (3,000 benign, 25,065 anomalous, mixed-attack-type as noted in Section 2.5), the chosen model produces 9 false positives out of 3,000 benign queries (FPR = 0.3%) and correctly flags 5,196 of 25,065 anomalous queries (detection rate = 20.7%), with average precision (PR-AUC) = 0.982.
+One-Class SVM was selected for its substantially higher AUC and detection rate at a comparable (in fact lower) false-positive rate. On the held-out evaluation (2,775 benign, 26,218 anomalous — the anomalous set now includes the 1,153 SSRF rows moved out of the benign pool, Section 2.5), the chosen model produces 2 false positives out of 2,775 benign queries at its native (very conservative, nu = 0.001) threshold, correctly flagging 22.5% of anomalous queries there and **63.6% at the matched-FPR=5% operating point**, with average precision (PR-AUC) = 0.993. Per-class breakdown surfaces something the aggregate number hides: detection rate is 23.5% on the D3 CSIC 2010 attacks but only 0.9% on the SSRF rows moved into this set — expected, since Branch 2 targets SQLi zero-days, not SSRF (a structurally different attack family), and worth stating explicitly rather than leaving it inside one blended number.
 
 **→ Insert Figure 2.2 here (`report/metrics/figures/branch2_pr_curve.png`) — Branch 2 Precision–Recall curve.**
 **→ Insert Figure 2.3 here (`report/metrics/figures/branch2_score_dist.png`) — Branch 2 anomaly score distribution, benign vs. anomalous.**
+**→ Optional: `report/metrics/zeroday_experiment/branch2_dist_final.png`/`branch2_dr_journey.png` — 3-panel distribution and bar chart showing the before-cleanup / after-cleanup-regression / after-feature-fix journey described in Section 2.5; useful if the debugging story itself is included as a methodology figure.**
 
-As noted in Section 2.5, the 20.7% detection rate is measured against a multi-attack-type evaluation set, not a SQLi-only one; it should be read as a general anomaly detection rate unless the evaluation set is first filtered to SQLi-only rows.
+As noted in Section 2.5, this detection rate is measured against a multi-attack-type evaluation set, not a SQLi-only one; it should be read as a general anomaly detection rate unless the evaluation set is first filtered to SQLi-only rows.
 
-**Why a headline detection rate of 20.7% is consistent with AUC = 0.902.** FPR and detection rate are both computed at a *single, fixed* decision threshold — the one corresponding to the deployed operating point (contamination = 0.005). AUC, by contrast, integrates performance across the *entire* range of possible thresholds. A high AUC with a low detection rate at one specific point simply means the model separates benign from anomalous traffic well overall, and the deployed threshold was chosen deliberately conservative (to keep FPR — and therefore the Overkill/HOLD administrator workload, Section 2.6 — very low), not that the model is weak. A full sweep across 21 thresholds (`report/metrics/branch2_threshold_sweep.csv`) makes this trade-off explicit; Table 2.5 shows selected points from that sweep.
+**Why a native-threshold detection rate can look low while AUC is high.** FPR and detection rate at the native threshold are both computed at a *single, fixed* decision point — the one corresponding to the deployed operating point (contamination/nu = 0.001, chosen deliberately conservative). AUC, by contrast, integrates performance across the *entire* range of possible thresholds. A high AUC with a low detection rate at one specific, very-low-FPR point simply means the model separates benign from anomalous traffic well overall, and the deployed threshold trades detection rate for a very low false-positive rate (to keep the Overkill/HOLD administrator workload, Section 2.6, low), not that the model is weak. A full sweep across 21 thresholds (`report/metrics/branch2_threshold_sweep.csv`) makes this trade-off explicit; Table 2.5 shows selected points from that sweep.
 
 ### **Table 2.5 Branch 2 Threshold Sweep (Selected Operating Points)**
 
 | Operating point | FPR | Detection Rate | Precision |
 | :---- | :---- | :---- | :---- |
-| **Deployed (contamination = 0.005)** | **0.30%** | **20.7%** | 99.8% |
-| Relaxed 1 | 3.17% | 33.2% | 98.9% |
-| Relaxed 2 | 13.4% | 65.6% | 97.6% |
-| Relaxed 3 | 20.5% | 87.1% | 97.3% |
-| Relaxed 4 | 30.6% | 97.1% | 96.4% |
+| **Deployed (native, nu = 0.001)** | **0.07%** | **22.5%** | 99.97% |
+| Matched FPR=5% (reporting reference) | 5.01% | 63.6% | — |
+| Relaxed 1 | 0.86% | 33.1% | 99.7% |
+| Relaxed 2 | 2.38% | 55.0% | 99.5% |
+| Relaxed 3 | 9.26% | 76.4% | 98.7% |
+| Relaxed 4 | 21.3% | 97.3% | 97.7% |
 | Maximally relaxed | ~100% | 100% | — |
 
 **→ Insert Figure 2.4 here (`report/metrics/figures/branch2_threshold_tradeoff.png`) — FPR / Detection-Rate threshold trade-off.**
 
-Detection rate rises sharply as the threshold is relaxed — reaching 97.1% at 30.6% FPR — which is exactly what a high AUC predicts. The deployed operating point was chosen at the very-low-FPR end of this curve because, under the Overkill policy (Section 2.6), every false positive becomes work for an administrator; the appropriate operating point is therefore a deployment/product decision, not a fixed property of the model, and Table 2.5 (or the full 21-point sweep) is the artifact that should be handed to whoever makes that decision.
+Detection rate rises sharply as the threshold is relaxed — reaching 97.3% at 21.3% FPR — which is exactly what a high AUC predicts. The deployed operating point was chosen at the very-low-FPR end of this curve because, under the Overkill policy (Section 2.6), every false positive becomes work for an administrator; the appropriate operating point is therefore a deployment/product decision, not a fixed property of the model, and Table 2.5 (or the full 21-point sweep) is the artifact that should be handed to whoever makes that decision.
+
+**Caveat on the feature-selection process (state this in Limitations, Section 2.12, not just here):** the winning 3-feature subset above was chosen by scoring all 16 candidate feature subsets directly against the held-out anomalous evaluation set, with no separate feature-selection validation split. The reported detection rate for the winning subset is therefore somewhat optimistic (selection-on-test bias) — a real and consistent signal (corroborated by both a univariate check and the full ablation reproducing the known root cause), but not a number that should be presented as final without a confirmatory re-split.
 
 ## **2.10 Illustrative Demonstration**
 
@@ -835,7 +851,7 @@ A demonstration notebook (`train/notebooks/demo_detect.ipynb`) loads the trained
 
 ## **2.11 Summary of Results**
 
-Branch 1 and Branch 2 both meet the accuracy targets set out in the Research Objectives, at latencies (0.5 ms and — for Branch 2, feature computation plus a linear SVM decision — comparably small) consistent with real-time proxy use. Branch 2's headline detection rate (20.7%) looks low in isolation, but Section 2.9 shows this is a deliberately conservative operating-point choice, not a weak model — AUC = 0.902 and the threshold sweep (Table 2.5) confirm detection rate rises above 97% if a higher FPR is accepted.
+Branch 1 and Branch 2 both meet the accuracy targets set out in the Research Objectives, at latencies (0.5 ms and — for Branch 2, feature computation plus a linear SVM decision — comparably small) consistent with real-time proxy use. Branch 2's headline detection rate at its deployed native threshold (22.5%) looks modest in isolation, but Section 2.9 shows this is a deliberately conservative operating-point choice, not a weak model — AUC = 0.949, detection rate is 63.6% at a matched FPR=5% comparison point, and the threshold sweep (Table 2.5) confirms detection rate rises above 97% if a higher FPR is accepted.
 
 ## **2.12 Discussion and Limitations**
 
@@ -869,7 +885,7 @@ Two points are flagged here rather than silently accepted: (1) the Branch 2 One-
 
 ## **Summary of Contributions**
 
-This midterm report covers two working, evaluated components of a larger planned SQL Injection detection system: a supervised multi-class classifier (Branch 1, F1-macro = 0.9822) and a query-level anomaly detector (Branch 2, One-Class SVM, AUC = 0.902). Both were trained on a combined and carefully cleaned public dataset and evaluated with measured — not assumed — results, including a documented account of the label-noise issues found along the way (Section 2.12.1).
+This midterm report covers two working, evaluated components of a larger planned SQL Injection detection system: a supervised multi-class classifier (Branch 1, F1-macro = 0.9822) and a query-level anomaly detector (Branch 2, One-Class SVM, AUC = 0.949). Both were trained on a combined and carefully cleaned public dataset and evaluated with measured — not assumed — results, including a documented account of the label-noise issues found along the way (Section 2.12.1).
 
 Everything beyond these two components — session-level detection across multiple queries, an integrated Decision Engine, the Overkill administrator-review workflow, and Continual Learning from administrator feedback — is part of the project's longer-term design (motivated by the research gaps in Section 1.10) but has **not** been implemented or evaluated. It is listed below as future work, not claimed as a current contribution.
 

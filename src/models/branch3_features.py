@@ -46,7 +46,12 @@ def branch2_scores_for_texts(texts: list[str], detector, feature_names: list[str
     steps — a real false positive observed via the live API, not a
     hypothetical.
     """
-    feature_names = feature_names or _DEFAULT_B2_FEATURE_ORDER
+    # Prefer the loaded detector's own trained feature list — it's always
+    # correct for THIS detector, unlike the caller-supplied default below
+    # (a bug this exact fallback caused once already: SessionCorrelator.score()
+    # omitted feature_names, silently defaulting to all of FEATURE_ORDER,
+    # which shape-mismatched against a detector trained on a subset).
+    feature_names = feature_names or getattr(detector, "feature_names", None) or _DEFAULT_B2_FEATURE_ORDER
     X = np.array([extract_statistical_features(t).as_list() for t in texts], dtype=np.float64)
     if feature_names != _DEFAULT_B2_FEATURE_ORDER:
         idx = [_DEFAULT_B2_FEATURE_ORDER.index(f) for f in feature_names]
