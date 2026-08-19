@@ -1,16 +1,28 @@
 # -*- coding: utf-8 -*-
 """Exploration (NO code change to production) — candidate structural features
-for Branch 2, tried after the SSRF/short-string cleanup regressed separation
-(DR 41.87% -> 31.19% at matched FPR=5%, see report/plan/solution_branch2_cleanup.md).
+for Branch 2.
 
-Root cause on record: removing the short-string "anchor" cluster left only
-harder benign rows (complex JOIN/subquery), which now resemble complex attack
-payloads in the current 4-feature space (length, special_char_ratio,
-sql_keyword_count, entropy). This script tries 4 new *structural* (not
-content/keyword) features and measures whether adding any of them recovers
-separation on the CLEAN data, using ONE fixed evaluation methodology
-throughout (AUC + DR at FPR matched to 5% via the P95-of-benign-test
-threshold) to avoid the dual-threshold reporting confusion found earlier.
+REWRITTEN 17/08 to remove a bias found in the previous version: the
+multivariate ablation (sections B2/B3 below) hard-coded `bigram_entropy` into
+EVERY combination it tried, so it could only ever re-confirm bigram_entropy
+as a winner — it never gave the other 3 candidates (quote_imbalance,
+same_type_run_ratio, max_token_length) the same fair power-set treatment.
+That mattered: bigram_entropy turned out to be a DOMAIN-SHIFT artifact, not a
+genuine attack-structure signal — see train/build_branch2_data.py's docstring
+and configs/config.yaml (branch2_anomaly) for the full story of how that was
+found (the benign pool used to be missing the d3_csic2010 source entirely,
+which is 100% of the anomalous eval set, so bigram_entropy was partly
+learning "is this D3-formatted text" rather than "is this an attack").
+
+Now runs a genuinely neutral search: full power-set (16 subsets, including
+empty) of the 4 original features, repeated independently for EACH of the 4
+new candidates (64 combos total) plus baseline_4+candidate and
+baseline_4+all_candidates, so no candidate gets a structural advantage over
+the others in how thoroughly it's tested.
+
+Uses ONE fixed evaluation methodology throughout (AUC + DR at FPR matched to
+5% via the P95-of-benign-test threshold) to avoid the dual-threshold
+reporting confusion found earlier (see report/plan/solution_branch2_cleanup.md).
 
 Candidate features (Duc's suggestions, kept "shape not content"):
   - quote_imbalance:    (count(') odd) + (count(") odd) -> 0/1/2. An unclosed
@@ -182,25 +194,23 @@ def main() -> None:
 
     # ---- B. Multivariate: baseline 4 features vs baseline+candidate(s), same OCSVM hyperparams ----
     logger.info("=== Multivariate: OCSVM (current tuned nu/gamma) — fixed P95-matched-FPR methodology ===")
+    import itertools
+
     combos: dict[str, list[str]] = {"baseline_4": list(BASE_FEATURES)}
     for name in NEW_FEATURE_FUNCS:
         combos[f"baseline_4+{name}"] = list(BASE_FEATURES) + [name]
     combos["baseline_4+all_new"] = list(BASE_FEATURES) + list(NEW_FEATURE_FUNCS)
 
-    # ---- B2. Ablation: with bigram_entropy in, does dropping any of the 4
-    # original features help further? (weak/redundant features can dilute
-    # OCSVM in a low-dim space, as max_token_length showed above.)
-    for drop in BASE_FEATURES:
-        kept = [f for f in BASE_FEATURES if f != drop] + ["bigram_entropy"]
-        combos[f"5feat_drop_{drop}"] = kept
-
-    # ---- B3. Full power-set of the 4 base features, bigram_entropy always included ----
-    import itertools
-    for r in range(0, len(BASE_FEATURES) + 1):
-        for subset in itertools.combinations(BASE_FEATURES, r):
-            feat_list = list(subset) + ["bigram_entropy"]
-            key = "subset[" + ",".join(subset) + "]+bigram_entropy"
-            combos[key] = feat_list
+    # ---- B2. Full power-set of the 4 base features, repeated independently
+    # for EACH candidate (not just one) — the neutral version of what used
+    # to be a bigram_entropy-only ablation. 16 subsets x 4 candidates = 64
+    # combos, so no candidate gets a structural advantage over the others.
+    for candidate in NEW_FEATURE_FUNCS:
+        for r in range(0, len(BASE_FEATURES) + 1):
+            for subset in itertools.combinations(BASE_FEATURES, r):
+                feat_list = list(subset) + [candidate]
+                key = "subset[" + ",".join(subset) + f"]+{candidate}"
+                combos[key] = feat_list
 
     all_results = {}
     for combo_name, feat_list in combos.items():

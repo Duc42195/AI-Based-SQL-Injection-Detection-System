@@ -1,8 +1,18 @@
 """Branch 2 — Anomaly Detection model wrapper.
 
-Trains on 100 % benign (normal) traffic using Isolation Forest or One-Class SVM.
-Emits a continuous anomaly score per query, used both as a zero-day flag and as
-an extra feature dimension for Branch 3 (session-level model).
+Trains on 100 % benign (normal) traffic using Isolation Forest, One-Class
+SVM, or Local Outlier Factor. Emits a continuous anomaly score per query,
+used both as a zero-day flag and as an extra feature dimension for Branch 3
+(session-level model).
+
+LOF added 19/08: the benign pool spans 3 structurally distinct
+sub-populations (D1/D3/D7 — see configs/config.yaml branch2_anomaly), which
+one global OCSVM/IsolationForest boundary handles poorly (a query that's
+merely "not from D3" looks anomalous to a D3-only-trained boundary, even
+when it's genuinely benign D1/D7 traffic). LOF's local-density notion
+judges each point against its own nearest neighbours rather than one global
+boundary, so it isn't fooled by cross-domain shape differences the same
+way — see report/conf/project_history.md §3 for the comparison numbers.
 
 Includes:
   - Optional log1p-transform for right-skewed features (e.g. length).
@@ -20,6 +30,7 @@ from typing import Literal
 import joblib
 import numpy as np
 from sklearn.ensemble import IsolationForest
+from sklearn.neighbors import LocalOutlierFactor
 from sklearn.preprocessing import StandardScaler
 from sklearn.svm import OneClassSVM
 
@@ -27,7 +38,7 @@ from src.utils import get_logger
 
 logger = get_logger(__name__)
 
-Algorithm = Literal["isolation_forest", "one_class_svm"]
+Algorithm = Literal["isolation_forest", "one_class_svm", "local_outlier_factor"]
 
 
 class AnomalyDetector:
@@ -53,10 +64,13 @@ class AnomalyDetector:
         """Initialise the anomaly detector.
 
         Args:
-            algorithm: ``"isolation_forest"`` or ``"one_class_svm"``.
+            algorithm: ``"isolation_forest"``, ``"one_class_svm"``, or
+                ``"local_outlier_factor"``.
             contamination: Expected fraction of anomalies in the training set.
                 For IF: passed as ``contamination`` (use ``"auto"`` for data-driven).
                 For OCSVM: passed as ``nu``.
+                For LOF: passed as ``contamination`` (only affects ``predict()``'s
+                    binary threshold, not ``score()``, which is threshold-free).
                 Training data is 100 % benign → set this very small (<0.001).
             random_seed: Seed for reproducibility.
             scale_features: If True, fit a ``StandardScaler`` on the training
@@ -78,24 +92,42 @@ class AnomalyDetector:
         self._scaler: StandardScaler | None = None
         self._log_indices: np.ndarray | None = None
         self._n_features: int | None = None
+        self.gamma: float | str | None = None
+        self.n_neighbors: int | None = None
 
         if algorithm == "isolation_forest":
             self._model = IsolationForest(
                 n_estimators=kwargs.get("n_estimators", 100),
+                max_samples=kwargs.get("max_samples", "auto"),
                 contamination=contamination,
                 random_state=random_seed,
                 n_jobs=kwargs.get("n_jobs", -1),
             )
         elif algorithm == "one_class_svm":
+            self.gamma = kwargs.get("gamma", "scale")
             self._model = OneClassSVM(
                 kernel=kwargs.get("kernel", "rbf"),
-                gamma=kwargs.get("gamma", "scale"),
+                gamma=self.gamma,
                 nu=contamination,
+            )
+        elif algorithm == "local_outlier_factor":
+            # novelty=True is required to score data other than what it was
+            # fit on (the default, novelty=False, only supports transductive
+            # fit_predict on the training set itself). Unlike IF/OCSVM, the
+            # fitted model retains the full training feature matrix internally
+            # (sklearn's `_fit_X`) to answer k-NN queries at score time — no
+            # extra bookkeeping needed here, joblib.dump captures it as-is.
+            self.n_neighbors = kwargs.get("n_neighbors", 20)
+            self._model = LocalOutlierFactor(
+                n_neighbors=self.n_neighbors,
+                novelty=True,
+                contamination=contamination,
+                n_jobs=kwargs.get("n_jobs", -1),
             )
         else:
             raise ValueError(
                 f"Unknown algorithm: {algorithm}. "
-                f"Expected one of: isolation_forest, one_class_svm"
+                f"Expected one of: isolation_forest, one_class_svm, local_outlier_factor"
             )
 
     # ──────────────────────────────────────────────
@@ -233,6 +265,8 @@ class AnomalyDetector:
         meta = {
             "algorithm": self.algorithm,
             "contamination": self.contamination,
+            "gamma": self.gamma,
+            "n_neighbors": self.n_neighbors,
             "random_seed": self.random_seed,
             "scale_features": self.scale_features,
             "log_transform_features": self.log_transform_features,
@@ -265,6 +299,8 @@ class AnomalyDetector:
             scale_features=meta.get("scale_features", False),
             log_transform_features=meta.get("log_transform_features", []),
             feature_names=meta.get("feature_names"),
+            gamma=meta.get("gamma", "scale"),
+            n_neighbors=meta.get("n_neighbors", 20),
         )
         detector._model = joblib.load(path / "model.joblib")
 

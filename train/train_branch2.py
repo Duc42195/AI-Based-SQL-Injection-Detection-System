@@ -1,8 +1,9 @@
 """Train, evaluate and save Branch-2 anomaly detection models.
 
-Trains both Isolation Forest and One-Class SVM on the Branch-2 benign pool,
-evaluates FPR on held-out benign test data and detection rate on anomalous
-data, then saves the best model (by AUC) to models/branch2_v1/.
+Trains Isolation Forest, One-Class SVM, and Local Outlier Factor on the
+Branch-2 benign pool, evaluates FPR on held-out benign test data and
+detection rate on anomalous data, then saves the best model (by AUC) to
+models/branch2_v1/.
 
 Changes from v0 (training audit 16/7):
   - Feature scaling (StandardScaler) inside AnomalyDetector.
@@ -27,8 +28,18 @@ from src.utils import Config, get_logger, load_config
 
 logger = get_logger(__name__)
 
+_DEFAULT_FEATURES = [
+    "length", "special_char_ratio", "sql_keyword_count", "entropy",
+    "bigram_entropy", "quote_imbalance", "same_type_run_ratio",
+    "max_token_length", "token_count", "max_special_run", "max_digit_run",
+    "paren_imbalance",
+]
+
+ALGORITHMS = ["isolation_forest", "one_class_svm", "local_outlier_factor"]
+
+
 def _get_feature_names(cfg: Config) -> list[str]:
-    return list(cfg.get_path("branch2_anomaly.features", ["length", "special_char_ratio", "sql_keyword_count", "entropy"]))
+    return list(cfg.get_path("branch2_anomaly.features", _DEFAULT_FEATURES))
 
 
 def _load_data(cfg: Config) -> tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame]:
@@ -76,7 +87,8 @@ def _build_detector(
 
     Args:
         cfg: Loaded config.
-        algorithm: ``"isolation_forest"`` or ``"one_class_svm"``.
+        algorithm: ``"isolation_forest"``, ``"one_class_svm"``, or
+            ``"local_outlier_factor"``.
         feature_names: Ordered list of feature names from config.
         **override_kwargs: Override any constructor arg.
 
@@ -90,6 +102,8 @@ def _build_detector(
     # Each algorithm uses its own contamination — independently tuned.
     if algorithm == "one_class_svm":
         contamination = cfg.get_path("branch2_anomaly.ocsvm_nu", base_contamination)
+    elif algorithm == "local_outlier_factor":
+        contamination = cfg.get_path("branch2_anomaly.lof_contamination", base_contamination)
     else:
         contamination = base_contamination
 
@@ -106,6 +120,14 @@ def _build_detector(
         gamma = cfg.get_path("branch2_anomaly.ocsvm_gamma", None)
         if gamma is not None:
             kwargs["gamma"] = gamma
+    elif algorithm == "isolation_forest":
+        max_samples = cfg.get_path("branch2_anomaly.if_max_samples", None)
+        if max_samples is not None:
+            kwargs["max_samples"] = max_samples
+    elif algorithm == "local_outlier_factor":
+        n_neighbors = cfg.get_path("branch2_anomaly.lof_n_neighbors", None)
+        if n_neighbors is not None:
+            kwargs["n_neighbors"] = n_neighbors
 
     kwargs.update(override_kwargs)
     return AnomalyDetector(**kwargs)
@@ -310,7 +332,7 @@ def main() -> None:
     best_detector = None
     best_results = {}
 
-    for alg in ["isolation_forest", "one_class_svm"]:
+    for alg in ALGORITHMS:
         logger.info("=== %s ===", alg.upper())
 
         if tune_enabled:

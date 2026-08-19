@@ -1,5 +1,7 @@
 # RIVF 2026 Paper — Outline & Writing Plan
 
+> 📜 **Lịch sử đầy đủ theo từng phần dự án** (không chỉ bài báo): [`project_history.md`](project_history.md) — tổng hợp lại các khối STATUS bên dưới theo Branch 1/2/3, decision engine, MLOps, thay vì theo mục bài báo. File này (outline.md) vẫn là kế hoạch viết, giữ nguyên.
+
 **Target:** RIVF 2026 (IEEE, https://rivf2026.org/) — 2-column IEEEtran `conference` format.
 **Template:** [`report/conf/conference_101719.tex`](conference_101719.tex)
 **Submission deadline:** 30 Aug 2026 (moved from the original 31 Jul).

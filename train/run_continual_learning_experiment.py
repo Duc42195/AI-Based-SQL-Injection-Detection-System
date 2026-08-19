@@ -61,7 +61,10 @@ from src.utils import get_logger, load_config
 logger = get_logger(__name__)
 
 ROUND_ID = "experiment"
-FEATURES = ["length", "special_char_ratio", "sql_keyword_count", "entropy"]
+# Kept intentionally SEPARATE from branch2_anomaly.features — see
+# deploy/routers/mlops.py's identical constant for why, and keep both in
+# sync by hand when the model's feature set changes.
+FEATURES = ["length", "special_char_ratio", "entropy", "quote_imbalance"]
 
 # Drift signals compared side by side. The point of running all five is to find
 # out which, if any, notices a new attack class that is only ~1 % of traffic.
@@ -139,8 +142,13 @@ def evaluate_on(
 # Drift over the replay stream
 # --------------------------------------------------------------------------- #
 def feature_frame(texts: pd.Series) -> pd.DataFrame:
-    """Extract the Branch-2 structural features for a set of queries."""
-    rows = [extract_statistical_features(str(t)).as_list() for t in texts]
+    """Extract the drift-monitored structural features for a set of queries.
+
+    Selects by name (FEATURES may be a different subset than
+    StatisticalFeatures.as_list()'s full FEATURE_ORDER — see FEATURES'
+    definition above for why they're kept separate).
+    """
+    rows = [extract_statistical_features(str(t)).as_dict() for t in texts]
     return pd.DataFrame(rows, columns=FEATURES)
 
 

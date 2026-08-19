@@ -51,7 +51,17 @@ logger = get_logger(__name__)
 
 router = APIRouter(prefix="/mlops", tags=["mlops"])
 
-FEATURES = ["length", "special_char_ratio", "sql_keyword_count", "entropy"]
+# Kept intentionally SEPARATE from branch2_anomaly.features (the anomaly
+# model's own feature set, now all 12 of statistical_features.FEATURE_ORDER
+# as of 19/08) — this is what the drift monitor tracks over general traffic
+# characteristics, not tied to whichever features the current anomaly model
+# happens to use, and deliberately kept to a small, easily-interpreted
+# subset rather than mirroring the full engineered feature set (the newer
+# "local peak" features — max_special_run etc. — are specific fixes for the
+# D3/D7 whole-string-dilution problem, not general drift signals). Update by
+# hand, in sync with train/run_continual_learning_experiment.py's identical
+# constant, whenever this subset should change.
+FEATURES = ["length", "special_char_ratio", "entropy", "quote_imbalance"]
 DEMO_ROUND = "demo"
 
 
@@ -167,8 +177,11 @@ def replay(request: ReplayRequest) -> ReplayResponse:
         predicted=predictions, confidence=confidences, canonical=canonicals
     )
 
+    # Selects by name (FEATURES may be a different subset than
+    # StatisticalFeatures.as_list()'s full FEATURE_ORDER — see FEATURES'
+    # definition above for why they're kept separate).
     features = pd.DataFrame(
-        [extract_statistical_features(t).as_list() for t in stream["canonical"]],
+        [extract_statistical_features(t).as_dict() for t in stream["canonical"]],
         columns=FEATURES,
     )
 

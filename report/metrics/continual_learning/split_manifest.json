@@ -45,22 +45,22 @@
     }
   },
   "stream": {
-    "rows": 80808,
-    "windows": 81,
+    "rows": 8693,
+    "windows": 9,
     "window_size": 1000,
     "target_attack_rate": 0.05,
-    "actual_attack_rate": 0.05,
-    "phase_a_rows": 32323,
-    "phase_b_rows": 48485,
+    "actual_attack_rate": 0.04993,
+    "phase_a_rows": 3477,
+    "phase_b_rows": 5216,
     "benign_source": "data/processed/branch2_normal.csv",
-    "benign_available_after_exclusions": 76768,
+    "benign_available_after_exclusions": 8259,
     "class_mix": {
-      "normal": 76768,
-      "boolean_blind": 952,
-      "time_blind": 941,
-      "union_based": 896,
-      "stacked": 727,
-      "error_based": 524
+      "normal": 8259,
+      "boolean_blind": 112,
+      "time_blind": 109,
+      "union_based": 94,
+      "stacked": 78,
+      "error_based": 41
     }
   },
   "new_class": {
@@ -68,7 +68,7 @@
     "unique_payloads": 363,
     "golden_rows": 73,
     "stream_unique": 290,
-    "stream_occurrences": 727,
+    "stream_occurrences": 78,
     "sampled_with_replacement": true,
     "caveat": "100% synthetic templated payloads; demonstrates the major-bump mechanism only - accuracy on this class is not a detection result."
   },
@@ -101,7 +101,7 @@
     {
       "name": "attack_rate_within_tolerance",
       "passed": true,
-      "detail": "actual=0.0500 target=0.05"
+      "detail": "actual=0.0499 target=0.05"
     },
     {
       "name": "every_row_assigned_one_partition",

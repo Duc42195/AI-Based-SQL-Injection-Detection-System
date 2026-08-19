@@ -4,20 +4,20 @@
       "candidate": {
         "model_version": "branch1_v2",
         "data_version": "2.0",
-        "f1_macro": 0.957254,
+        "f1_macro": 0.871569,
         "fpr": 0.063814,
         "per_class_recall": {
-          "boolean_blind": 0.987134,
+          "boolean_blind": 0.986419,
           "error_based": 1.0,
           "normal": 0.936186,
-          "stacked": 0.726027,
+          "stacked": 0.205479,
           "time_blind": 0.999292,
           "union_based": 0.9869
         },
         "n_rows": 6418
       },
       "decision": {
-        "ts": "2026-07-28T09:47:21+00:00",
+        "ts": "2026-08-19T03:41:53+00:00",
         "candidate": "branch1_v2",
         "champion": "champion",
         "candidate_data": "2.0",
@@ -28,13 +28,13 @@
           "candidate": {
             "model_version": "branch1_v2",
             "data_version": "2.0",
-            "f1_macro": 0.957254,
+            "f1_macro": 0.871569,
             "fpr": 0.063814,
             "per_class_recall": {
-              "boolean_blind": 0.987134,
+              "boolean_blind": 0.986419,
               "error_based": 1.0,
               "normal": 0.936186,
-              "stacked": 0.726027,
+              "stacked": 0.205479,
               "time_blind": 0.999292,
               "union_based": 0.9869
             },
@@ -64,36 +64,36 @@
         "verdict": "direct_promote",
         "reason": "Data major changed 1.0 -> 2.0 (new class: stacked). The label spaces differ, so a champion/challenger comparison would measure the benchmark rather than the models; promoting directly."
       },
-      "new_class_recall": 0.726027397260274
+      "new_class_recall": 0.2054794520547945
     },
     "act2_minor": {
       "naive": {
-        "pool_rows": 43351,
-        "extra_rows": 21680,
+        "pool_rows": 24459,
+        "extra_rows": 2855,
         "extra_class_mix": {
-          "normal": 18383,
-          "boolean_blind": 945,
-          "time_blind": 941,
-          "union_based": 887,
-          "error_based": 524
+          "normal": 2500,
+          "boolean_blind": 111,
+          "time_blind": 109,
+          "union_based": 94,
+          "error_based": 41
         },
         "candidate": {
           "model_version": "branch1_v2_1_naive",
           "data_version": "2.1",
-          "f1_macro": 0.942505,
-          "fpr": 0.002175,
+          "f1_macro": 0.861362,
+          "fpr": 0.049311,
           "per_class_recall": {
-            "boolean_blind": 0.878485,
+            "boolean_blind": 0.970693,
             "error_based": 1.0,
-            "normal": 0.997825,
-            "stacked": 0.671233,
-            "time_blind": 0.997877,
-            "union_based": 0.986172
+            "normal": 0.950689,
+            "stacked": 0.164384,
+            "time_blind": 0.998585,
+            "union_based": 0.9869
           },
           "n_rows": 6418
         },
         "decision": {
-          "ts": "2026-07-28T09:47:45+00:00",
+          "ts": "2026-08-19T03:42:05+00:00",
           "candidate": "branch1_v2_1_naive",
           "champion": "branch1_v2",
           "candidate_data": "2.1",
@@ -104,28 +104,28 @@
             "candidate": {
               "model_version": "branch1_v2_1_naive",
               "data_version": "2.1",
-              "f1_macro": 0.942505,
-              "fpr": 0.002175,
+              "f1_macro": 0.861362,
+              "fpr": 0.049311,
               "per_class_recall": {
-                "boolean_blind": 0.878485,
+                "boolean_blind": 0.970693,
                 "error_based": 1.0,
-                "normal": 0.997825,
-                "stacked": 0.671233,
-                "time_blind": 0.997877,
-                "union_based": 0.986172
+                "normal": 0.950689,
+                "stacked": 0.164384,
+                "time_blind": 0.998585,
+                "union_based": 0.9869
               },
               "n_rows": 6418
             },
             "champion": {
               "model_version": "branch1_v2",
               "data_version": "2.0",
-              "f1_macro": 0.957254,
+              "f1_macro": 0.871569,
               "fpr": 0.063814,
               "per_class_recall": {
-                "boolean_blind": 0.987134,
+                "boolean_blind": 0.986419,
                 "error_based": 1.0,
                 "normal": 0.936186,
-                "stacked": 0.726027,
+                "stacked": 0.205479,
                 "time_blind": 0.999292,
                 "union_based": 0.9869
               },
@@ -135,57 +135,55 @@
           "criteria": {
             "f1_macro_ok": false,
             "f1_macro": {
-              "candidate": 0.942505,
-              "floor": 0.957254
+              "candidate": 0.861362,
+              "floor": 0.871569
             },
             "fpr_ok": true,
             "fpr": {
-              "candidate": 0.002175,
+              "candidate": 0.049311,
               "ceiling": 0.063814
             },
             "per_class_ok": false,
             "failing_classes": [
-              "boolean_blind",
               "stacked"
             ],
             "regressions": {
-              "boolean_blind": 0.108649,
-              "stacked": 0.054795
+              "stacked": 0.041096
             },
             "new_class_ok": true,
             "weak_new_classes": {}
           },
           "verdict": "reject",
-          "reason": "F1-macro 0.9425 < 0.9573; recall regression on boolean_blind (-0.1086), stacked (-0.0548)"
+          "reason": "F1-macro 0.8614 < 0.8716; recall regression on stacked (-0.0411)"
         }
       },
       "balanced": {
-        "pool_rows": 24291,
-        "extra_rows": 2620,
+        "pool_rows": 21809,
+        "extra_rows": 205,
         "extra_class_mix": {
-          "boolean_blind": 524,
-          "error_based": 524,
-          "normal": 524,
-          "time_blind": 524,
-          "union_based": 524
+          "boolean_blind": 41,
+          "error_based": 41,
+          "normal": 41,
+          "time_blind": 41,
+          "union_based": 41
         },
         "candidate": {
           "model_version": "branch1_v2_1_balanced",
           "data_version": "2.1",
-          "f1_macro": 0.96233,
-          "fpr": 0.02248,
+          "f1_macro": 0.883823,
+          "fpr": 0.062364,
           "per_class_recall": {
-            "boolean_blind": 0.975697,
+            "boolean_blind": 0.984989,
             "error_based": 1.0,
-            "normal": 0.97752,
-            "stacked": 0.726027,
+            "normal": 0.937636,
+            "stacked": 0.260274,
             "time_blind": 0.999292,
-            "union_based": 0.987627
+            "union_based": 0.9869
           },
           "n_rows": 6418
         },
         "decision": {
-          "ts": "2026-07-28T09:48:00+00:00",
+          "ts": "2026-08-19T03:42:14+00:00",
           "candidate": "branch1_v2_1_balanced",
           "champion": "branch1_v2",
           "candidate_data": "2.1",
@@ -196,28 +194,28 @@
             "candidate": {
               "model_version": "branch1_v2_1_balanced",
               "data_version": "2.1",
-              "f1_macro": 0.96233,
-              "fpr": 0.02248,
+              "f1_macro": 0.883823,
+              "fpr": 0.062364,
               "per_class_recall": {
-                "boolean_blind": 0.975697,
+                "boolean_blind": 0.984989,
                 "error_based": 1.0,
-                "normal": 0.97752,
-                "stacked": 0.726027,
+                "normal": 0.937636,
+                "stacked": 0.260274,
                 "time_blind": 0.999292,
-                "union_based": 0.987627
+                "union_based": 0.9869
               },
               "n_rows": 6418
             },
             "champion": {
               "model_version": "branch1_v2",
               "data_version": "2.0",
-              "f1_macro": 0.957254,
+              "f1_macro": 0.871569,
               "fpr": 0.063814,
               "per_class_recall": {
-                "boolean_blind": 0.987134,
+                "boolean_blind": 0.986419,
                 "error_based": 1.0,
                 "normal": 0.936186,
-                "stacked": 0.726027,
+                "stacked": 0.205479,
                 "time_blind": 0.999292,
                 "union_based": 0.9869
               },
@@ -227,12 +225,12 @@
           "criteria": {
             "f1_macro_ok": true,
             "f1_macro": {
-              "candidate": 0.96233,
-              "floor": 0.957254
+              "candidate": 0.883823,
+              "floor": 0.871569
             },
             "fpr_ok": true,
             "fpr": {
-              "candidate": 0.02248,
+              "candidate": 0.062364,
               "ceiling": 0.063814
             },
             "per_class_ok": true,
@@ -242,7 +240,7 @@
             "weak_new_classes": {}
           },
           "verdict": "promote",
-          "reason": "Candidate meets every criterion on golden@2 (F1 0.9623 >= 0.9573, FPR 0.0225 <= 0.0638, no per-class regression)."
+          "reason": "Candidate meets every criterion on golden@2 (F1 0.8838 >= 0.8716, FPR 0.0624 <= 0.0638, no per-class regression)."
         }
       },
       "interpretation": "Retraining on raw confirmed traffic skews the class balance toward `normal` (most flagged queries are false positives) and costs attack recall; the gate rejects it. Balancing the confirmed pool first is what earns promotion."
@@ -252,38 +250,38 @@
     "volume_control": {
       "model_version": "control",
       "data_version": "1.1",
-      "f1_macro": 0.813137,
-      "fpr": 0.042785,
+      "f1_macro": 0.808689,
+      "fpr": 0.079768,
       "per_class_recall": {
-        "boolean_blind": 0.966405,
+        "boolean_blind": 0.974982,
         "error_based": 1.0,
-        "normal": 0.957215,
+        "normal": 0.920232,
         "stacked": 0.0,
-        "time_blind": 0.997877,
-        "union_based": 0.983261
+        "time_blind": 0.998585,
+        "union_based": 0.983988
       },
       "n_rows": 6418,
       "new_class_recall": 0.0,
-      "extra_rows": 254,
+      "extra_rows": 31,
       "interpretation": "If this closes the new-class gap, the gain came from data volume rather than from learning the class."
     },
     "starved_rehearsal": {
       "model_version": "starved",
       "data_version": "2.1",
-      "f1_macro": 0.831534,
-      "fpr": 0.128354,
+      "f1_macro": 0.839952,
+      "fpr": 0.105149,
       "per_class_recall": {
-        "boolean_blind": 0.478914,
+        "boolean_blind": 0.398142,
         "error_based": 0.95641,
-        "normal": 0.871646,
-        "stacked": 1.0,
-        "time_blind": 0.987969,
-        "union_based": 0.944687
+        "normal": 0.894851,
+        "stacked": 0.863014,
+        "time_blind": 0.989384,
+        "union_based": 0.939592
       },
       "n_rows": 6418,
       "rehearsal_fraction": 0.01,
       "decision": {
-        "ts": "2026-07-28T09:48:13+00:00",
+        "ts": "2026-08-19T03:42:26+00:00",
         "candidate": "starved",
         "champion": "branch1_v2",
         "candidate_data": "2.1",
@@ -294,28 +292,28 @@
           "candidate": {
             "model_version": "starved",
             "data_version": "2.1",
-            "f1_macro": 0.831534,
-            "fpr": 0.128354,
+            "f1_macro": 0.839952,
+            "fpr": 0.105149,
             "per_class_recall": {
-              "boolean_blind": 0.478914,
+              "boolean_blind": 0.398142,
               "error_based": 0.95641,
-              "normal": 0.871646,
-              "stacked": 1.0,
-              "time_blind": 0.987969,
-              "union_based": 0.944687
+              "normal": 0.894851,
+              "stacked": 0.863014,
+              "time_blind": 0.989384,
+              "union_based": 0.939592
             },
             "n_rows": 6418
           },
           "champion": {
             "model_version": "branch1_v2",
             "data_version": "2.0",
-            "f1_macro": 0.957254,
+            "f1_macro": 0.871569,
             "fpr": 0.063814,
             "per_class_recall": {
-              "boolean_blind": 0.987134,
+              "boolean_blind": 0.986419,
               "error_based": 1.0,
               "normal": 0.936186,
-              "stacked": 0.726027,
+              "stacked": 0.205479,
               "time_blind": 0.999292,
               "union_based": 0.9869
             },
@@ -325,12 +323,12 @@
         "criteria": {
           "f1_macro_ok": false,
           "f1_macro": {
-            "candidate": 0.831534,
-            "floor": 0.957254
+            "candidate": 0.839952,
+            "floor": 0.871569
           },
           "fpr_ok": false,
           "fpr": {
-            "candidate": 0.128354,
+            "candidate": 0.105149,
             "ceiling": 0.063814
           },
           "per_class_ok": false,
@@ -341,16 +339,16 @@
             "union_based"
           ],
           "regressions": {
-            "boolean_blind": 0.50822,
+            "boolean_blind": 0.588277,
             "error_based": 0.04359,
-            "normal": 0.06454,
-            "union_based": 0.042213
+            "normal": 0.041334,
+            "union_based": 0.047307
           },
           "new_class_ok": true,
           "weak_new_classes": {}
         },
         "verdict": "reject",
-        "reason": "F1-macro 0.8315 < 0.9573; FPR 0.1284 > 0.0638; recall regression on boolean_blind (-0.5082), error_based (-0.0436), normal (-0.0645), union_based (-0.0422)"
+        "reason": "F1-macro 0.8400 < 0.8716; FPR 0.1051 > 0.0638; recall regression on boolean_blind (-0.5883), error_based (-0.0436), normal (-0.0413), union_based (-0.0473)"
       },
       "interpretation": "Retraining almost entirely on the new class makes the model forget the old ones; the gate must reject it on per-class regression."
     }
@@ -369,65 +367,65 @@
     },
     "n_rows": 6345,
     "run_id": "e28fb365a844",
-    "git_sha": "9a46b5b7f3d35dab93196525b1a91e2a75e8763e",
+    "git_sha": "3893fbb4881a117ee2eb4c6cb67871f6f374d3f8",
     "train_rows": 21573,
     "valid_rows": 3807,
     "valid_ids_hash": "sha256:b8111b39efc9f0f36e86cacaa2752f8d77b510ec9eb43d4debfd9e98af1a8ad2",
-    "duration_s": 11.25
+    "duration_s": 10.23
   },
   "labelling": {
-    "flagged_queries": 21934,
-    "pre_label_acceptance_rate": 0.460336,
-    "confirmed_new_class": 254,
-    "confirmed_known_classes": 21680,
+    "flagged_queries": 2886,
+    "pre_label_acceptance_rate": 0.460152,
+    "confirmed_new_class": 31,
+    "confirmed_known_classes": 2855,
     "note": "Labelling is simulated at this scale: ground truth stands in for a reviewer."
   },
   "drift": {
     "summary": {
       "global": {
-        "phase_a_mean": 0.006945,
-        "phase_a_max": 0.014111,
-        "phase_b_mean": 0.007691,
-        "phase_b_max": 0.012733,
+        "phase_a_mean": 0.010193,
+        "phase_a_max": 0.014397,
+        "phase_b_mean": 0.00877,
+        "phase_b_max": 0.015691,
         "quiet_in_phase_a": true,
         "fired_in_phase_b": false,
-        "phase_b_over_phase_a": 1.107
+        "phase_b_over_phase_a": 0.86
       },
       "attack_subpop": {
-        "phase_a_mean": 0.044467,
-        "phase_a_max": 0.072723,
-        "phase_b_mean": 0.049549,
-        "phase_b_max": 0.115736,
+        "phase_a_mean": 0.043698,
+        "phase_a_max": 0.05142,
+        "phase_b_mean": 0.044362,
+        "phase_b_max": 0.085301,
         "quiet_in_phase_a": true,
         "fired_in_phase_b": false,
-        "phase_b_over_phase_a": 1.114
+        "phase_b_over_phase_a": 1.015
       },
       "prediction": {
-        "phase_a_mean": 0.005852,
-        "phase_a_max": 0.015306,
-        "phase_b_mean": 0.00898,
-        "phase_b_max": 0.028024,
+        "phase_a_mean": 0.008113,
+        "phase_a_max": 0.009532,
+        "phase_b_mean": 0.006029,
+        "phase_b_max": 0.008379,
         "quiet_in_phase_a": true,
         "fired_in_phase_b": false,
-        "phase_b_over_phase_a": 1.535
+        "phase_b_over_phase_a": 0.743
       },
       "confidence": {
-        "phase_a_mean": 0.011147,
-        "phase_a_max": 0.019532,
-        "phase_b_mean": 0.010789,
-        "phase_b_max": 0.023449,
+        "phase_a_mean": 0.019328,
+        "phase_a_max": 0.021242,
+        "phase_b_mean": 0.006538,
+        "phase_b_max": 0.009025,
         "quiet_in_phase_a": true,
         "fired_in_phase_b": false,
-        "phase_b_over_phase_a": 0.968
+        "phase_b_over_phase_a": 0.338
       },
       "confidence_flagged": {
-        "phase_a_mean": 0.061301,
-        "phase_a_max": 0.129283,
-        "phase_b_mean": 0.075728,
-        "phase_b_max": 0.189609,
+        "phase_a_mean": 0.079658,
+        "phase_a_max": 0.092785,
+        "phase_b_mean": 0.080988,
+        "phase_b_max": 0.115529,
         "quiet_in_phase_a": true,
         "fired_in_phase_b": false,
-        "phase_b_over_phase_a": 1.235
+        "phase_b_over_phase_a": 1.017
       }
     },
     "trigger": {
@@ -438,13 +436,13 @@
     }
   },
   "shadow": {
-    "rows": 48485,
-    "agreement_rate": 0.988491,
-    "candidate_allows_champion_blocks": 13,
-    "candidate_blocks_champion_allows": 387,
-    "champion_block_rate": 0.183253,
-    "candidate_block_rate": 0.190966,
-    "mean_latency_ms_per_query": 0.1401
+    "rows": 5216,
+    "agreement_rate": 0.990414,
+    "candidate_allows_champion_blocks": 17,
+    "candidate_blocks_champion_allows": 18,
+    "champion_block_rate": 0.217216,
+    "candidate_block_rate": 0.217408,
+    "mean_latency_ms_per_query": 0.0603
   },
   "caveats": [
     "'stacked' is 100% synthetic (363 templated payloads): the major-bump mechanism is demonstrated, its accuracy is not a detection result.",
