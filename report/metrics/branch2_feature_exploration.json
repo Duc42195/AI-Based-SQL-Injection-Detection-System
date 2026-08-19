@@ -1,17 +1,17 @@
 {
   "univariate_ks": {
-    "quote_imbalance": 0.0792,
-    "bigram_entropy": 0.6537,
-    "same_type_run_ratio": 0.3992,
-    "max_token_length": 0.8003
+    "quote_imbalance": 0.0435,
+    "bigram_entropy": 0.2821,
+    "same_type_run_ratio": 0.324,
+    "max_token_length": 0.3215
   },
-  "univariate_ks_length_log1p_reference": 0.5795,
+  "univariate_ks_length_log1p_reference": 0.2217,
   "multivariate": {
     "baseline_4": {
-      "fpr_p95": 0.0476,
-      "dr_p95": 0.3101,
-      "auc": 0.8359,
-      "ks": 0.5265,
+      "fpr_p95": 0.05,
+      "dr_p95": 0.0616,
+      "auc": 0.7615,
+      "ks": 0.4727,
       "features": [
         "length",
         "special_char_ratio",
@@ -20,10 +20,10 @@
       ]
     },
     "baseline_4+quote_imbalance": {
-      "fpr_p95": 0.0483,
-      "dr_p95": 0.3102,
-      "auc": 0.837,
-      "ks": 0.5202,
+      "fpr_p95": 0.05,
+      "dr_p95": 0.0659,
+      "auc": 0.7691,
+      "ks": 0.4838,
       "features": [
         "length",
         "special_char_ratio",
@@ -33,10 +33,10 @@
       ]
     },
     "baseline_4+bigram_entropy": {
-      "fpr_p95": 0.0483,
-      "dr_p95": 0.4244,
-      "auc": 0.8705,
-      "ks": 0.5795,
+      "fpr_p95": 0.05,
+      "dr_p95": 0.0535,
+      "auc": 0.7587,
+      "ks": 0.472,
       "features": [
         "length",
         "special_char_ratio",
@@ -46,10 +46,10 @@
       ]
     },
     "baseline_4+same_type_run_ratio": {
-      "fpr_p95": 0.0476,
-      "dr_p95": 0.3049,
-      "auc": 0.8347,
-      "ks": 0.5218,
+      "fpr_p95": 0.05,
+      "dr_p95": 0.0553,
+      "auc": 0.7355,
+      "ks": 0.4502,
       "features": [
         "length",
         "special_char_ratio",
@@ -59,10 +59,10 @@
       ]
     },
     "baseline_4+max_token_length": {
-      "fpr_p95": 0.0501,
-      "dr_p95": 0.2657,
-      "auc": 0.8136,
-      "ks": 0.5026,
+      "fpr_p95": 0.05,
+      "dr_p95": 0.0723,
+      "auc": 0.7606,
+      "ks": 0.4587,
       "features": [
         "length",
         "special_char_ratio",
@@ -72,10 +72,10 @@
       ]
     },
     "baseline_4+all_new": {
-      "fpr_p95": 0.0501,
-      "dr_p95": 0.3166,
-      "auc": 0.8494,
-      "ks": 0.5639,
+      "fpr_p95": 0.05,
+      "dr_p95": 0.0624,
+      "auc": 0.7403,
+      "ks": 0.4557,
       "features": [
         "length",
         "special_char_ratio",
@@ -87,108 +87,236 @@
         "max_token_length"
       ]
     },
-    "5feat_drop_length": {
-      "fpr_p95": 0.0501,
-      "dr_p95": 0.5681,
-      "auc": 0.9189,
-      "ks": 0.6801,
+    "subset[]+quote_imbalance": {
+      "fpr_p95": 0.0105,
+      "dr_p95": 0.0541,
+      "auc": 0.5217,
+      "ks": 0.0435,
+      "features": [
+        "quote_imbalance"
+      ]
+    },
+    "subset[length]+quote_imbalance": {
+      "fpr_p95": 0.0489,
+      "dr_p95": 0.0811,
+      "auc": 0.5833,
+      "ks": 0.1408,
+      "features": [
+        "length",
+        "quote_imbalance"
+      ]
+    },
+    "subset[special_char_ratio]+quote_imbalance": {
+      "fpr_p95": 0.0008,
+      "dr_p95": 0.0103,
+      "auc": 0.5943,
+      "ks": 0.1722,
+      "features": [
+        "special_char_ratio",
+        "quote_imbalance"
+      ]
+    },
+    "subset[sql_keyword_count]+quote_imbalance": {
+      "fpr_p95": 0.0069,
+      "dr_p95": 0.0163,
+      "auc": 0.5546,
+      "ks": 0.1335,
+      "features": [
+        "sql_keyword_count",
+        "quote_imbalance"
+      ]
+    },
+    "subset[entropy]+quote_imbalance": {
+      "fpr_p95": 0.05,
+      "dr_p95": 0.1313,
+      "auc": 0.7178,
+      "ks": 0.3172,
+      "features": [
+        "entropy",
+        "quote_imbalance"
+      ]
+    },
+    "subset[length,special_char_ratio]+quote_imbalance": {
+      "fpr_p95": 0.0491,
+      "dr_p95": 0.0709,
+      "auc": 0.6391,
+      "ks": 0.2536,
+      "features": [
+        "length",
+        "special_char_ratio",
+        "quote_imbalance"
+      ]
+    },
+    "subset[length,sql_keyword_count]+quote_imbalance": {
+      "fpr_p95": 0.0478,
+      "dr_p95": 0.0684,
+      "auc": 0.5975,
+      "ks": 0.1763,
+      "features": [
+        "length",
+        "sql_keyword_count",
+        "quote_imbalance"
+      ]
+    },
+    "subset[length,entropy]+quote_imbalance": {
+      "fpr_p95": 0.05,
+      "dr_p95": 0.0763,
+      "auc": 0.7031,
+      "ks": 0.3082,
+      "features": [
+        "length",
+        "entropy",
+        "quote_imbalance"
+      ]
+    },
+    "subset[special_char_ratio,sql_keyword_count]+quote_imbalance": {
+      "fpr_p95": 0.0005,
+      "dr_p95": 0.006,
+      "auc": 0.6263,
+      "ks": 0.2287,
       "features": [
         "special_char_ratio",
         "sql_keyword_count",
-        "entropy",
-        "bigram_entropy"
+        "quote_imbalance"
       ]
     },
-    "5feat_drop_special_char_ratio": {
-      "fpr_p95": 0.0483,
-      "dr_p95": 0.4246,
-      "auc": 0.8705,
-      "ks": 0.5799,
+    "subset[special_char_ratio,entropy]+quote_imbalance": {
+      "fpr_p95": 0.05,
+      "dr_p95": 0.2623,
+      "auc": 0.7917,
+      "ks": 0.4647,
+      "features": [
+        "special_char_ratio",
+        "entropy",
+        "quote_imbalance"
+      ]
+    },
+    "subset[sql_keyword_count,entropy]+quote_imbalance": {
+      "fpr_p95": 0.05,
+      "dr_p95": 0.1067,
+      "auc": 0.7141,
+      "ks": 0.3166,
+      "features": [
+        "sql_keyword_count",
+        "entropy",
+        "quote_imbalance"
+      ]
+    },
+    "subset[length,special_char_ratio,sql_keyword_count]+quote_imbalance": {
+      "fpr_p95": 0.0478,
+      "dr_p95": 0.0643,
+      "auc": 0.6536,
+      "ks": 0.277,
+      "features": [
+        "length",
+        "special_char_ratio",
+        "sql_keyword_count",
+        "quote_imbalance"
+      ]
+    },
+    "subset[length,special_char_ratio,entropy]+quote_imbalance": {
+      "fpr_p95": 0.05,
+      "dr_p95": 0.0765,
+      "auc": 0.7642,
+      "ks": 0.4652,
+      "features": [
+        "length",
+        "special_char_ratio",
+        "entropy",
+        "quote_imbalance"
+      ]
+    },
+    "subset[length,sql_keyword_count,entropy]+quote_imbalance": {
+      "fpr_p95": 0.05,
+      "dr_p95": 0.0683,
+      "auc": 0.7026,
+      "ks": 0.3124,
       "features": [
         "length",
         "sql_keyword_count",
         "entropy",
-        "bigram_entropy"
+        "quote_imbalance"
       ]
     },
-    "5feat_drop_sql_keyword_count": {
-      "fpr_p95": 0.0501,
-      "dr_p95": 0.47,
-      "auc": 0.8532,
-      "ks": 0.5565,
+    "subset[special_char_ratio,sql_keyword_count,entropy]+quote_imbalance": {
+      "fpr_p95": 0.05,
+      "dr_p95": 0.2612,
+      "auc": 0.793,
+      "ks": 0.4733,
       "features": [
-        "length",
         "special_char_ratio",
+        "sql_keyword_count",
         "entropy",
-        "bigram_entropy"
+        "quote_imbalance"
       ]
     },
-    "5feat_drop_entropy": {
-      "fpr_p95": 0.045,
-      "dr_p95": 0.3962,
-      "auc": 0.8454,
-      "ks": 0.5414,
+    "subset[length,special_char_ratio,sql_keyword_count,entropy]+quote_imbalance": {
+      "fpr_p95": 0.05,
+      "dr_p95": 0.0659,
+      "auc": 0.7691,
+      "ks": 0.4838,
       "features": [
         "length",
         "special_char_ratio",
         "sql_keyword_count",
-        "bigram_entropy"
+        "entropy",
+        "quote_imbalance"
       ]
     },
     "subset[]+bigram_entropy": {
-      "fpr_p95": 0.0497,
-      "dr_p95": 0.6028,
-      "auc": 0.8689,
-      "ks": 0.5863,
+      "fpr_p95": 0.05,
+      "dr_p95": 0.0771,
+      "auc": 0.6632,
+      "ks": 0.2655,
       "features": [
         "bigram_entropy"
       ]
     },
     "subset[length]+bigram_entropy": {
-      "fpr_p95": 0.0501,
-      "dr_p95": 0.416,
-      "auc": 0.8157,
-      "ks": 0.494,
+      "fpr_p95": 0.05,
+      "dr_p95": 0.0764,
+      "auc": 0.6427,
+      "ks": 0.2272,
       "features": [
         "length",
         "bigram_entropy"
       ]
     },
     "subset[special_char_ratio]+bigram_entropy": {
-      "fpr_p95": 0.0497,
-      "dr_p95": 0.6028,
-      "auc": 0.8689,
-      "ks": 0.5863,
+      "fpr_p95": 0.05,
+      "dr_p95": 0.0509,
+      "auc": 0.7005,
+      "ks": 0.3123,
       "features": [
         "special_char_ratio",
         "bigram_entropy"
       ]
     },
     "subset[sql_keyword_count]+bigram_entropy": {
-      "fpr_p95": 0.0332,
-      "dr_p95": 0.5367,
-      "auc": 0.893,
-      "ks": 0.6305,
+      "fpr_p95": 0.05,
+      "dr_p95": 0.0624,
+      "auc": 0.6568,
+      "ks": 0.2592,
       "features": [
         "sql_keyword_count",
         "bigram_entropy"
       ]
     },
     "subset[entropy]+bigram_entropy": {
-      "fpr_p95": 0.0501,
-      "dr_p95": 0.6246,
-      "auc": 0.8979,
-      "ks": 0.6673,
+      "fpr_p95": 0.05,
+      "dr_p95": 0.0756,
+      "auc": 0.706,
+      "ks": 0.3132,
       "features": [
         "entropy",
         "bigram_entropy"
       ]
     },
     "subset[length,special_char_ratio]+bigram_entropy": {
-      "fpr_p95": 0.0501,
-      "dr_p95": 0.4148,
-      "auc": 0.8156,
-      "ks": 0.4929,
+      "fpr_p95": 0.05,
+      "dr_p95": 0.0572,
+      "auc": 0.7021,
+      "ks": 0.3474,
       "features": [
         "length",
         "special_char_ratio",
@@ -196,10 +324,10 @@
       ]
     },
     "subset[length,sql_keyword_count]+bigram_entropy": {
-      "fpr_p95": 0.045,
-      "dr_p95": 0.3962,
-      "auc": 0.8454,
-      "ks": 0.5418,
+      "fpr_p95": 0.05,
+      "dr_p95": 0.0618,
+      "auc": 0.6433,
+      "ks": 0.2424,
       "features": [
         "length",
         "sql_keyword_count",
@@ -207,10 +335,10 @@
       ]
     },
     "subset[length,entropy]+bigram_entropy": {
-      "fpr_p95": 0.0501,
-      "dr_p95": 0.4696,
-      "auc": 0.8532,
-      "ks": 0.5564,
+      "fpr_p95": 0.05,
+      "dr_p95": 0.0759,
+      "auc": 0.7033,
+      "ks": 0.3083,
       "features": [
         "length",
         "entropy",
@@ -218,10 +346,10 @@
       ]
     },
     "subset[special_char_ratio,sql_keyword_count]+bigram_entropy": {
-      "fpr_p95": 0.0332,
-      "dr_p95": 0.5366,
-      "auc": 0.893,
-      "ks": 0.6307,
+      "fpr_p95": 0.05,
+      "dr_p95": 0.05,
+      "auc": 0.7102,
+      "ks": 0.3219,
       "features": [
         "special_char_ratio",
         "sql_keyword_count",
@@ -229,10 +357,10 @@
       ]
     },
     "subset[special_char_ratio,entropy]+bigram_entropy": {
-      "fpr_p95": 0.0501,
-      "dr_p95": 0.6246,
-      "auc": 0.8979,
-      "ks": 0.6673,
+      "fpr_p95": 0.05,
+      "dr_p95": 0.0676,
+      "auc": 0.7755,
+      "ks": 0.5,
       "features": [
         "special_char_ratio",
         "entropy",
@@ -240,10 +368,10 @@
       ]
     },
     "subset[sql_keyword_count,entropy]+bigram_entropy": {
-      "fpr_p95": 0.0501,
-      "dr_p95": 0.5681,
-      "auc": 0.9189,
-      "ks": 0.68,
+      "fpr_p95": 0.05,
+      "dr_p95": 0.0609,
+      "auc": 0.6985,
+      "ks": 0.318,
       "features": [
         "sql_keyword_count",
         "entropy",
@@ -251,10 +379,10 @@
       ]
     },
     "subset[length,special_char_ratio,sql_keyword_count]+bigram_entropy": {
-      "fpr_p95": 0.045,
-      "dr_p95": 0.3962,
-      "auc": 0.8454,
-      "ks": 0.5414,
+      "fpr_p95": 0.05,
+      "dr_p95": 0.0527,
+      "auc": 0.7015,
+      "ks": 0.3342,
       "features": [
         "length",
         "special_char_ratio",
@@ -263,10 +391,10 @@
       ]
     },
     "subset[length,special_char_ratio,entropy]+bigram_entropy": {
-      "fpr_p95": 0.0501,
-      "dr_p95": 0.47,
-      "auc": 0.8532,
-      "ks": 0.5565,
+      "fpr_p95": 0.05,
+      "dr_p95": 0.0574,
+      "auc": 0.7608,
+      "ks": 0.4735,
       "features": [
         "length",
         "special_char_ratio",
@@ -275,10 +403,10 @@
       ]
     },
     "subset[length,sql_keyword_count,entropy]+bigram_entropy": {
-      "fpr_p95": 0.0483,
-      "dr_p95": 0.4246,
-      "auc": 0.8705,
-      "ks": 0.5799,
+      "fpr_p95": 0.05,
+      "dr_p95": 0.0613,
+      "auc": 0.6941,
+      "ks": 0.3139,
       "features": [
         "length",
         "sql_keyword_count",
@@ -287,10 +415,10 @@
       ]
     },
     "subset[special_char_ratio,sql_keyword_count,entropy]+bigram_entropy": {
-      "fpr_p95": 0.0501,
-      "dr_p95": 0.5681,
-      "auc": 0.9189,
-      "ks": 0.6801,
+      "fpr_p95": 0.05,
+      "dr_p95": 0.0595,
+      "auc": 0.7695,
+      "ks": 0.4898,
       "features": [
         "special_char_ratio",
         "sql_keyword_count",
@@ -299,16 +427,368 @@
       ]
     },
     "subset[length,special_char_ratio,sql_keyword_count,entropy]+bigram_entropy": {
-      "fpr_p95": 0.0483,
-      "dr_p95": 0.4244,
-      "auc": 0.8705,
-      "ks": 0.5795,
+      "fpr_p95": 0.05,
+      "dr_p95": 0.0535,
+      "auc": 0.7587,
+      "ks": 0.472,
       "features": [
         "length",
         "special_char_ratio",
         "sql_keyword_count",
         "entropy",
         "bigram_entropy"
+      ]
+    },
+    "subset[]+same_type_run_ratio": {
+      "fpr_p95": 0.0041,
+      "dr_p95": 0.0,
+      "auc": 0.6787,
+      "ks": 0.3188,
+      "features": [
+        "same_type_run_ratio"
+      ]
+    },
+    "subset[length]+same_type_run_ratio": {
+      "fpr_p95": 0.0496,
+      "dr_p95": 0.0139,
+      "auc": 0.6462,
+      "ks": 0.331,
+      "features": [
+        "length",
+        "same_type_run_ratio"
+      ]
+    },
+    "subset[special_char_ratio]+same_type_run_ratio": {
+      "fpr_p95": 0.0045,
+      "dr_p95": 0.0,
+      "auc": 0.6373,
+      "ks": 0.2312,
+      "features": [
+        "special_char_ratio",
+        "same_type_run_ratio"
+      ]
+    },
+    "subset[sql_keyword_count]+same_type_run_ratio": {
+      "fpr_p95": 0.0043,
+      "dr_p95": 0.0,
+      "auc": 0.6648,
+      "ks": 0.2994,
+      "features": [
+        "sql_keyword_count",
+        "same_type_run_ratio"
+      ]
+    },
+    "subset[entropy]+same_type_run_ratio": {
+      "fpr_p95": 0.05,
+      "dr_p95": 0.1271,
+      "auc": 0.7254,
+      "ks": 0.3252,
+      "features": [
+        "entropy",
+        "same_type_run_ratio"
+      ]
+    },
+    "subset[length,special_char_ratio]+same_type_run_ratio": {
+      "fpr_p95": 0.0469,
+      "dr_p95": 0.0029,
+      "auc": 0.6738,
+      "ks": 0.3579,
+      "features": [
+        "length",
+        "special_char_ratio",
+        "same_type_run_ratio"
+      ]
+    },
+    "subset[length,sql_keyword_count]+same_type_run_ratio": {
+      "fpr_p95": 0.0479,
+      "dr_p95": 0.008,
+      "auc": 0.6479,
+      "ks": 0.335,
+      "features": [
+        "length",
+        "sql_keyword_count",
+        "same_type_run_ratio"
+      ]
+    },
+    "subset[length,entropy]+same_type_run_ratio": {
+      "fpr_p95": 0.05,
+      "dr_p95": 0.0733,
+      "auc": 0.6773,
+      "ks": 0.2877,
+      "features": [
+        "length",
+        "entropy",
+        "same_type_run_ratio"
+      ]
+    },
+    "subset[special_char_ratio,sql_keyword_count]+same_type_run_ratio": {
+      "fpr_p95": 0.0045,
+      "dr_p95": 0.0,
+      "auc": 0.635,
+      "ks": 0.2304,
+      "features": [
+        "special_char_ratio",
+        "sql_keyword_count",
+        "same_type_run_ratio"
+      ]
+    },
+    "subset[special_char_ratio,entropy]+same_type_run_ratio": {
+      "fpr_p95": 0.05,
+      "dr_p95": 0.1702,
+      "auc": 0.7736,
+      "ks": 0.4798,
+      "features": [
+        "special_char_ratio",
+        "entropy",
+        "same_type_run_ratio"
+      ]
+    },
+    "subset[sql_keyword_count,entropy]+same_type_run_ratio": {
+      "fpr_p95": 0.05,
+      "dr_p95": 0.11,
+      "auc": 0.7164,
+      "ks": 0.3171,
+      "features": [
+        "sql_keyword_count",
+        "entropy",
+        "same_type_run_ratio"
+      ]
+    },
+    "subset[length,special_char_ratio,sql_keyword_count]+same_type_run_ratio": {
+      "fpr_p95": 0.0468,
+      "dr_p95": 0.0012,
+      "auc": 0.6794,
+      "ks": 0.3657,
+      "features": [
+        "length",
+        "special_char_ratio",
+        "sql_keyword_count",
+        "same_type_run_ratio"
+      ]
+    },
+    "subset[length,special_char_ratio,entropy]+same_type_run_ratio": {
+      "fpr_p95": 0.05,
+      "dr_p95": 0.0608,
+      "auc": 0.7379,
+      "ks": 0.455,
+      "features": [
+        "length",
+        "special_char_ratio",
+        "entropy",
+        "same_type_run_ratio"
+      ]
+    },
+    "subset[length,sql_keyword_count,entropy]+same_type_run_ratio": {
+      "fpr_p95": 0.05,
+      "dr_p95": 0.0574,
+      "auc": 0.6834,
+      "ks": 0.2997,
+      "features": [
+        "length",
+        "sql_keyword_count",
+        "entropy",
+        "same_type_run_ratio"
+      ]
+    },
+    "subset[special_char_ratio,sql_keyword_count,entropy]+same_type_run_ratio": {
+      "fpr_p95": 0.05,
+      "dr_p95": 0.1123,
+      "auc": 0.7604,
+      "ks": 0.4635,
+      "features": [
+        "special_char_ratio",
+        "sql_keyword_count",
+        "entropy",
+        "same_type_run_ratio"
+      ]
+    },
+    "subset[length,special_char_ratio,sql_keyword_count,entropy]+same_type_run_ratio": {
+      "fpr_p95": 0.05,
+      "dr_p95": 0.0553,
+      "auc": 0.7355,
+      "ks": 0.4502,
+      "features": [
+        "length",
+        "special_char_ratio",
+        "sql_keyword_count",
+        "entropy",
+        "same_type_run_ratio"
+      ]
+    },
+    "subset[]+max_token_length": {
+      "fpr_p95": 0.046,
+      "dr_p95": 0.0504,
+      "auc": 0.5975,
+      "ks": 0.17,
+      "features": [
+        "max_token_length"
+      ]
+    },
+    "subset[length]+max_token_length": {
+      "fpr_p95": 0.05,
+      "dr_p95": 0.0605,
+      "auc": 0.6034,
+      "ks": 0.1857,
+      "features": [
+        "length",
+        "max_token_length"
+      ]
+    },
+    "subset[special_char_ratio]+max_token_length": {
+      "fpr_p95": 0.0442,
+      "dr_p95": 0.136,
+      "auc": 0.6426,
+      "ks": 0.2405,
+      "features": [
+        "special_char_ratio",
+        "max_token_length"
+      ]
+    },
+    "subset[sql_keyword_count]+max_token_length": {
+      "fpr_p95": 0.0481,
+      "dr_p95": 0.0367,
+      "auc": 0.5715,
+      "ks": 0.1671,
+      "features": [
+        "sql_keyword_count",
+        "max_token_length"
+      ]
+    },
+    "subset[entropy]+max_token_length": {
+      "fpr_p95": 0.05,
+      "dr_p95": 0.0956,
+      "auc": 0.6923,
+      "ks": 0.2988,
+      "features": [
+        "entropy",
+        "max_token_length"
+      ]
+    },
+    "subset[length,special_char_ratio]+max_token_length": {
+      "fpr_p95": 0.05,
+      "dr_p95": 0.0472,
+      "auc": 0.6446,
+      "ks": 0.2807,
+      "features": [
+        "length",
+        "special_char_ratio",
+        "max_token_length"
+      ]
+    },
+    "subset[length,sql_keyword_count]+max_token_length": {
+      "fpr_p95": 0.0496,
+      "dr_p95": 0.0495,
+      "auc": 0.5848,
+      "ks": 0.1668,
+      "features": [
+        "length",
+        "sql_keyword_count",
+        "max_token_length"
+      ]
+    },
+    "subset[length,entropy]+max_token_length": {
+      "fpr_p95": 0.05,
+      "dr_p95": 0.0736,
+      "auc": 0.674,
+      "ks": 0.2895,
+      "features": [
+        "length",
+        "entropy",
+        "max_token_length"
+      ]
+    },
+    "subset[special_char_ratio,sql_keyword_count]+max_token_length": {
+      "fpr_p95": 0.0408,
+      "dr_p95": 0.129,
+      "auc": 0.6437,
+      "ks": 0.2525,
+      "features": [
+        "special_char_ratio",
+        "sql_keyword_count",
+        "max_token_length"
+      ]
+    },
+    "subset[special_char_ratio,entropy]+max_token_length": {
+      "fpr_p95": 0.05,
+      "dr_p95": 0.1656,
+      "auc": 0.7873,
+      "ks": 0.4745,
+      "features": [
+        "special_char_ratio",
+        "entropy",
+        "max_token_length"
+      ]
+    },
+    "subset[sql_keyword_count,entropy]+max_token_length": {
+      "fpr_p95": 0.05,
+      "dr_p95": 0.0661,
+      "auc": 0.6942,
+      "ks": 0.3053,
+      "features": [
+        "sql_keyword_count",
+        "entropy",
+        "max_token_length"
+      ]
+    },
+    "subset[length,special_char_ratio,sql_keyword_count]+max_token_length": {
+      "fpr_p95": 0.0499,
+      "dr_p95": 0.0363,
+      "auc": 0.6391,
+      "ks": 0.2763,
+      "features": [
+        "length",
+        "special_char_ratio",
+        "sql_keyword_count",
+        "max_token_length"
+      ]
+    },
+    "subset[length,special_char_ratio,entropy]+max_token_length": {
+      "fpr_p95": 0.05,
+      "dr_p95": 0.0769,
+      "auc": 0.7623,
+      "ks": 0.456,
+      "features": [
+        "length",
+        "special_char_ratio",
+        "entropy",
+        "max_token_length"
+      ]
+    },
+    "subset[length,sql_keyword_count,entropy]+max_token_length": {
+      "fpr_p95": 0.05,
+      "dr_p95": 0.0556,
+      "auc": 0.6882,
+      "ks": 0.3007,
+      "features": [
+        "length",
+        "sql_keyword_count",
+        "entropy",
+        "max_token_length"
+      ]
+    },
+    "subset[special_char_ratio,sql_keyword_count,entropy]+max_token_length": {
+      "fpr_p95": 0.05,
+      "dr_p95": 0.1378,
+      "auc": 0.78,
+      "ks": 0.4669,
+      "features": [
+        "special_char_ratio",
+        "sql_keyword_count",
+        "entropy",
+        "max_token_length"
+      ]
+    },
+    "subset[length,special_char_ratio,sql_keyword_count,entropy]+max_token_length": {
+      "fpr_p95": 0.05,
+      "dr_p95": 0.0723,
+      "auc": 0.7606,
+      "ks": 0.4587,
+      "features": [
+        "length",
+        "special_char_ratio",
+        "sql_keyword_count",
+        "entropy",
+        "max_token_length"
       ]
     }
   }

@@ -1,0 +1,78 @@
+{
+  "dataset": "branch1",
+  "versions": [
+    {
+      "version": "1.0",
+      "state": "sealed",
+      "protected": true,
+      "parent": null,
+      "bump": null,
+      "created_at": "2026-08-16T15:12:02+00:00",
+      "reason": "baseline copied from the service registry",
+      "label_space": [
+        "boolean_blind",
+        "error_based",
+        "normal",
+        "time_blind",
+        "union_based"
+      ],
+      "n_rows": 63450,
+      "content_hash": "sha256:0ff31cacebf84c245d5a4d9b6f35db17e4f88078ce890f642915a9ef1450843b",
+      "partitions": {
+        "stream": 31725,
+        "train": 21573,
+        "golden": 6345,
+        "valid": 3807
+      },
+      "golden_hash": "sha256:db59ba876cadcd7d81fea343cd19dd6e08eeea12c4321c9b8336777052c9a6fa"
+    },
+    {
+      "version": "2.0",
+      "state": "sealed",
+      "protected": false,
+      "parent": "1.0",
+      "bump": "major",
+      "created_at": "2026-08-16T15:12:58+00:00",
+      "reason": "new class 'stacked' confirmed from the stream",
+      "label_space": [
+        "boolean_blind",
+        "error_based",
+        "normal",
+        "stacked",
+        "time_blind",
+        "union_based"
+      ],
+      "n_rows": 21628,
+      "content_hash": "sha256:18e0175666c5878bf13e10e799f7d498fc75673e1dab05edac7637a2352934bb",
+      "partitions": {
+        "train": 21628,
+        "golden": 6418
+      },
+      "golden_hash": "sha256:ab72208c46bd40b41b9b1d7909aa2b46f3d20db60376a305a96ba68a3c238a95"
+    },
+    {
+      "version": "2.1",
+      "state": "sealed",
+      "protected": false,
+      "parent": "2.0",
+      "bump": "minor",
+      "created_at": "2026-08-19T03:41:53+00:00",
+      "reason": "new class 'stacked' confirmed from the stream",
+      "label_space": [
+        "boolean_blind",
+        "error_based",
+        "normal",
+        "stacked",
+        "time_blind",
+        "union_based"
+      ],
+      "n_rows": 21604,
+      "content_hash": "sha256:925521f7a0b4acf40117aacfec6a69ecc777948e181ccb45a529f913f3bfaeed",
+      "partitions": {
+        "train": 21604,
+        "golden": 6418
+      },
+      "golden_hash": "sha256:ab72208c46bd40b41b9b1d7909aa2b46f3d20db60376a305a96ba68a3c238a95"
+    }
+  ]
+}

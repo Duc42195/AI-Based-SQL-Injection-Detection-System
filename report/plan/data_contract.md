@@ -126,6 +126,21 @@ File: `data/processed/branch2_normal.csv` (91,935 rows) + `data/processed/branch
 
 ---
 
+## 3.4. Branch 2 scope fix + estimator switch (19 Aug) — resolves the §3.2 SQLi-isolation caveat
+
+Follow-up to §3.2's flagged caveat ("D3 anomalous contains many attack types, not just SQLi") and to the 16-17/08 domain-confound bug fix (`configs/config.yaml` `branch2_anomaly` comments, `train/build_branch2_data.py` docstring). Full narrative: [`report/conf/project_history.md`](../conf/project_history.md) §3. Short version:
+
+1. **System-scope finding**: the system is deployed at "Position B" (DB proxy, receives the SQL statement *after* the backend has built it — `report/plan/De_xuat_SQLi_Detection_AI.md` §5.1), so production input is always query/parameter text, never a raw HTTP request. D1 (SQLiV3) already matches this. D3 (CSIC 2010) and D7 (SR-BH 2020) were captured as full HTTP requests — the scheme/host/path portion is routing noise that measurably dilutes whole-string features (`special_char_ratio` effect size |d|=1.69 on D1 vs only |d|=0.12 on D3).
+2. **Fix**: `train/build_branch2_dataset.py` now strips the scheme/host/path off D3/D7 rows (`_strip_url_wrapper`), keeping only query-string/body parameters — the closest available proxy to Position-B input for HTTP-captured sources. Rows with nothing left after stripping (bare static-asset requests) are dropped. The anomalous eval set now also includes D1 + D7 attack rows (previously D3 only) — D7's `load_d7` already isolates its "SQL Injection" CAPEC column, so these are confirmed-SQLi, not D3's mixed-attack-type problem.
+3. **New features**: 6 "local peak" features added to `statistical_features.py` (`same_type_run_ratio`, `max_token_length`, `token_count`, `max_special_run`, `max_digit_run`, `paren_imbalance`) — measure a local run/token instead of a whole-string ratio, so they aren't diluted by the long legitimate parameter strings D3/D7 produce even after the URL strip.
+4. **Estimator switch**: `one_class_svm` → `local_outlier_factor` (`n_neighbors=5`). The benign pool now spans 3 structurally distinct sub-populations (D1/D3/D7); a single global OCSVM/IsolationForest boundary judged "not like D3" as anomalous even for genuinely benign D1/D7 traffic. LOF's local-density notion avoids this. Compared against OCSVM, IsolationForest (incl. `max_samples=1.0`), GaussianMixture, EllipticEnvelope — LOF won clearly.
+
+**Result** (`report/metrics/branch2_eval.json`, official `models/branch2_v1`): **DR @ matched FPR=5% = 80.6%, AUC = 0.929** (up from 26.2% / 0.792 pre-fix). Per-source DR: D1=78.5%, D3=66.9%, D7=84.0%, `ssrf_moved_from_benign`=59.3%.
+
+**Trade-off worth stating in Limitations**: LOF's fitted model retains the full training feature matrix (not a compact set of parameters like OCSVM/IsolationForest) — larger model artifact, and every inference call does a k-NN lookup against the training set rather than a fixed decision boundary. Measured latency was comparable to IsolationForest in an offline benchmark (~15-18 ms/query on this hardware) but this should be re-measured against the live `/api/v1/detect` endpoint before citing an end-to-end number in the paper.
+
+---
+
 ## 3. Multi-class label table (Branch 1) — applied via a rule-based tagger
 
 Priority order when a payload matches multiple signals: **stacked > time_blind > error_based > union_based > boolean_blind**.

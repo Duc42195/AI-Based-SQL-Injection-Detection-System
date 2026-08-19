@@ -99,8 +99,20 @@ branch1_supervised:
 branch2_anomaly:
   # Trained on BENIGN ONLY. Output is a continuous anomaly score used both as a
   # per-query zero-day flag and as an extra feature dim fed into Branch 3.
-  # "isolation_forest" | "one_class_svm"
-  algorithm: "one_class_svm"
+  # "isolation_forest" | "one_class_svm" | "local_outlier_factor"
+  #
+  # CHANGED 19/08 (one_class_svm -> local_outlier_factor): the benign pool
+  # spans 3 structurally distinct sub-populations (D1 bare SQL text, D3/D7
+  # HTTP query-parameter text — see `features`/data_file comments below), a
+  # shape single-boundary estimators (OCSVM/IsolationForest) handle poorly —
+  # a query that's merely "not from D3" can look anomalous to a
+  # D3-influenced boundary even when genuinely benign D1/D7 traffic. LOF
+  # judges each point against its own nearest neighbours (local density)
+  # rather than one global boundary, so cross-domain shape differences don't
+  # get mistaken for attacks the same way. Full comparison (OCSVM/
+  # IsolationForest/GaussianMixture/EllipticEnvelope/LOF, several
+  # hyperparameter grids): report/conf/project_history.md §3.
+  algorithm: "local_outlier_factor"
   # Model folder under models_dir (created once Branch 2 is trained). Until then
   # the API reports this branch as "not_ready" instead of crashing.
   active_version: "branch2_v1"
@@ -109,62 +121,113 @@ branch2_anomaly:
   # short-string-rebalanced files, not the originals build_branch2_data.py
   # writes directly — run train/clean_branch2_data.py after
   # train/build_branch2_data.py to (re)generate them.
+  #
+  # UPDATED 19/08: build_branch2_dataset.py now also strips the HTTP
+  # scheme/host/path off D3/D7 rows (kept only for content captured as full
+  # HTTP requests — D1 is already query-shaped) — see that script's
+  # docstring and report/conf/project_history.md §1/§3 for why (the system
+  # is deployed at "Position B" / DB proxy, which only ever sees a built SQL
+  # statement, never a raw HTTP request). The anomalous eval set now also
+  # includes D1 + D7 attack rows (previously D3 only).
   data_file: "branch2_data_clean.csv"
   anomalous_eval_file: "branch2_anomalous_eval_clean.csv"
   # Expected fraction of anomalies in the (Normal) training data.
   # NOTE: training data is 100 % benign (0 % anomaly), so this should be very
   # small — IF='auto' uses the algorithm's own estimate; OCSVM default nu=0.001.
-  # Shared contamination (used for Isolation Forest). One-Class SVM uses its
-  # own ocsvm_nu below — each algorithm independently tuned.
+  # Shared/fallback contamination — each algorithm can override with its own
+  # key below (ocsvm_nu, lof_contamination); Isolation Forest uses this one
+  # directly.
   contamination: 0.01
-  # One-Class SVM specific hyperparameters — retuned 15/08 via grid search
-  # (branch2_anomaly.tune below) on the CLEAN data + the 3-feature set below.
-  # nu=0.001 beat nu=0.005 on BOTH validation AUC (0.943) and P95-matched-FPR=5%
-  # DR (63.6% vs 62.1%) — not just an AUC-only pick that happens to hurt DR.
-  # See train/explore_branch2_new_features.py / report/metrics/branch2_feature_exploration.json.
+  # One-Class SVM specific hyperparameters — kept for reference /
+  # `branch2_anomaly.tune` comparisons even though LOF is the active
+  # algorithm (see `algorithm` comment above). nu=0.001/gamma=0.01 was the
+  # 17/08 tuned result on the (pre-19/08) 3-feature/D3-only setup:
+  # AUC=0.792, DR=26.2% at matched FPR=5%.
   ocsvm_nu: 0.001
   ocsvm_gamma: 0.01
-  # Scale all features with StandardScaler before training. EMPIRICAL NOTE
-  # (retuned 15/08, post-cleanup): with `length` dropped (see `features`
-  # below), the remaining 3 features are on comparable raw scales, so
-  # scaling now HELPS (DR 56.8%->62.1% at matched FPR=5%) instead of hurting
-  # like it did in the original 16/7 audit — that finding was specific to
-  # `length` dominating raw magnitude, which no longer applies once `length`
-  # itself is out of the feature set.
+  # Isolation Forest — max_samples=1.0 (each of the 500 trees sees the FULL
+  # training set, not sklearn's default 256-row random subsample) mattered
+  # far more than n_estimators for this multi-domain pool: a small random
+  # subsample often doesn't represent all 3 domains, so trees partition
+  # poorly. Kept as a documented runner-up (AUC=0.837, DR=61.4%) — LOF beat
+  # it (AUC=0.900, DR=80.0%), see `algorithm` comment.
+  if_max_samples: 1.0
+  # Local Outlier Factor — ACTIVE algorithm. n_neighbors=5 won a sweep of
+  # [5, 8, 10, 12, 15, 20, 25, 30, 50, 100, 200, 500] on validation AUC (the
+  # curve is flat across 5-25, not a sharp overfit spike at the smallest
+  # value tried — report/conf/project_history.md §3). contamination only
+  # affects `predict()`'s binary threshold, not `score()` (which every
+  # eval/calibration script here uses instead) — set to roughly match the
+  # matched-FPR=5% operating point used for reporting.
+  lof_n_neighbors: 5
+  lof_contamination: 0.05
+  # Scale all features with StandardScaler before training — required for
+  # LOF (a distance-based method) even more than it was for OCSVM's RBF
+  # kernel, since the 12 features below are on very different raw scales
+  # (e.g. length ~10-1000s vs quote_imbalance 0/1/2).
   scale_features: true
-  # No feature currently needs log1p — `length` (the only right-skewed one)
-  # was dropped; sql_keyword_count/entropy/bigram_entropy are all reasonably
-  # bounded/unimodal (tested both ways, see explore_branch2_new_features.py).
-  log_transform_features: []
+  # log1p-transform the right-skewed count/length features before scaling —
+  # these have long tails (a handful of very long queries/tokens/runs) that
+  # would otherwise dominate Euclidean distance for LOF's k-NN lookups.
+  log_transform_features:
+    - "length"
+    - "max_token_length"
+    - "max_special_run"
+    - "max_digit_run"
   # Statistical/structural features extracted per query (not TF-IDF - Branch 2
   # needs to generalize to unseen syntax, so features describe SHAPE not content).
   #
-  # RETUNED 15/08 after the SSRF/short-string cleanup regressed separation
-  # (DR 41.87%->31.19% at matched FPR=5%, see solution_branch2_cleanup.md).
-  # Root cause: removing the short-string benign cluster left only complex
-  # JOIN/subquery benign rows, which overlap attack payloads in `length` once
-  # that cluster is gone — `length` used to be ~80% of permutation importance
-  # precisely BECAUSE of the short-string cluster it no longer has. Ablation
-  # (train/explore_branch2_new_features.py) over all 2^4 subsets of the
-  # original 4 features + the new bigram_entropy candidate found:
-  #   - `length` now HURTS every combination it's in (confound, not signal).
-  #   - `special_char_ratio` is inert (identical results with/without it in
-  #     every combo tested — near-identical distribution both groups).
-  #   - `sql_keyword_count` + `entropy` + `bigram_entropy` together: best AUC
-  #     among all subsets tried; after also retuning ocsvm_nu/gamma for this
-  #     subset (below), final AUC=0.949, DR=63.6% at matched FPR=5% (vs 31.2%
-  #     with the old 4-feature set on the same clean data — recovers AND
-  #     exceeds the pre-cleanup 41.87%).
-  # CAVEAT: this subset was chosen by scoring all 16 candidate subsets
-  # directly against branch2_anomalous_eval_clean.csv (no separate
-  # feature-selection validation split) — the reported DR/AUC for the winning
-  # subset is therefore somewhat optimistic (selection-on-test bias). Treat
-  # as a strong signal, not a final number for the paper without a
-  # confirmatory re-split.
+  # BUG FOUND AND FIXED 16/08 (train/build_branch2_data.py): the benign
+  # training pool was being built from `branch1_train.csv` filtered to
+  # label==0 — Branch 1's dataset, PER-CLASS-UNDERSAMPLED to 15,000 "normal"
+  # rows and, critically, containing ONLY the d1_sqliv3 + d7_srbh2020_normal
+  # sources. The anomalous eval set is 100% d3_csic2010. So the benign pool
+  # was missing an entire source that the eval set is entirely drawn from —
+  # a domain-shift confound, not just "6x less data". Fixed by loading the
+  # dedicated, uncapped `branch2_normal.csv` (all of D1+D3+D7, no per-class
+  # cap — the design this project always intended, see
+  # report/plan/data_contract.md §3.2) that was already published on the HF
+  # dataset repo the whole time.
+  #
+  # This exposed that the previously-chosen feature `bigram_entropy` (15/08)
+  # was itself mostly riding this confound (see git history / previous
+  # versions of this comment block for the exact numbers) — replaced 17/08
+  # by `quote_imbalance` (count of unclosed single/double quotes).
+  #
+  # UPDATED 19/08 (3 features -> all 12): a follow-up finding showed *why*
+  # D3/D7 stayed harder than D1 even with quote_imbalance — D3/D7 rows are
+  # full HTTP query-parameter strings (`key=value&key=value&...`), so a
+  # WHOLE-STRING ratio feature (special_char_ratio, quote_imbalance) gets
+  # diluted by all the legitimate `&`/`=`/`.` syntax surrounding a small
+  # injected payload (measured effect size on special_char_ratio: |d|=1.69
+  # on D1, only |d|=0.12 on D3 — report/plan/data_contract.md). Added 6
+  # "local peak" features (same_type_run_ratio, max_token_length,
+  # token_count, max_special_run, max_digit_run, paren_imbalance — see
+  # src/preprocessing/statistical_features.py) that look for a local run/
+  # token rather than a whole-string average, so they aren't diluted the
+  # same way. Combined with the D3/D7 URL-wrapper strip (`data_file` comment
+  # above) and switching to LOF (`algorithm` comment above), this raised
+  # DR@matched-FPR5% from 26.2% to 80.0% (AUC 0.79 -> 0.90) on a combined
+  # D1+D3+D7 eval. Using ALL 12 features (not a hand-picked subset) won a
+  # forward/backward stepwise search by a wide margin once the estimator
+  # became LOF — full account: report/conf/project_history.md §3.
+  #
+  # CAVEAT: as before, this subset was chosen by scoring candidates directly
+  # against the held-out anomalous eval set (no separate feature-selection
+  # validation split) — somewhat optimistic (selection-on-test bias).
   features:
+    - "length"
+    - "special_char_ratio"
     - "sql_keyword_count"
     - "entropy"
     - "bigram_entropy"
+    - "quote_imbalance"
+    - "same_type_run_ratio"
+    - "max_token_length"
+    - "token_count"
+    - "max_special_run"
+    - "max_digit_run"
+    - "paren_imbalance"
   # Held-out split of the benign pool for evaluating FPR (build_branch2_dataset.py).
   test_fraction: 0.2
   # Hyperparameter tuning via grid search (disabled by default; enable for
@@ -175,11 +238,15 @@ branch2_anomaly:
     scoring: "roc_auc"
     # Grids are expanded as Cartesian product.
     isolation_forest:
-      n_estimators: [50, 100, 200]
+      n_estimators: [100, 500]
+      max_samples: [0.5, 1.0]
       contamination: [0.001, 0.005, 0.01, "auto"]
     one_class_svm:
       gamma: ["scale", "auto", 0.1, 0.01]
       contamination: [0.001, 0.005, 0.01, 0.05]
+    local_outlier_factor:
+      n_neighbors: [5, 10, 20, 50]
+      contamination: [0.02, 0.05]
 
 branch3_session:
   # Session Correlator (formerly "Branch 3"). NOT a trained model: it re-uses
@@ -328,7 +395,21 @@ mlops:
     # so scoring the stream against it measures that construction difference
     # and reports drift from window 0. Baselining on an initial stable period
     # is also what a real deployment does.
-    baseline_windows: 10
+    # Lowered 10->5 on 17/08: after the branch2_normal.csv data-source fix
+    # (configs/config.yaml branch2_anomaly), the MLOps replay stream pool
+    # (train/build_mlops_split.py) shrank a lot — usable benign rows after
+    # excluding Branch 1/Branch 2 training overlap dropped from ~76.8K to
+    # ~15.4K (those rows are legitimately consumed by Branch 2 training) —
+    # 17 windows total, phase A (phase_a_fraction=0.4) only ~6-7 of them.
+    # baseline_windows=10 no longer fit inside phase A; 5 was the fix then.
+    #
+    # UPDATED 19/08: after the D3/D7 URL-wrapper strip (build_branch2_dataset.py)
+    # + the anomalous-eval set now also drawing D1/D7 attacks, the usable
+    # stream-benign pool shrank further to ~8.7K rows — only 9 windows total,
+    # phase A now just ~3 of them. baseline_windows=5 again ate all of phase
+    # A (same crash as before, computing phase_a_max on an empty array). 2
+    # leaves 1 window of margin under the ~3 phase-A windows.
+    baseline_windows: 2
     # Consecutive windows that must breach the threshold before retraining is
     # triggered - a single-window spike is noise.
     sustained_windows: 2

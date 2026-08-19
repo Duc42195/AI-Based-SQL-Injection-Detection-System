@@ -108,6 +108,9 @@ def main() -> None:
     models_dir = Path(cfg.get_path("paths.models_dir", "models"))
     feature_names = list(cfg.get_path("branch2_anomaly.features", [
         "length", "special_char_ratio", "sql_keyword_count", "entropy",
+        "bigram_entropy", "quote_imbalance", "same_type_run_ratio",
+        "max_token_length", "token_count", "max_special_run",
+        "max_digit_run", "paren_imbalance",
     ]))
 
     # ── 1. Load data ──

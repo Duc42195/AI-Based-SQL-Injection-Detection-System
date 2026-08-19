@@ -1,13 +1,21 @@
 """Build Branch-2 benign pool from HF dataset.
 
-Loads the unified HF dataset (Jason-42195/VNU-SQLi-Detection), keeps only
-normal rows (label=0), extracts statistical features, and saves as a CSV for
-anomaly detection training.
+Loads the dedicated, UNCAPPED Branch-2 benign pool (`branch2_normal.csv` on
+the HF dataset repo — built by the original raw-source pipeline,
+`train/build_branch2_dataset.py`, from D1+D3+D7 with no per-class cap; see
+`report/plan/data_contract.md` §3.2), extracts statistical features, and
+saves as a CSV for anomaly detection training.
 
-This replaces the old build_branch2_dataset.py approach (which built from raw
-D1/D3/D7 sources). The HF dataset already includes properly canonicalized text
-and stratified splits, so we skip de-novo cleaning and reuse split+label
-directly.
+BUG FIXED 16/08: this script previously loaded `branch1_train.csv` (Branch
+1's dataset) and filtered to `label == 0`, which silently gives Branch 1's
+PER-CLASS-UNDERSAMPLED "normal" rows (capped at `branch1_supervised.balance.
+target_per_class`, 15,000 total) instead of Branch 2's own, deliberately
+UNCAPPED pool (91,935 rows) — a design requirement stated explicitly in
+data_contract.md §3.2 ("no count cap — Branch 2 doesn't need class balance;
+more normal data is better"). `branch2_normal.csv` already existed on HF with
+the correct data the whole time; the bug was which file this script read.
+Every Branch 2 result from 16/07 through 16/08 (a month) was trained on 1/6th
+of the benign data that was actually available.
 
 Always computes/writes the FULL canonical feature set (statistical_features.
 FEATURE_ORDER), not just whatever subset branch2_anomaly.features currently
@@ -36,12 +44,9 @@ def main() -> None:
     processed_dir = Path(cfg.get_path("paths.data_processed", "data/processed"))
     processed_dir.mkdir(parents=True, exist_ok=True)
 
-    logger.info("Loading HF dataset Jason-42195/VNU-SQLi-Detection (branch1_train.csv) ...")
-    ds = load_dataset("Jason-42195/VNU-SQLi-Detection", data_files="branch1_train.csv", split="train")
-    logger.info("Total rows: %d", len(ds))
-
-    normal = ds.filter(lambda r: r["label"] == 0)
-    logger.info("Normal rows (label=0): %d", len(normal))
+    logger.info("Loading HF dataset Jason-42195/VNU-SQLi-Detection (branch2_normal.csv) ...")
+    normal = load_dataset("Jason-42195/VNU-SQLi-Detection", data_files="branch2_normal.csv", split="train")
+    logger.info("Normal rows: %d", len(normal))
 
     rows: list[dict] = []
     for i, row in enumerate(normal):

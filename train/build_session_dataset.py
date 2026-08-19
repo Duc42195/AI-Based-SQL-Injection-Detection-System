@@ -240,7 +240,12 @@ def main() -> None:
     vectorizer, clf = _load_branch1(models_dir, cfg.get_path("branch1_supervised.active_version", "branch1_v1"))
     detector = _load_branch2(models_dir, cfg.get_path("branch2_anomaly.active_version", "branch2_v1"))
     feature_names = list(
-        cfg.get_path("branch2_anomaly.features", ["length", "special_char_ratio", "sql_keyword_count", "entropy"])
+        cfg.get_path("branch2_anomaly.features", [
+            "length", "special_char_ratio", "sql_keyword_count", "entropy",
+            "bigram_entropy", "quote_imbalance", "same_type_run_ratio",
+            "max_token_length", "token_count", "max_special_run",
+            "max_digit_run", "paren_imbalance",
+        ])
     )
 
     logger.info("Running Branch 1 + Branch 2 inference on every step ...")
