@@ -305,20 +305,28 @@ def compute_branch2_metrics(detector, test_benign, anom_df):
     logger.info("[Branch 2] Threshold trade-off plot saved")
 
     # ── Score Distribution ──
-    # density=True so the two classes are visually comparable despite the
-    # huge sample-size imbalance (benign n=7.9K vs anomalous n=270K) — a
-    # raw-frequency histogram would dwarf the benign bars regardless of how
-    # well-separated the two distributions actually are.
+    # Undersample the larger class (anomalous, n=270K) down to the smaller
+    # one (benign, n=7.9K) so both histograms use the same N and raw bar
+    # heights are directly comparable — no density normalization needed.
+    # Undersampling (not oversampling benign) keeps every plotted point a
+    # real, distinct observation. Seed matches project.random_seed (42,
+    # config not threaded into this function — see load_config() call in
+    # load_branch2_model_and_data() for the project-wide source of truth).
+    rng = np.random.default_rng(42)
+    n_plot = min(len(benign_scores), len(anom_scores))
+    benign_plot = rng.choice(benign_scores, size=n_plot, replace=False) if len(benign_scores) > n_plot else benign_scores
+    anom_plot = rng.choice(anom_scores, size=n_plot, replace=False) if len(anom_scores) > n_plot else anom_scores
+
     fig, ax = plt.subplots(figsize=(5, 4.5))
-    ax.hist(benign_scores, bins=50, range=(display_lo, display_hi), density=True, alpha=0.6,
-             color="#1f77b4", label=f"Benign (n={len(benign_scores)})")
-    ax.hist(anom_scores, bins=50, range=(display_lo, display_hi), density=True, alpha=0.5,
-             color="#d62728", label=f"Anomalous (n={len(anom_scores)})")
+    ax.hist(benign_plot, bins=50, range=(display_lo, display_hi), alpha=0.6,
+             color="#1f77b4", label=f"Benign (n={len(benign_plot)})")
+    ax.hist(anom_plot, bins=50, range=(display_lo, display_hi), alpha=0.5,
+             color="#d62728", label=f"Anomalous (n={len(anom_plot)}, undersampled from {len(anom_scores)})")
     ax.axvline(x=current_thresh_approx, color="gray", ls="--", lw=1, alpha=0.7)
     ax.set_xlabel("Anomaly Score")
-    ax.set_ylabel("Density")
+    ax.set_ylabel("Frequency")
     ax.set_title("Branch 2 — Score Distribution")
-    ax.legend(fontsize=8)
+    ax.legend(fontsize=7.5)
     fig.savefig(FIGURES_DIR / "branch2_score_dist.png")
     plt.close(fig)
     logger.info("[Branch 2] Score distribution saved")
