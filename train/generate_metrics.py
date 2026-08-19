@@ -275,6 +275,18 @@ def compute_branch2_metrics(detector, test_benign, anom_df):
         writer.writerows(sweep_rows)
     logger.info("[Branch 2] Threshold sweep saved to %s (%d rows)", sweep_path, len(sweep_rows))
 
+    # Display range for the two plots below, clipped to the 0.5-97th
+    # percentile of all scores rather than true min/max. Some estimators
+    # (LOF in particular — a density RATIO, unbounded above) can put ~1-3%
+    # of points at extreme values (near-duplicate-heavy training regions
+    # blow up the ratio for anything not in that exact cluster), which
+    # otherwise stretches the axis so far that the entire informative bulk
+    # of the distribution collapses into a sliver near the origin. The
+    # underlying threshold_sweep CSV still records the true min/max/all
+    # percentiles — only these two chart's VIEWPORT is clipped.
+    display_lo = float(np.percentile(scores_all, 0.5))
+    display_hi = float(np.percentile(scores_all, 97))
+
     # ── Threshold Trade-off Plot ──
     fig, ax1 = plt.subplots(figsize=(5, 4.5))
     fpr_vals = [r["fpr"] for r in sweep_rows]
@@ -287,18 +299,24 @@ def compute_branch2_metrics(detector, test_benign, anom_df):
     ax1.set_ylabel("Rate")
     ax1.set_title("Branch 2 — Threshold Trade-off")
     ax1.legend(loc="center right")
-    ax1.set_xlim(min(thresh_vals), max(thresh_vals))
+    ax1.set_xlim(display_lo, display_hi)
     fig.savefig(FIGURES_DIR / "branch2_threshold_tradeoff.png")
     plt.close(fig)
     logger.info("[Branch 2] Threshold trade-off plot saved")
 
     # ── Score Distribution ──
+    # density=True so the two classes are visually comparable despite the
+    # huge sample-size imbalance (benign n=7.9K vs anomalous n=270K) — a
+    # raw-frequency histogram would dwarf the benign bars regardless of how
+    # well-separated the two distributions actually are.
     fig, ax = plt.subplots(figsize=(5, 4.5))
-    ax.hist(benign_scores, bins=50, alpha=0.7, color="#1f77b4", label=f"Benign (n={len(benign_scores)})")
-    ax.hist(anom_scores, bins=50, alpha=0.6, color="#d62728", label=f"Anomalous (n={len(anom_scores)})")
+    ax.hist(benign_scores, bins=50, range=(display_lo, display_hi), density=True, alpha=0.6,
+             color="#1f77b4", label=f"Benign (n={len(benign_scores)})")
+    ax.hist(anom_scores, bins=50, range=(display_lo, display_hi), density=True, alpha=0.5,
+             color="#d62728", label=f"Anomalous (n={len(anom_scores)})")
     ax.axvline(x=current_thresh_approx, color="gray", ls="--", lw=1, alpha=0.7)
     ax.set_xlabel("Anomaly Score")
-    ax.set_ylabel("Frequency")
+    ax.set_ylabel("Density")
     ax.set_title("Branch 2 — Score Distribution")
     ax.legend(fontsize=8)
     fig.savefig(FIGURES_DIR / "branch2_score_dist.png")
