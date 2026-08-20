@@ -1,7 +1,10 @@
 # Plan & Báo cáo — Audit dữ liệu Branch 1
 
 > Người thực hiện: Bách | 14/08/2026 | theo chỉ đạo mentor "làm tiếp audit nhánh 1"
-> Trạng thái: audit/báo cáo đã xong. CHƯA sửa data Branch 1 (chờ mentor chốt hướng).
+> Trạng thái: audit/báo cáo đã xong. **Mảng 2 (cross-split leakage) ĐÃ SỬA 20/8** — dedup
+> `query_canonical` pre-split trong `train/build_branch1_dataset.py`; rebuild → 0 leakage;
+> retrain `branch1_v1` → F1-macro 0.9822→0.9907 leakage-free; `branch1_eval.json` regenerated.
+> Mảng 3 (SSRF) giữ nguyên theo note mentor (không lọc cho Branch 1); Mảng 4 chỉ ghi nhận.
 
 ## Báo cáo chi tiết
 

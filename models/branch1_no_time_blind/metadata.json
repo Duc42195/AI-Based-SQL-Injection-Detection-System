@@ -1,6 +1,7 @@
 {
   "excluded_label": 4,
   "excluded_label_name": "time_blind",
-  "f1_macro_on_remaining": 0.9773,
-  "trained_at": "2026-07-26T00:14:04"
+  "f1_macro_on_remaining": 0.9883,
+  "trained_at": "2026-08-20T07:07:15",
+  "split": "leakage-free (deduped branch1_train.csv, 20/8)"
 }

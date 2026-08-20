@@ -33,7 +33,7 @@
 **Objective:** Build an intelligent gatekeeper system at the Database layer. Full design comprises **3 parallel branches** (supervised, per-query anomaly detection, and **session-level/sequence** over query chains) combined with a **Continual Learning** mechanism and an **Overkill (hold & verify)** policy — but **the 25 Jul submission only experimentally implements the first 2 branches** (see Section 0 for why).
 
 **Contributions — clearly distinguishing what's done (25 Jul) vs. design/Future Work:**
-1. **[IMPLEMENTED]** Branch 1 (supervised multi-class, F1-macro=0.982) + Branch 2 (anomaly detection, OCSVM AUC=0.90) combined on the same canonicalization pipeline, demonstrated via a demo notebook (`train/notebooks/demo_detect.ipynb`) — the API/integrated system is Future Work (see Section 13).
+1. **[IMPLEMENTED]** Branch 1 (supervised multi-class, F1-macro=0.991 on the leakage-free split) + Branch 2 (anomaly detection, OCSVM AUC=0.90) combined on the same canonicalization pipeline, demonstrated via a demo notebook (`train/notebooks/demo_detect.ipynb`) — the API/integrated system is Future Work (see Section 13).
 2. **[DESIGN — Future Work]** Branch 3 — a hierarchical model over sessions/query chains, addressing a gap that all 11 surveyed Related Work sources overlook: **temporal query splitting** attacks (Boolean/Time-based Blind SQLi) where each individual query looks valid and the pattern only shows up across a sequence. The architecture is fully designed (Section 4.3) but **has no data/experiments** as of the 25 Jul submission.
 3. **[DESIGN — Future Work]** A Continual Learning loop from Admin feedback (the Overkill policy) — basic 2-branch decision logic exists, but the full retrain loop isn't implemented.
 
@@ -84,20 +84,22 @@
 ### 4.1 Model architecture choice for Branch 1 (per-query)
 Unchanged from V2: compares DistilBERT vs. TF-IDF/char n-gram + Gradient Boosting vs. a lightweight CNN with a custom SQL tokenizer (referencing a lightweight architecture from the Related Work survey — ~69K parameters, tens of times faster than DistilBERT). Chosen based on measured F1/latency, not defaulting to a transformer.
 
-**Experimental result — locked in: TF-IDF + Logistic Regression.** Compared 4 candidates on the final **5-class, 13,560-row test set** (the too-easy `stacked` class was dropped — see the finding below), all re-trained on the same 5 classes with data-driven head sizes (`train/compare_branch1_architectures.py`, full results in `report/metrics/branch1_architecture_comparison.json` + `train/notebooks/model_comparison_branch1.ipynb`):
+**Experimental result — locked in: TF-IDF + Logistic Regression.** Compared 4 candidates on the final **5-class, 13,560-row test set** (the too-easy `stacked` class was dropped — see the finding below), all re-trained on the same 5 classes with data-driven head sizes. Numbers below are on the **leakage-free split** (20/8: dataset deduplicated by `query_canonical` before the split — audit Mảng 2 found 949 identical texts straddling train & test) (`train/compare_branch1_architectures.py`, full results in `report/metrics/branch1_architecture_comparison.json` + `train/notebooks/model_comparison_branch1.ipynb`):
 
 | Model | F1-macro | p50 latency | Size | Train time |
 |---|---|---|---|---|
-| **TF-IDF + LogReg** (chosen) | 0.982 | **0.8 ms** | 3.5 MB | 17 s |
-| TF-IDF + LightGBM | **0.991** | 92 ms | 5.7 MB | 328 s |
-| DistilBERT | 0.989 | 2.9 ms (GPU) | 256 MB | 1574 s |
-| CNN + SQL-tokenizer | 0.984 | **0.3 ms** | **0.11 MB** (28.5K params) | 10 s |
+| **TF-IDF + LogReg** (chosen) | 0.991 | **0.5 ms** | 3.5 MB | 13 s |
+| TF-IDF + LightGBM | **0.998** | 60 ms | 5.6 MB | 195 s |
+| DistilBERT | 0.996 | 2.8 ms (GPU) | 256 MB | 1499 s |
+| CNN + SQL-tokenizer | 0.991 | **0.3 ms** | **0.11 MB** (28.5K params) | 10 s |
 
-Reason for choosing LogReg: the F1 gap between the 4 models is negligible (0.982–0.991), while LightGBM is ~115x slower (~92 ms — too high for a real-time proxy), and DistilBERT costs 256 MB + needs a GPU + ~26 minutes to train without beating F1. CNN is a good fallback candidate (fastest/smallest) if stronger feature learning is needed later. The CNN + DistilBERT weights (5-class) are published on HF (`Jason-42195/VNU-SQLi-Detection-Models`, folder `branch1_comparison/`).
+Reason for choosing LogReg: the F1 gap between the 4 models is negligible (0.991–0.998), while LightGBM is ~115x slower (~60 ms — too high for a real-time proxy), and DistilBERT costs 256 MB + needs a GPU + ~25 minutes to train without beating F1. CNN is a good fallback candidate (fastest/smallest) if stronger feature learning is needed later. The CNN + DistilBERT weights (5-class) are published on HF (`Jason-42195/VNU-SQLi-Detection-Models`, folder `branch1_comparison/`).
+
+> **Note (20/8) — leakage fix nudged F1 *up*, not down:** removing the 4,277 duplicate rows (949 straddling train/test) alone would lower the score, but dedup also let the undersampler draw 15k **distinct** rows/class from a much larger pool, so training data is more diverse. TF-IDF+LogReg went 0.982 → 0.991. The eval is now genuinely leakage-free.
 
 **⚠️ Finding — `stacked` dropped from the dataset:** in the initial run (which still included `stacked`) all 4 models hit F1 ~0.99 and the `stacked` class (363 synthetic samples) hit **100% recall on all 4** → a sign the data is **too easy to distinguish** (repeated template structure), NOT a genuine quality signal. Decision: **exclude `stacked` from training** (`branch1_supervised.balance.exclude_labels: [5]` in `config.yaml`), keep the generation code (`synthetic_stacked.py`) for reuse once real data exists from the Docker lab/sqlmap (Day 5-6). Dataset now **5 classes, 67,796 rows**.
 
-**Correct F1-macro after dropping `stacked`: 0.9822** (`models/branch1_v1/`, architecture unchanged — TF-IDF+LogReg). Note: the first retrain incorrectly reported F1=0.8185 due to a `classification_report` bug (hardcoded all 6 labels even though `stacked` was no longer in the data → sklearn scored the missing label 0, skewing the macro-average) — fixed in both `train_branch1.py` and `compare_branch1_architectures.py` (details: `data_contract.md` Section 3.3). The confusion matrix shows the only notable confusion is `normal ↔ boolean_blind` (matches the ~13% label noise measured in the `boolean_blind` bucket) — this F1 figure still shouldn't be read as "near-perfect", the real test is the adversarial set (Day 7).
+**F1-macro (leakage-free split, 20/8): 0.9907** (`models/branch1_v1/`, architecture unchanged — TF-IDF+LogReg; was 0.9822 on the earlier leaky split). Two earlier corrections on the road to this number: (1) a first retrain incorrectly reported F1=0.8185 due to a `classification_report` bug (hardcoded all 6 labels even though `stacked` was no longer in the data → sklearn scored the missing label 0, skewing the macro-average) — fixed in both `train_branch1.py` and `compare_branch1_architectures.py` (`data_contract.md` Section 3.3); (2) the eval had cross-split leakage (949 identical texts in both train & test) — fixed by deduplicating `query_canonical` before the split (audit Mảng 2, `report/metrics/audit_branch1/audit_report.md`). The confusion matrix shows the only notable confusion is `normal ↔ boolean_blind` (matches the ~13% label noise measured in the `boolean_blind` bucket) — this F1 figure still shouldn't be read as "near-perfect", the real test is the adversarial set (Day 7).
 
 ### 4.2 Branch 2: Per-query anomaly detection (unchanged from V2)
 
@@ -217,7 +219,7 @@ Same as V2 (FastAPI + CTranslate2 if using a transformer). Addition: need to cho
 ## 11. DETAILED PLAN (13 Jul – 25 Jul) — 4 people, running in parallel
 
 **Staffing — Day 1-8 (13-20 Jul, already happened):**
-- **Duc** — Data + Branch 1 training (done: `models/branch1_v1/`, F1-macro=0.9822, 5 classes) → built the API scaffold (`deploy/main.py`, `deploy/routers/`).
+- **Duc** — Data + Branch 1 training (done: `models/branch1_v1/`, F1-macro=0.9907 leakage-free, 5 classes) → built the API scaffold (`deploy/main.py`, `deploy/routers/`).
 - **Bach** — Branch 2 (Anomaly), independent (Isolation Forest + One-Class SVM, tuning, audit).
 - **Minh** — Streamlit (scaffold + demo/admin pages).
 - **Diep** — Support/report (RIVF paper paused for now — see Section 0).

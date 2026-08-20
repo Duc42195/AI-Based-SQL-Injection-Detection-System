@@ -2,11 +2,11 @@
   "version": "branch1_v1",
   "branch": "branch1_supervised_multiclass",
   "architecture": "tfidf_logreg",
-  "trained_at": "2026-07-16T12:16:08",
+  "trained_at": "2026-08-20T01:02:50",
   "train_rows": 54236,
   "test_rows": 13560,
-  "f1_macro": 0.9821905121114611,
-  "train_time_s": 14.00293961600255,
+  "f1_macro": 0.9906716828805351,
+  "train_time_s": 14.267253901998629,
   "labels": {
     "0": "normal",
     "1": "union_based",
@@ -20,9 +20,5 @@
     "ngram_min": 2,
     "ngram_max": 4,
     "max_features": 50000
-  },
-  "data_version": "1.0",
-  "protected": true,
-  "state": "promoted",
-  "promoted_at": "2026-07-29T09:58:56+00:00"
+  }
 }

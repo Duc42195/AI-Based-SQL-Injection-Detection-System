@@ -43,10 +43,10 @@ labels:
 branch1_supervised:
   # CHOSEN (16/7) after comparing 4 candidates on F1-macro vs latency vs size
   # (see report/metrics/branch1_architecture_comparison.json + notebook). All 4 scored
-  # F1-macro 0.982-0.991 on 5 classes (differences negligible); tfidf_logreg picked
-  # for the best latency/size/simplicity trade-off. LightGBM had the top F1 but ~92ms
-  # p50 latency (too slow for a real-time proxy); DistilBERT gave no F1 gain
-  # for 256MB + GPU + ~26-min training; cnn_sqltok is the fast/tiny fallback.
+  # F1-macro 0.991-0.998 on the 5-class leakage-free split (differences negligible);
+  # tfidf_logreg picked for the best latency/size/simplicity trade-off. LightGBM had
+  # the top F1 but ~60ms p50 latency (too slow for a real-time proxy); DistilBERT gave
+  # no F1 gain for 256MB + GPU + ~25-min training; cnn_sqltok is the fast/tiny fallback.
   #   "tfidf_logreg"  |  "tfidf_lightgbm"  |  "distilbert"  |  "cnn_sqltok"
   architecture: "tfidf_logreg"
   multiclass: true
@@ -88,6 +88,12 @@ branch1_supervised:
     # x 11 statements x 3 terminators = 363). No real source has this class.
     synthetic_stacked_count: 363
     test_fraction: 0.2
+    # Deduplicate rows by `query_canonical` BEFORE the train/test split. Fixes
+    # the cross-split leakage found in the Branch-1 audit (949 identical texts
+    # straddled train & test, 4,277 extra copies) which made the eval F1
+    # "slightly optimistic" - a model could memorise a text in train and see it
+    # again in test. See report/metrics/audit_branch1/audit_report.md (Mảng 2).
+    dedup_query_canonical: true
     # Labels EXCLUDED from data/processed/branch1_train.csv entirely (16/7).
     # `stacked` (5) disabled: 100% synthetic (363 templated payloads) and hit
     # 100% recall across all 4 compared architectures - a red flag that the

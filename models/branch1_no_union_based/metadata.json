@@ -1,6 +1,7 @@
 {
   "excluded_label": 1,
   "excluded_label_name": "union_based",
-  "f1_macro_on_remaining": 0.9803,
-  "trained_at": "2026-07-26T00:13:27"
+  "f1_macro_on_remaining": 0.9901,
+  "trained_at": "2026-08-20T07:06:26",
+  "split": "leakage-free (deduped branch1_train.csv, 20/8)"
 }

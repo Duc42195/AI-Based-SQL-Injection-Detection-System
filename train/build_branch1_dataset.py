@@ -25,6 +25,7 @@ from __future__ import annotations
 
 import csv
 import random
+import re
 from pathlib import Path
 
 from sklearn.model_selection import train_test_split
@@ -44,6 +45,19 @@ logger = get_logger(__name__)
 
 csv.field_size_limit(10_000_000)
 
+# Control chars (C0/DEL, excluding the whitespace \t\n\r which are collapsed
+# separately). canonicalize can leave these in query_canonical; a CSV round-trip
+# silently strips them, so two texts that differ only by a control char are one
+# text to the trained model yet look distinct in memory - which let duplicates
+# slip across the train/test split. Strip them at build time so the stored text
+# is byte-stable and dedup matches exactly what the model reads back.
+_CTRL_CHARS = re.compile(r"[\x00-\x08\x0b\x0c\x0e-\x1f\x7f]")
+
+
+def _clean_canonical(text: str) -> str:
+    """Strip control chars and collapse all whitespace runs to single spaces."""
+    return " ".join(_CTRL_CHARS.sub("", text).split())
+
 
 def _load_synthetic_stacked(limit: int) -> list[tuple[str, bool, str]]:
     """Generate the synthetic `stacked` payload batch.
@@ -54,6 +68,46 @@ def _load_synthetic_stacked(limit: int) -> list[tuple[str, bool, str]]:
     payloads = generate_synthetic_stacked(limit=limit)
     logger.info("Synthetic stacked: generated %d payloads", len(payloads))
     return [(p, True, "synthetic_stacked") for p in payloads]
+
+
+def _dedup_by_canonical(rows: list[dict]) -> list[dict]:
+    """Drop duplicate rows sharing the same `query_canonical`, keeping the first.
+
+    Deduplicating BEFORE the train/test split is what prevents cross-split
+    leakage: if the same canonical text can appear in both train and test, the
+    model can memorise it at train time and be handed it back at test time,
+    inflating the eval F1 (Branch-1 audit Mảng 2: 949 texts straddled the
+    splits, 4,277 extra copies). Order is preserved (source order d1+d4+d7), so
+    the kept copy is deterministic; when duplicates disagree on label, the first
+    label wins and the collision is logged.
+
+    Args:
+        rows: Tagged rows (each a dict with "query_canonical" and "label").
+
+    Returns:
+        Rows with a single copy per distinct `query_canonical`.
+    """
+    seen: dict[str, int] = {}
+    deduped: list[dict] = []
+    label_conflicts = 0
+    for r in rows:
+        # query_canonical is already control-char-stripped + whitespace-collapsed
+        # by _clean_canonical at build time, so it is a byte-stable dedup key.
+        key = r["query_canonical"]
+        if key in seen:
+            if seen[key] != r["label"]:
+                label_conflicts += 1
+            continue
+        seen[key] = r["label"]
+        deduped.append(r)
+    logger.info(
+        "Dedup by query_canonical: %d -> %d rows (%d duplicate copies removed, %d had a label conflict)",
+        len(rows),
+        len(deduped),
+        len(rows) - len(deduped),
+        label_conflicts,
+    )
+    return deduped
 
 
 def _undersample(rows: list[dict], target_per_class: int, seed: int) -> list[dict]:
@@ -99,6 +153,7 @@ def main() -> None:
     synthetic_count = cfg.get_path("branch1_supervised.balance.synthetic_stacked_count", 363)
     test_fraction = cfg.get_path("branch1_supervised.balance.test_fraction", 0.2)
     exclude_labels = set(cfg.get_path("branch1_supervised.balance.exclude_labels", []))
+    dedup_canonical = cfg.get_path("branch1_supervised.balance.dedup_query_canonical", True)
 
     raw_dir = Path(cfg.get_path("paths.data_raw", "data/raw"))
     processed_dir = Path(cfg.get_path("paths.data_processed", "data/processed"))
@@ -140,7 +195,7 @@ def main() -> None:
         tagged_rows.append(
             {
                 "query_raw": text,
-                "query_canonical": canonical.query_canonical,
+                "query_canonical": _clean_canonical(canonical.query_canonical),
                 "has_comment_marker": canonical.has_comment_marker,
                 "label": label,
                 "label_name": LABEL_NAMES[label],
@@ -163,6 +218,10 @@ def main() -> None:
             before - len(tagged_rows),
             sorted(exclude_labels),
         )
+
+    if dedup_canonical:
+        logger.info("=== Deduplicating by query_canonical (pre-split, anti-leakage) ===")
+        tagged_rows = _dedup_by_canonical(tagged_rows)
 
     logger.info("=== Undersampling to target_per_class=%d ===", target_per_class)
     balanced_rows = _undersample(tagged_rows, target_per_class, seed)

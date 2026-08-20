@@ -22,7 +22,16 @@ File kiểm: `data/processed/branch1_train.csv` (67,796 dòng; train 54,236 / te
 
 ---
 
-## Mảng 2 — Duplicate / leakage cross-split: CÓ cross-split leakage (cần dedup)
+## Mảng 2 — Duplicate / leakage cross-split: CÓ cross-split leakage → **ĐÃ SỬA (20/8)**
+
+> **✅ RESOLVED (20/8):** thêm dedup `query_canonical` **trước khi split** vào
+> `train/build_branch1_dataset.py` (config `branch1_supervised.balance.dedup_query_canonical: true`);
+> đồng thời strip control-char + gộp whitespace để text byte-stable qua CSV round-trip.
+> Rebuild `branch1_train.csv` → **0 duplicate, 0 text straddle train/test** (trước: 4,277 / 949).
+> Retrain `branch1_v1` trên split sạch: **F1-macro 0.9822 → 0.9907** (tăng, không giảm — vì dedup
+> còn giúp undersample lấy 15k dòng **distinct**/lớp từ pool lớn hơn, data đa dạng hơn).
+> `report/metrics/branch1_eval.json` đã regenerate leakage-free. Chi tiết bên dưới là chẩn đoán gốc.
+
 
 | Metric | Giá trị |
 |---|---:|
@@ -76,7 +85,7 @@ Tức là: **SSRF trong `normal` được mentor chấp nhận cho Branch 1** (B
 
 ## Tổng kết & re-caveat trước khi nộp
 
-1. **Con số cần re-caveat:** `branch1_eval.json` (F1-macro ~0.9822) chưa dedup cross-split (Mảng 2) → con số **lạc quan nhẹ**; chưa phản ánh label noise (Mảng 3) và content-format trùng (Mảng 4).
+1. ~~**Con số cần re-caveat:** `branch1_eval.json` (F1-macro ~0.9822) chưa dedup cross-split (Mảng 2) → con số **lạc quan nhẹ**~~ → **ĐÃ SỬA 20/8**: dedup pre-split, split sạch (0 leakage), retrain → **F1-macro 0.9907** leakage-free. Vẫn chưa phản ánh label noise (Mảng 3) và content-format trùng (Mảng 4).
 2. **Sạch & đáng tin:** phân phối 5 lớp cân bằng (Mảng 1), không phantom `stacked`.
 3. **Hướng xử lý tiếp (cần mentor chốt):**
    - **Mảng 2 (cross-split dup):** đề xuất dedup `query_canonical` trước split — đây là điểm cần sửa rõ ràng (949 text trùng cả train & test là leakage vector).

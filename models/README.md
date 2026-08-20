@@ -25,7 +25,7 @@ Training data: [Jason-42195/VNU-SQLi-Detection](https://huggingface.co/datasets/
 
 | Folder | Branch | Model | Headline metric |
 |---|---|---|---|
-| `branch1_v1/` | 1 | TF-IDF (char) + Logistic Regression | F1-macro **0.9822** (5 classes) |
+| `branch1_v1/` | 1 | TF-IDF (char) + Logistic Regression | F1-macro **0.9907** (5 classes, leakage-free) |
 | `branch1_comparison/` | 1 | 4 candidate architectures (5-class) | see table below |
 | `branch1_no_*/` | 1 | Leave-one-class-out ablations (zero-day coverage) | F1 ~0.98 on remaining |
 | `branch2_v1/` | 2 | One-Class SVM (4 structural features) | avg-precision **0.982** |
@@ -41,8 +41,9 @@ Download everything: `hf download Jason-42195/VNU-SQLi-Detection-Models --local-
 TF-IDF (`char_wb`, 2–4 gram, 50k features) + Logistic Regression. Classifies a query into one of
 **5 classes**: `normal`, `union_based`, `error_based`, `boolean_blind`, `time_blind`.
 
-- **F1-macro: 0.9822** on the held-out test set (13,560 rows).
-- p50 latency ~0.8 ms, size ~3.5 MB.
+- **F1-macro: 0.9907** on the held-out test set (13,560 rows), **leakage-free split** (dataset
+  deduplicated by `query_canonical` before the train/test split — see the audit note below).
+- p50 latency ~0.5 ms, size ~3.5 MB.
 - Files: `vectorizer.joblib` (TfidfVectorizer), `model.joblib` (LogisticRegression), `metadata.json`.
 
 ```python
@@ -60,12 +61,14 @@ Four candidates trained on the same 5-class data (`train/compare_branch1_archite
 The neural heads are sized from the data (true 5-class, no dead `stacked` neuron). TF-IDF+LogReg
 was chosen for production on the latency/size trade-off — the F1 gap is negligible.
 
+Numbers are on the **leakage-free split** (deduped by `query_canonical` before splitting):
+
 | Candidate | F1-macro | p50 latency | Size |
 |---|---|---|---|
-| `candidate_tfidf_logreg` | 0.9822 | 0.8 ms | 3.5 MB |
-| `candidate_tfidf_lightgbm` | 0.9912 | 91.7 ms | 5.7 MB |
-| `candidate_distilbert` | 0.9892 | 2.9 ms (GPU) | 256 MB |
-| `candidate_cnn_sqltok` | 0.9838 | 0.3 ms | 0.11 MB (28.5K params) |
+| `candidate_tfidf_logreg` | 0.9907 | 0.5 ms | 3.5 MB |
+| `candidate_tfidf_lightgbm` | 0.9977 | 60.4 ms | 5.6 MB |
+| `candidate_distilbert` | 0.9957 | 2.8 ms (GPU) | 256 MB |
+| `candidate_cnn_sqltok` | 0.9906 | 0.3 ms | 0.11 MB (28.5K params) |
 
 Only the two neural candidates' weights are hosted here (`candidate_distilbert/`:
 `model.safetensors` + tokenizer/config; `candidate_cnn_sqltok/`: `model.pt` + `vocab.json`).
@@ -130,8 +133,11 @@ this replaced an earlier trained GRU design (`branch3_v1`, removed).
 
 - Branch 1's `boolean_blind` class has ~13% measured label noise (catch-all bucket for unmatched
   attack rows) — see `data_contract.md` in the project repo.
-- The uniformly high Branch-1 F1 (~0.98–0.99 across all 4 architectures) indicates the current
-  dataset is easy to separate; it is **not** an adversarial/obfuscation benchmark.
+- The uniformly high Branch-1 F1 (~0.99 across all 4 architectures) indicates the current dataset
+  is easy to separate; it is **not** an adversarial/obfuscation benchmark. A `/blog/index.php/...`
+  request format makes up ~17.6% of rows (content-format duplication), further limiting diversity.
+- Cross-split leakage (949 identical texts straddling train & test) was found and **fixed** on
+  20/8 by deduplicating `query_canonical` before the split; the numbers here are leakage-free.
 - No adversarial/obfuscation robustness testing yet.
 - License: mixed/unclear for the underlying training data (see the dataset repo's card) — treat as
   research / course-project artifacts, not cleared for unrestricted reuse.
