@@ -66,3 +66,24 @@ File: `build_new_class_pool(seed=42)` (363 template) → sample-with-replacement
 3. **Hướng giải quyết:** Cách B (sqlmap thật) là kiểm chứng bắt buộc để biến kết quả Branch 3 thành con số có nghĩa.
 
 **Deliverable Day 1:** báo cáo này + `findings.json`. Chưa cần sửa model; chỉ re-caveat số liệu hiện có.
+
+---
+
+## Cập nhật (20/8) — Mảng 1 đã fix, re-audit lại SẠCH
+
+**Chẩn đoán gốc sâu hơn:** `train/build_session_dataset.py` random hoá đúng 100-user pool để sinh `boolean_blind`/`time_blind`, nhưng việc **chia train/test lại làm SAU khi sinh xong**, bằng cách shuffle `session_id` — không quan tâm session đó nhắm vào user nào. Vì bisection là deterministic theo target, xác suất 1 user bị chọn làm target ở cả 2 phía (train và test) sau shuffle là rất cao với pool chỉ 100 user / 350 session mỗi lớp → đúng là nguyên nhân gây ra 65/70 và 67/70 ở trên.
+
+**Fix:** tách pool 100 user thành 2 tập **rời nhau** (80 dùng cho target TRAIN, 20 dùng cho target TEST) **trước khi** sinh session, thay vì chia session sau khi sinh. `benign`/`query_splitting` giữ nguyên cách chia cũ (không deterministic theo target, không có nguy cơ này).
+
+**Re-audit sau fix** (`train/audit_branch3_data_validity.py`, cùng data mới `data/processed/branch3_sessions_cach_a.csv`):
+
+| class | test session | share target với train* | **byte-identical với train** |
+|---|---:|---:|---:|
+| benign | 70 | 70 | **0** |
+| boolean_blind | 70 | 70* | **0** (trước: 65) |
+| time_blind | 70 | 70* | **0** (trước: 67) |
+| query_splitting | 70 | 0 | 0 |
+
+\* Cột "share target" bị lộ ra là **không đáng tin**: regex `_target()` trong script audit chỉ bắt được chuỗi `username='zzz'` — là username giả hardcode trong MỌI payload injection (`zzz' OR (...)--`), không phải target thật đang bị extract. Nên cột này luôn ~100% với mọi session boolean_blind/time_blind, không phản ánh gì về việc user thật có bị chia sẻ hay không — cột **byte-identical** mới là số đáng tin, và số đó giờ về 0.
+
+**Recalibrate sau fix** (`train/calibrate_branch3.py`, `train/eval_branch3_hard.py`): FPR=0,0 / DR=1,0 (`boolean_blind`/`time_blind`/`query_splitting`) **giữ nguyên** trên data đã thật sự tách biệt train/test — tức là con số cũ tuy tính trên data bị rò rỉ nhưng **không phải chỉ là ghi nhớ**: content-check dựa vào Branch 1 nhận diện đúng *cú pháp* injection (không cần thấy đúng username/password cụ thể trước đó), nên vẫn generalize tốt sang target mới. Khuyến nghị (c) trong Mảng 1 (chờ Cách B) và caveat "sanity trên generator" ở trên vẫn còn giá trị cho vấn đề khác (Cách A vẫn không phải traffic tấn công thật độc lập) — chỉ riêng nghi vấn "ghi nhớ do rò rỉ" thì coi như đã bác bỏ bằng thực nghiệm.

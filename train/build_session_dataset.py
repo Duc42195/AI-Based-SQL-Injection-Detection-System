@@ -108,12 +108,17 @@ def _fragment_text(text: str, n_fragments: int, rng: random.Random) -> list[str]
     return [p for p in pieces if p]
 
 
-def _assemble_rows(session_id: str, session_label: int, session_source: str, steps: list[dict]) -> list[dict]:
+def _assemble_rows(
+    session_id: str, session_label: int, session_source: str, steps: list[dict], split: str
+) -> list[dict]:
     """Turn a raw step list (query_raw/query_canonical/timestamp) into full rows.
 
     ``gap_seconds`` (0.0 for the first step) is computed from REAL consecutive
     timestamps for real-DB-driven sessions — for time-blind sessions this
     directly reflects genuine measured SLEEP delays, not a guessed range.
+
+    ``split`` is decided by the caller at generation time (not by shuffling
+    session IDs afterwards) — see the leakage note in ``build_sessions``.
     """
     rows = []
     prev_ts = None
@@ -130,20 +135,39 @@ def _assemble_rows(session_id: str, session_label: int, session_source: str, ste
                 "gap_seconds": round(gap, 6),
                 "session_label": session_label,
                 "session_source": session_source,
+                "split": split,
             }
         )
         prev_ts = ts
     return rows
 
 
+def _sample_targets(pool: list[str], n: int, rng: random.Random) -> list[str]:
+    """Draw ``n`` usernames from ``pool``, using every entry once before repeating."""
+    if n <= len(pool):
+        return rng.sample(pool, n)
+    usernames = list(pool)
+    rng.shuffle(usernames)
+    usernames += rng.choices(pool, k=n - len(pool))
+    return usernames
+
+
 def build_sessions(cfg: Config, df_train: pd.DataFrame, rng: random.Random) -> list[dict]:
-    """Generate all Cách A session rows (without Branch 1/2 scores yet)."""
+    """Generate all Cách A session rows (without Branch 1/2 scores yet).
+
+    Train/test membership is decided PER SESSION at generation time, not by
+    shuffling session IDs after the fact (see the pool-partition note below
+    for why that used to leak).
+    """
     cach_a = cfg.get_path("branch3_session.cach_a")
     n_per_class = int(cach_a["sessions_per_class"])
     attack_gap = tuple(cach_a["attack_step_gap_seconds"])
     frag_min, frag_max = cach_a["splitting_fragments"]
     benign_min_steps, benign_max_steps = int(cach_a["min_len"]), int(cach_a["max_len"])
     benign_gap = tuple(cach_a["benign_step_gap_seconds"])
+    test_fraction = float(cach_a.get("test_fraction", 0.2))
+    n_test = max(1, round(n_per_class * test_fraction))
+    n_train = n_per_class - n_test
 
     real_db_cfg = cach_a["real_db"]
     target_column = real_db_cfg["target_column"]
@@ -161,42 +185,75 @@ def build_sessions(cfg: Config, df_train: pd.DataFrame, rng: random.Random) -> l
     pool_usernames = [row[1] for row in user_pool]
     logger.info("Generated a %d-user synthetic pool for training-data diversity", n_synthetic_users)
 
+    # boolean_blind/time_blind: the SAME target username always produces a
+    # byte-identical trace (deterministic bisection). A big pool only
+    # protects against duplicates WITHIN one split — it does nothing to stop
+    # a target from landing in BOTH splits, which is what actually leaked
+    # (audit: 65/70 boolean_blind and 67/70 time_blind TEST sessions were
+    # byte-identical to a TRAIN session). Fix: partition the pool into
+    # disjoint train/test subsets BEFORE assigning targets, so no username
+    # can ever be sampled for both splits.
+    shuffled_pool = list(pool_usernames)
+    rng.shuffle(shuffled_pool)
+    n_test_users = max(1, round(len(shuffled_pool) * test_fraction))
+    test_pool_usernames = shuffled_pool[:n_test_users]
+    train_pool_usernames = shuffled_pool[n_test_users:]
+
     rows: list[dict] = []
 
-    # benign (0) — real lookups against the larger real DB pool.
+    # benign (0) — real lookups against the larger real DB pool. Each step
+    # picks its username independently at random (not one fixed target for
+    # the whole session), so this isn't target-deterministic and a plain
+    # per-session split is safe.
     logger.info("Generating %d benign sessions (real DB lookups) ...", n_per_class)
+    benign_split = ["train"] * n_train + ["test"] * n_test
+    rng.shuffle(benign_split)
     for i in range(n_per_class):
         n_steps = rng.randint(benign_min_steps, benign_max_steps)
         steps = run_benign_session(rng, n_steps, benign_gap, seed_rows=user_pool)
-        rows += _assemble_rows(f"cachA_benign_{i:04d}", 0, "A_real_db", steps)
+        rows += _assemble_rows(f"cachA_benign_{i:04d}", 0, "A_real_db", steps, benign_split[i])
 
-    # boolean_blind (1) — real bisection attack against the larger real DB pool.
-    logger.info("Generating %d boolean_blind sessions (real bisection attack) ...", n_per_class)
-    usernames = rng.sample(pool_usernames, min(n_per_class, len(pool_usernames)))
-    if len(usernames) < n_per_class:
-        usernames += rng.choices(pool_usernames, k=n_per_class - len(usernames))
-    for i, username in enumerate(usernames):
+    # boolean_blind (1) — real bisection attack; targets drawn from
+    # split-exclusive user subsets so TRAIN and TEST never share a target.
+    logger.info(
+        "Generating %d boolean_blind sessions (real bisection attack, %d train / %d test targets) ...",
+        n_per_class, n_train, n_test,
+    )
+    for i, username in enumerate(_sample_targets(train_pool_usernames, n_train, rng)):
         steps, extracted = run_boolean_blind_session(
             username, target_column, rng, max_extract_chars, seed_rows=user_pool
         )
-        rows += _assemble_rows(f"cachA_boolean_blind_{i:04d}", 1, "A_real_db", steps)
+        rows += _assemble_rows(f"cachA_boolean_blind_train_{i:04d}", 1, "A_real_db", steps, "train")
+    for i, username in enumerate(_sample_targets(test_pool_usernames, n_test, rng)):
+        steps, extracted = run_boolean_blind_session(
+            username, target_column, rng, max_extract_chars, seed_rows=user_pool
+        )
+        rows += _assemble_rows(f"cachA_boolean_blind_test_{i:04d}", 1, "A_real_db", steps, "test")
 
     # time_blind (2) — same real bisection, oracle = real measured timing.
-    logger.info("Generating %d time_blind sessions (real timing attack) ...", n_per_class)
-    usernames = rng.sample(pool_usernames, min(n_per_class, len(pool_usernames)))
-    if len(usernames) < n_per_class:
-        usernames += rng.choices(pool_usernames, k=n_per_class - len(usernames))
-    for i, username in enumerate(usernames):
+    logger.info(
+        "Generating %d time_blind sessions (real timing attack, %d train / %d test targets) ...",
+        n_per_class, n_train, n_test,
+    )
+    for i, username in enumerate(_sample_targets(train_pool_usernames, n_train, rng)):
         steps, extracted = run_time_blind_session(
             username, target_column, rng, max_extract_chars,
             sleep_seconds=time_blind_sleep, seed_rows=user_pool,
         )
-        rows += _assemble_rows(f"cachA_time_blind_{i:04d}", 2, "A_real_db", steps)
+        rows += _assemble_rows(f"cachA_time_blind_train_{i:04d}", 2, "A_real_db", steps, "train")
+    for i, username in enumerate(_sample_targets(test_pool_usernames, n_test, rng)):
+        steps, extracted = run_time_blind_session(
+            username, target_column, rng, max_extract_chars,
+            sleep_seconds=time_blind_sleep, seed_rows=user_pool,
+        )
+        rows += _assemble_rows(f"cachA_time_blind_test_{i:04d}", 2, "A_real_db", steps, "test")
 
-    # query_splitting (3) — unchanged: fragment one real attack payload.
-    # No second vulnerable parameter exists in the demo DB to realistically
-    # probe across, and no per-query "splitting" label exists in any source
-    # data, so this stays on the heuristic approach (see data_contract.md).
+    # query_splitting (3) — unchanged: fragment one real attack payload. Not
+    # target-deterministic (random source payload + random fragmentation
+    # cuts each draw), so a plain per-session split is safe. No second
+    # vulnerable parameter exists in the demo DB to realistically probe
+    # across, and no per-query "splitting" label exists in any source data,
+    # so generation itself stays on the heuristic approach (data_contract.md).
     logger.info("Generating %d query_splitting sessions (fragmentation heuristic) ...", n_per_class)
     by_label = {
         name: df_train.loc[df_train["label_name"] == name, "query_canonical"].tolist()
@@ -204,6 +261,8 @@ def build_sessions(cfg: Config, df_train: pd.DataFrame, rng: random.Random) -> l
     }
     all_attack_texts = by_label["union_based"] + by_label["error_based"] + by_label["boolean_blind"] + by_label["time_blind"]
     base_ts = time.time() - 86400 * 30
+    splitting_split = ["train"] * n_train + ["test"] * n_test
+    rng.shuffle(splitting_split)
     for i in range(n_per_class):
         source_text = rng.choice(all_attack_texts)
         n_frag = rng.randint(int(frag_min), int(frag_max))
@@ -213,7 +272,7 @@ def build_sessions(cfg: Config, df_train: pd.DataFrame, rng: random.Random) -> l
         for text in texts:
             steps.append({"query_raw": text, "query_canonical": text, "timestamp": ts})
             ts += rng.uniform(*attack_gap)
-        rows += _assemble_rows(f"cachA_query_splitting_{i:04d}", 3, "A_simulated", steps)
+        rows += _assemble_rows(f"cachA_query_splitting_{i:04d}", 3, "A_simulated", steps, splitting_split[i])
 
     return rows
 
@@ -262,17 +321,10 @@ def main() -> None:
 
     out_df = pd.DataFrame(rows)
 
-    # Train/test split at the SESSION level (not row level), stratified by
-    # session_label, so a session's steps never straddle both splits.
-    test_fraction = float(cfg.get_path("branch3_session.cach_a.test_fraction", 0.2))
-    session_meta = out_df.drop_duplicates("session_id")[["session_id", "session_label"]]
-    test_ids: set[str] = set()
-    for label in session_meta["session_label"].unique():
-        ids = session_meta.loc[session_meta["session_label"] == label, "session_id"].tolist()
-        rng.shuffle(ids)
-        n_test = max(1, int(len(ids) * test_fraction))
-        test_ids.update(ids[:n_test])
-    out_df["split"] = out_df["session_id"].apply(lambda sid: "test" if sid in test_ids else "train")
+    # `split` was already decided per session at generation time (see
+    # build_sessions) so that boolean_blind/time_blind targets never
+    # straddle both splits — nothing to compute here, just report it.
+    session_meta = out_df.drop_duplicates("session_id")[["session_id", "session_label", "split"]]
 
     out_cols = (
         ["session_id", "step_index", "query_raw", "query_canonical", "branch1_label"]
@@ -285,10 +337,11 @@ def main() -> None:
     out_df.to_csv(out_path, index=False)
 
     n_sessions = out_df["session_id"].nunique()
-    n_train_sessions = session_meta.loc[~session_meta["session_id"].isin(test_ids)].shape[0]
+    n_train_sessions = int((session_meta["split"] == "train").sum())
+    n_test_sessions = int((session_meta["split"] == "test").sum())
     logger.info(
         "Saved %d rows / %d sessions to %s (train sessions=%d, test sessions=%d)",
-        len(out_df), n_sessions, out_path, n_train_sessions, len(test_ids),
+        len(out_df), n_sessions, out_path, n_train_sessions, n_test_sessions,
     )
     logger.info("Session-label distribution:\n%s", session_meta["session_label"].value_counts().sort_index())
 
