@@ -90,15 +90,7 @@ def extract_features_df(df: pd.DataFrame, feature_names: list[str]) -> np.ndarra
     if all(f in df.columns for f in feature_names):
         return df[feature_names].to_numpy(dtype=np.float64)
     text_col = "query_canonical" if "query_canonical" in df.columns else "query_raw"
-    rows = []
-    for text in df[text_col].astype(str):
-        feats = extract_statistical_features(text)
-        rows.append({
-            "length": float(feats.length),
-            "special_char_ratio": feats.special_char_ratio,
-            "sql_keyword_count": float(feats.sql_keyword_count),
-            "entropy": feats.entropy,
-        })
+    rows = [extract_statistical_features(text).as_dict() for text in df[text_col].astype(str)]
     return pd.DataFrame(rows)[feature_names].to_numpy(dtype=np.float64)
 
 
@@ -114,9 +106,16 @@ def main() -> None:
     ]))
 
     # ── 1. Load data ──
+    # Uses the CURRENT branch2_anomaly.data_file/anomalous_eval_file (the
+    # URL-stripped, D1+D3+D7-combined "_clean" pool), not a hardcoded filename
+    # -- this experiment previously drifted onto a stale 27-Jul One-Class-SVM
+    # baseline (models/branch2_zeroday, 4 features) while the rest of the
+    # project moved to LocalOutlierFactor/12 features; see report/conf/outline.md.
+    branch2_data_file = cfg.get_path("branch2_anomaly.data_file", "branch2_data_clean.csv")
+    branch2_anomalous_file = cfg.get_path("branch2_anomaly.anomalous_eval_file", "branch2_anomalous_eval_clean.csv")
     branch1_df = pd.read_csv(processed_dir / "branch1_train.csv")
-    branch2_df = pd.read_csv(processed_dir / "branch2_data.csv")
-    anomalous_df = pd.read_csv(processed_dir / "branch2_anomalous_eval.csv")
+    branch2_df = pd.read_csv(processed_dir / branch2_data_file)
+    anomalous_df = pd.read_csv(processed_dir / branch2_anomalous_file)
 
     train_df = branch1_df[branch1_df["split"] == "train"].reset_index(drop=True)
     test_df = branch1_df[branch1_df["split"] == "test"].reset_index(drop=True)
@@ -127,22 +126,34 @@ def main() -> None:
                 len(train_df), len(test_df), len(branch2_train), len(branch2_test), len(anomalous_df))
 
     # ── 2. Train Branch 2 (anomaly) ──
-    branch2_model_dir = models_dir / "branch2_zeroday"
-    if branch2_model_dir.exists():
-        logger.info("Loading existing Branch 2 model from %s", branch2_model_dir)
-        detector = AnomalyDetector.load(branch2_model_dir)
+    # Always retrain fresh from the current config (algorithm/contamination/
+    # scaling/features), rather than loading a cached model that may predate
+    # the current Branch 2 configuration.
+    branch2_algorithm = cfg.get_path("branch2_anomaly.algorithm", "local_outlier_factor")
+    branch2_scale_features = cfg.get_path("branch2_anomaly.scale_features", True)
+    branch2_log_transform = cfg.get_path("branch2_anomaly.log_transform_features", [])
+    detector_kwargs: dict = {}
+    if branch2_algorithm == "local_outlier_factor":
+        branch2_contamination = cfg.get_path("branch2_anomaly.lof_contamination", 0.05)
+        detector_kwargs["n_neighbors"] = cfg.get_path("branch2_anomaly.lof_n_neighbors", 5)
+    elif branch2_algorithm == "one_class_svm":
+        branch2_contamination = cfg.get_path("branch2_anomaly.ocsvm_nu", 0.001)
     else:
-        logger.info("Training Branch 2 (One-Class SVM) on %d benign samples ...", len(branch2_train))
-        X_n2_train = branch2_train[feature_names].to_numpy(dtype=np.float64)
-        detector = AnomalyDetector(
-            algorithm="one_class_svm",
-            contamination=0.005,
-            scale_features=False,
-            log_transform_features=["length"],
-            feature_names=feature_names,
-        )
-        detector.fit(X_n2_train)
-        detector.save(branch2_model_dir)
+        branch2_contamination = cfg.get_path("branch2_anomaly.contamination", 0.01)
+
+    branch2_model_dir = models_dir / "branch2_zeroday"
+    logger.info("Training Branch 2 (%s) on %d benign samples ...", branch2_algorithm, len(branch2_train))
+    X_n2_train = branch2_train[feature_names].to_numpy(dtype=np.float64)
+    detector = AnomalyDetector(
+        algorithm=branch2_algorithm,
+        contamination=branch2_contamination,
+        scale_features=branch2_scale_features,
+        log_transform_features=branch2_log_transform,
+        feature_names=feature_names,
+        **detector_kwargs,
+    )
+    detector.fit(X_n2_train)
+    detector.save(branch2_model_dir)
 
     # ── Baseline: Branch 2 on normal test data ──
     X_benign_test = branch2_test[feature_names].to_numpy(dtype=np.float64)
@@ -243,8 +254,8 @@ def main() -> None:
         "experiment": "zero-day-detection-leave-one-out",
         "description": "For each SQLi label, train Branch 1 without it and test Branch 2 detection rate on the unseen label",
         "baseline": {
-            "branch2_algorithm": "one_class_svm",
-            "branch2_contamination": 0.005,
+            "branch2_algorithm": branch2_algorithm,
+            "branch2_contamination": branch2_contamination,
             "fpr": round(baseline_fpr, 4),
             "dr_all_anomalous": round(baseline_dr, 4),
         },

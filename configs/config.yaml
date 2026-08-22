@@ -434,6 +434,55 @@ mlops:
     max_per_class_recall_drop: 0.02
     min_new_class_recall: 0.80
 
+# Continual-learning scenario experiment: a REAL class held out of the initial
+# training pool (not the synthetic `stacked` payloads under mlops.stream above),
+# so major-bump accuracy is a genuine detection result. Supersedes `mlops`'s
+# stacked-based numbers in the paper (report/conf/rivf2026_paper.tex §III.G/V.E).
+cl_scenario:
+  artifacts_dir: "report/metrics/cl_scenario"
+  seed: 42
+  # Class entirely withheld from the initial training pool.
+  held_out_class: "union_based"
+  golden_fraction: 0.1
+  valid_fraction: 0.15
+  # Of each KNOWN class's non-golden 90%, the share reserved for the initial
+  # training pool ("Base"). The rest is held back for the two pours below and
+  # mostly left unused — deliberately, so "half the data, missing one label"
+  # stays a true description of Base rather than "nearly everything."
+  base_fraction_of_known: 0.5
+  stream:
+    window_size: 1000
+    # Leading windows of each pour used as that pour's drift reference.
+    baseline_windows: 2
+    # Scenario 1 (major bump): the held-out class appears, mixed with a light
+    # trickle of already-known traffic. Sized well below the ~13.5K held-out
+    # rows available, and below the ~8.7K usable benign pool
+    # (data/processed/branch2_normal.csv minus Branch-1/Branch-2 training
+    # overlap) that pads both pours to a plausible attack rate.
+    scenario1_new_class_rows: 2000
+    scenario1_trickle_rows: 300
+    # A benign+trickle head at the start of scenario 1 (no held-out class),
+    # sized to baseline_windows * window_size, giving the drift monitor a
+    # quiet reference before the held-out class is interleaved in.
+    quiet_head_rows: 2000
+    # Scenario 2 (minor bump): more volume of the 4 known classes only.
+    scenario2_known_rows: 2000
+    benign_source: "data/processed/branch2_normal.csv"
+    benign_exclude: "data/processed/branch2_data.csv"
+  # Confirmed-sample count in the review queue that triggers an automatic
+  # retrain — one policy for both bump types, not two thresholds to justify.
+  retrain_threshold: 500
+  # Minor-bump candidates must additionally survive this many further observed
+  # queries in shadow (logged only, champion still serves) before promotion.
+  # Major bump skips shadow (see report §III.G): there is no working champion
+  # for the new class to regress relative to, so the gate's absolute-floor
+  # check already carries the weight shadow exists to provide.
+  shadow_window_queries: 2000
+  shadow_fpr_tolerance: 0.005
+  gate:
+    max_per_class_recall_drop: 0.02
+    min_new_class_recall: 0.80
+
 api:
   host: "0.0.0.0"
   port: 8000

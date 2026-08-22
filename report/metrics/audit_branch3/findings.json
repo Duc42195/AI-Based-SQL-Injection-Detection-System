@@ -1,6 +1,6 @@
 {
   "mang1_branch3_leakage": {
-    "rows": 25166,
+    "rows": 25133,
     "n_sessions": 1400,
     "by_label": {
       "benign": {
@@ -11,12 +11,12 @@
       "boolean_blind": {
         "test_sessions": 70,
         "test_share_target_with_train": 70,
-        "test_byte_identical_to_train": 65
+        "test_byte_identical_to_train": 0
       },
       "time_blind": {
         "test_sessions": 70,
         "test_share_target_with_train": 70,
-        "test_byte_identical_to_train": 67
+        "test_byte_identical_to_train": 0
       },
       "query_splitting": {
         "test_sessions": 70,

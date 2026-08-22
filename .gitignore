@@ -48,3 +48,8 @@ models/_archive/
 
 # MLOps: promotion registry (lineage-critical, not weights)
 models/registry.json
+
+# LaTeX build artifacts (Tectonic) — source .tex is tracked, compiled output isn't
+report/conf/*.pdf
+report/conf/*.log
+report/conf/*.synctex.gz

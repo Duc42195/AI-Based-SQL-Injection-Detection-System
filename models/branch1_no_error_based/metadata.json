@@ -2,6 +2,5 @@
   "excluded_label": 2,
   "excluded_label_name": "error_based",
   "f1_macro_on_remaining": 0.989,
-  "trained_at": "2026-08-20T07:06:45",
-  "split": "leakage-free (deduped branch1_train.csv, 20/8)"
+  "trained_at": "2026-08-22T17:02:56"
 }

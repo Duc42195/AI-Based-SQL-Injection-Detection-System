@@ -1,0 +1,151 @@
+<mxfile host="app.diagrams.net" version="24.0.0">
+  <diagram id="sqli-arch-1" name="System Architecture">
+    <mxGraphModel dx="1400" dy="800" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1400" pageHeight="900" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+
+        <!-- Main pipeline -->
+        <mxCell id="query" value="Application&#10;(query built)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f5f5f5;strokeColor=#666666;fontSize=12;" vertex="1" parent="1">
+          <mxGeometry x="20" y="100" width="130" height="60" as="geometry" />
+        </mxCell>
+
+        <mxCell id="canon" value="Canonicalization&#10;(decode, fold case,&#10;mark comments)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=12;" vertex="1" parent="1">
+          <mxGeometry x="200" y="100" width="150" height="60" as="geometry" />
+        </mxCell>
+
+        <mxCell id="b1" value="Branch 1&#10;Supervised Multi-Class&#10;(TF-IDF + LogReg)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=12;" vertex="1" parent="1">
+          <mxGeometry x="400" y="30" width="190" height="65" as="geometry" />
+        </mxCell>
+
+        <mxCell id="b2" value="Branch 2&#10;Anomaly Detection&#10;(LocalOutlierFactor)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=12;" vertex="1" parent="1">
+          <mxGeometry x="400" y="170" width="190" height="65" as="geometry" />
+        </mxCell>
+
+        <mxCell id="sc" value="Session Correlator&#10;content check OR behavior check&#10;(reuses Branch 1 + Branch 2,&#10;no retraining)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffe6cc;strokeColor=#d79b00;fontSize=12;" vertex="1" parent="1">
+          <mxGeometry x="640" y="90" width="220" height="90" as="geometry" />
+        </mxCell>
+
+        <mxCell id="de" value="Decision Engine" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=12;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="910" y="105" width="150" height="60" as="geometry" />
+        </mxCell>
+
+        <mxCell id="allow" value="ALLOW" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=12;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="1110" y="30" width="110" height="40" as="geometry" />
+        </mxCell>
+
+        <mxCell id="block" value="BLOCK" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;fontSize=12;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="1110" y="105" width="110" height="40" as="geometry" />
+        </mxCell>
+
+        <mxCell id="overkill" value="OVERKILL" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffe6cc;strokeColor=#d79b00;fontSize=12;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="1110" y="180" width="110" height="40" as="geometry" />
+        </mxCell>
+
+        <mxCell id="db" value="Database" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#f5f5f5;strokeColor=#666666;shape=cylinder3;fontSize=12;" vertex="1" parent="1">
+          <mxGeometry x="1280" y="25" width="90" height="50" as="geometry" />
+        </mxCell>
+
+        <!-- MLOps loop -->
+        <mxCell id="drift" value="Drift Monitor&#10;(PSI over signals,&#10;alert @ 0.2 --- independent,&#10;gates nothing)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;fontSize=11;" vertex="1" parent="1">
+          <mxGeometry x="480" y="330" width="170" height="75" as="geometry" />
+        </mxCell>
+
+        <mxCell id="queue" value="Review Queue&#10;(admin confirms;&#10;retrain once confirmed&#10;count crosses threshold)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;fontSize=11;" vertex="1" parent="1">
+          <mxGeometry x="700" y="330" width="180" height="75" as="geometry" />
+        </mxCell>
+
+        <mxCell id="gate" value="Validation Gate&#10;major bump: no champion to&#10;compare -- floor check only&#10;minor bump: vs champion&#10;F1/FPR on golden set" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;fontSize=11;" vertex="1" parent="1">
+          <mxGeometry x="930" y="320" width="200" height="95" as="geometry" />
+        </mxCell>
+
+        <mxCell id="shadow" value="Shadow&#10;(minor bump only: candidate&#10;logged, champion still&#10;serves, for N queries)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;fontSize=11;" vertex="1" parent="1">
+          <mxGeometry x="1180" y="320" width="180" height="85" as="geometry" />
+        </mxCell>
+
+        <mxCell id="retired" value="Retired&#10;(superseded model,&#10;kept for rollback/audit)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f5f5f5;strokeColor=#666666;fontSize=11;dashed=1;" vertex="1" parent="1">
+          <mxGeometry x="930" y="460" width="200" height="65" as="geometry" />
+        </mxCell>
+
+        <!-- Edges: main pipeline -->
+        <mxCell id="e1" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;" edge="1" parent="1" source="query" target="canon">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e2" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;exitX=1;exitY=0.25;entryX=0;entryY=0.5;" edge="1" parent="1" source="canon" target="b1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e3" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;exitX=1;exitY=0.75;entryX=0;entryY=0.5;" edge="1" parent="1" source="canon" target="b2">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e4" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;exitX=1;exitY=0.5;entryX=0;entryY=0.3;" edge="1" parent="1" source="b1" target="sc">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e5" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;exitX=1;exitY=0.5;entryX=0;entryY=0.7;" edge="1" parent="1" source="b2" target="sc">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e6" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;" edge="1" parent="1" source="sc" target="de">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e7" value="normal + no anomaly" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;fontSize=10;exitX=1;exitY=0.25;entryX=0;entryY=0.5;" edge="1" parent="1" source="de" target="allow">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e8" value="attack class" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;fontSize=10;" edge="1" parent="1" source="de" target="block">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e9" value="normal + anomalous" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;fontSize=10;exitX=1;exitY=0.75;entryX=0;entryY=0.5;" edge="1" parent="1" source="de" target="overkill">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e10" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;" edge="1" parent="1" source="allow" target="db">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+
+        <!-- Edges: MLOps loop -->
+        <mxCell id="e11" value="confirmed" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;dashed=1;fontSize=10;exitX=0.5;exitY=1;entryX=0.7;entryY=0;" edge="1" parent="1" source="block" target="queue">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e12" value="confirmed" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;dashed=1;fontSize=10;exitX=0.5;exitY=1;entryX=0.3;entryY=0;" edge="1" parent="1" source="overkill" target="queue">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e13" value="threshold crossed" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;dashed=1;fontSize=10;" edge="1" parent="1" source="queue" target="gate">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e15" value="monitors" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;dashed=1;fontSize=10;exitX=0.5;exitY=1;entryX=0.6;entryY=0;" edge="1" parent="1" source="de" target="drift">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+
+        <mxCell id="e16a" value="major bump: direct promote" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;dashed=1;fontSize=10;exitX=0.25;exitY=0;entryX=0.5;entryY=1;" edge="1" parent="1" source="gate" target="b1">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="980" y="45" />
+              <mxPoint x="495" y="45" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="e16b" value="minor bump: to shadow" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;dashed=1;fontSize=10;exitX=1;exitY=0.5;entryX=0;entryY=0.5;" edge="1" parent="1" source="gate" target="shadow">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e17" value="champion (shadow window OK)" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;dashed=1;fontSize=10;exitX=0.75;exitY=0;entryX=0.5;entryY=1;" edge="1" parent="1" source="shadow" target="b1">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="1270" y="20" />
+              <mxPoint x="580" y="20" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+
+        <mxCell id="e18a" value="old champion" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;dashed=1;fontSize=10;exitX=0.3;exitY=1;entryX=0.3;entryY=0;" edge="1" parent="1" source="gate" target="retired">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e18b" value="old champion" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;dashed=1;fontSize=10;exitX=0.3;exitY=1;entryX=0.9;entryY=0;" edge="1" parent="1" source="shadow" target="retired">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+
+        <!-- Legend -->
+        <mxCell id="legend" value="Solid = per-query flow&#10;Dashed = continual-learning loop (offline)" style="text;html=1;align=left;verticalAlign=top;fontSize=11;fontStyle=2;" vertex="1" parent="1">
+          <mxGeometry x="20" y="470" width="300" height="40" as="geometry" />
+        </mxCell>
+
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>

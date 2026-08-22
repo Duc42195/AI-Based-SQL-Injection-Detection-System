@@ -2,7 +2,7 @@
 
 Re-scores `boolean_blind` test sessions' content check using
 `models/branch1_no_boolean_blind` (a Branch-1 variant that has never seen
-`boolean_blind` and misses 90.2% of it per-query, see
+`boolean_blind` and misses 86.5% of it per-query, see
 report/metrics/zeroday_experiment/summary.json) instead of the regular
 `branch1_v1`.
 
@@ -96,7 +96,7 @@ def main() -> None:
                 "description": (
                     "Zero-day ablation for the Session Correlator's content check: "
                     "boolean_blind TEST sessions re-scored with branch1_no_boolean_blind "
-                    "(never seen boolean_blind, misses 90.2% of it per-query). Reported as "
+                    "(never seen boolean_blind, misses 86.5% of it per-query). Reported as "
                     "a stated limitation, not a strength — concatenation does not rescue a "
                     "classifier that never learned the class."
                 ),

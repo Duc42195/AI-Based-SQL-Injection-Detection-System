@@ -1,0 +1,108 @@
+{
+  "partitions": {
+    "unused": 32958,
+    "base_train": 20194,
+    "golden": 6780,
+    "base_valid": 3564,
+    "stream_q3_new_class": 2000,
+    "stream_q4": 2000,
+    "stream_q3_trickle": 300
+  },
+  "per_class": {
+    "boolean_blind": {
+      "unused": 6084,
+      "base_train": 5733,
+      "golden": 1500,
+      "base_valid": 1017,
+      "stream_q4": 584,
+      "stream_q3_trickle": 82
+    },
+    "error_based": {
+      "unused": 3176,
+      "base_train": 2956,
+      "golden": 780,
+      "base_valid": 552,
+      "stream_q4": 286,
+      "stream_q3_trickle": 46
+    },
+    "normal": {
+      "unused": 6081,
+      "base_train": 5772,
+      "golden": 1500,
+      "base_valid": 978,
+      "stream_q4": 575,
+      "stream_q3_trickle": 94
+    },
+    "time_blind": {
+      "unused": 6117,
+      "base_train": 5733,
+      "golden": 1500,
+      "base_valid": 1017,
+      "stream_q4": 555,
+      "stream_q3_trickle": 78
+    },
+    "union_based": {
+      "unused": 11500,
+      "stream_q3_new_class": 2000,
+      "golden": 1500
+    }
+  },
+  "stream": {
+    "rows": 12955,
+    "windows": 13,
+    "window_size": 1000,
+    "q3_rows": 6929,
+    "q4_rows": 6026,
+    "quiet_head_rows": 2000,
+    "q3_attack_rate": 0.3184,
+    "q4_attack_rate": 0.2365,
+    "benign_pool_available": 8655,
+    "benign_pool_used": 8655,
+    "class_mix": {
+      "normal": 9324,
+      "union_based": 2000,
+      "boolean_blind": 666,
+      "time_blind": 633,
+      "error_based": 332
+    },
+    "unused_held_out_rows": 6220
+  },
+  "invariants": [
+    {
+      "name": "golden_disjoint_from_base",
+      "passed": true,
+      "detail": "overlap=0"
+    },
+    {
+      "name": "golden_disjoint_from_stream",
+      "passed": true,
+      "detail": "overlap=0"
+    },
+    {
+      "name": "base_has_zero_held_out_class",
+      "passed": true,
+      "detail": "Base must never see the held-out class"
+    },
+    {
+      "name": "q4_has_zero_held_out_class",
+      "passed": true,
+      "detail": "scenario 2 is volume-only, no new class"
+    },
+    {
+      "name": "quiet_head_has_zero_held_out_class",
+      "passed": true,
+      "detail": "the drift reference period must be free of the held-out class"
+    },
+    {
+      "name": "stream_benign_deduplicated",
+      "passed": true,
+      "detail": "no repeated benign padding rows"
+    },
+    {
+      "name": "every_row_assigned_one_partition",
+      "passed": true,
+      "detail": "unassigned=0"
+    }
+  ],
+  "all_invariants_passed": true
+}
