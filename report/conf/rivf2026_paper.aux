@@ -14,54 +14,52 @@
 \@writefile{toc}{\contentsline {section}{\numberline {III}Proposed System}{2}{}\protected@file@percent }
 \newlabel{sec:system}{{III}{2}{}{section.3}{}}
 \@writefile{toc}{\contentsline {subsection}{\numberline {\mbox  {III-A}}System Placement: The Database Proxy}{2}{}\protected@file@percent }
-\@writefile{lof}{\contentsline {figure}{\numberline {1}{\ignorespaces Multi-branch detector at the database proxy. Each query is canonicalized and scored by Branch~1 and Branch~2; the Session Correlator correlates both branches' signals over a whole session; the decision engine emits ALLOW/BLOCK/OVERKILL.}}{2}{}\protected@file@percent }
-\newlabel{fig:arch}{{1}{2}{}{figure.1}{}}
 \@writefile{toc}{\contentsline {subsection}{\numberline {\mbox  {III-B}}Canonicalization}{2}{}\protected@file@percent }
 \@writefile{toc}{\contentsline {subsection}{\numberline {\mbox  {III-C}}Branch 1 - Supervised Multi-Class Classification}{2}{}\protected@file@percent }
 \@writefile{toc}{\contentsline {subsection}{\numberline {\mbox  {III-D}}Branch 2 - Query-Level Anomaly Detection}{2}{}\protected@file@percent }
-\@writefile{toc}{\contentsline {subsection}{\numberline {\mbox  {III-E}}Session Correlator (Branch 3) - Session-Level Correlation}{3}{}\protected@file@percent }
-\@writefile{lot}{\contentsline {table}{\numberline {I}{\ignorespaces Decision policy combining the two query-level branches.}}{3}{}\protected@file@percent }
-\newlabel{tab:decision}{{I}{3}{}{table.1}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {\mbox  {III-E}}Session Correlator (Branch 3) - Session-Level Correlation}{2}{}\protected@file@percent }
+\@writefile{lof}{\contentsline {figure}{\numberline {1}{\ignorespaces Multi-branch detector at the database proxy.}}{3}{}\protected@file@percent }
+\newlabel{fig:arch}{{1}{3}{}{figure.1}{}}
 \@writefile{toc}{\contentsline {subsection}{\numberline {\mbox  {III-F}}Decision Engine and Overkill Policy}{3}{}\protected@file@percent }
-\@writefile{toc}{\contentsline {subsection}{\numberline {\mbox  {III-G}}Continual-Learning Design}{3}{}\protected@file@percent }
+\@writefile{lot}{\contentsline {table}{\numberline {I}{\ignorespaces Decision policy combining the two query-level branches.}}{4}{}\protected@file@percent }
+\newlabel{tab:decision}{{I}{4}{}{table.1}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {\mbox  {III-G}}Continual-Learning Design}{4}{}\protected@file@percent }
 \@writefile{toc}{\contentsline {section}{\numberline {IV}Dataset and Experimental Setup}{4}{}\protected@file@percent }
 \newlabel{sec:setup}{{IV}{4}{}{section.4}{}}
 \@writefile{toc}{\contentsline {subsection}{\numberline {\mbox  {IV-A}}Data Sources}{4}{}\protected@file@percent }
 \@writefile{toc}{\contentsline {subsection}{\numberline {\mbox  {IV-B}}Branch 1 Dataset}{4}{}\protected@file@percent }
 \@writefile{toc}{\contentsline {subsection}{\numberline {\mbox  {IV-C}}Branch 2 Dataset}{4}{}\protected@file@percent }
 \@writefile{toc}{\contentsline {subsection}{\numberline {\mbox  {IV-D}}Session Correlator Dataset}{4}{}\protected@file@percent }
-\@writefile{toc}{\contentsline {subsection}{\numberline {\mbox  {IV-E}}Evaluation Protocol}{4}{}\protected@file@percent }
-\@writefile{toc}{\contentsline {section}{\numberline {V}Experimental Results}{4}{}\protected@file@percent }
-\newlabel{sec:results}{{V}{4}{}{section.5}{}}
-\@writefile{toc}{\contentsline {subsection}{\numberline {\mbox  {V-A}}Branch 1 - Supervised Multi-Class}{4}{}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {\mbox  {IV-E}}Evaluation Protocol}{5}{}\protected@file@percent }
+\@writefile{toc}{\contentsline {section}{\numberline {V}Experimental Results}{5}{}\protected@file@percent }
+\newlabel{sec:results}{{V}{5}{}{section.5}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {\mbox  {V-A}}Branch 1 - Supervised Multi-Class}{5}{}\protected@file@percent }
 \@writefile{lot}{\contentsline {table}{\numberline {II}{\ignorespaces Branch~1 architecture comparison (5-class data, post-deduplication).}}{5}{}\protected@file@percent }
 \newlabel{tab:b1arch}{{II}{5}{}{table.2}{}}
 \@writefile{lot}{\contentsline {table}{\numberline {III}{\ignorespaces Branch~1 per-class results (test set, $n=13{,}560$).}}{5}{}\protected@file@percent }
 \newlabel{tab:b1perclass}{{III}{5}{}{table.3}{}}
-\@writefile{lof}{\contentsline {figure}{\numberline {2}{\ignorespaces Branch~1 per-class ROC curves.}}{5}{}\protected@file@percent }
-\newlabel{fig:b1roc}{{2}{5}{}{figure.2}{}}
-\@writefile{lot}{\contentsline {table}{\numberline {IV}{\ignorespaces Branch~2 algorithm comparison (same benign/anomalous pools).}}{5}{}\protected@file@percent }
-\newlabel{tab:b2}{{IV}{5}{}{table.4}{}}
 \@writefile{toc}{\contentsline {subsection}{\numberline {\mbox  {V-B}}Branch 2 - Query-Level Anomaly Detection}{5}{}\protected@file@percent }
-\@writefile{toc}{\contentsline {subsection}{\numberline {\mbox  {V-C}}Zero-Day Generalization Study}{5}{}\protected@file@percent }
+\@writefile{lof}{\contentsline {figure}{\numberline {2}{\ignorespaces Branch~1 per-class ROC curves.}}{6}{}\protected@file@percent }
+\newlabel{fig:b1roc}{{2}{6}{}{figure.2}{}}
+\@writefile{lot}{\contentsline {table}{\numberline {IV}{\ignorespaces Branch~2 algorithm comparison (same benign/anomalous pools).}}{6}{}\protected@file@percent }
+\newlabel{tab:b2}{{IV}{6}{}{table.4}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {\mbox  {V-C}}Zero-Day Generalization Study}{6}{}\protected@file@percent }
 \@writefile{lof}{\contentsline {figure}{\numberline {3}{\ignorespaces Branch~2 threshold trade-off: false-positive rate vs.\ detection rate across 21 operating points.}}{6}{}\protected@file@percent }
 \newlabel{fig:b2}{{3}{6}{}{figure.3}{}}
 \@writefile{lot}{\contentsline {table}{\numberline {V}{\ignorespaces Leave-one-out zero-day results. B1 miss = fraction of the unseen class predicted \texttt  {normal} (bypass); B2 detection = fraction independently flagged anomalous; Combined = fraction caught by either branch.}}{6}{}\protected@file@percent }
 \newlabel{tab:zeroday}{{V}{6}{}{table.5}{}}
-\@writefile{lot}{\contentsline {table}{\numberline {VI}{\ignorespaces Session Correlator ablation on held-out self-hosted sessions ($n=280$; 70 benign, 70 per attack class). Content check = concatenated session text re-scored by Branch~1; behavior check = aggregated Branch~2 anomaly scores. DR = detection rate.}}{6}{}\protected@file@percent }
-\newlabel{tab:b3}{{VI}{6}{}{table.6}{}}
-\@writefile{toc}{\contentsline {subsection}{\numberline {\mbox  {V-D}}Session Correlator}{6}{}\protected@file@percent }
+\@writefile{lot}{\contentsline {table}{\numberline {VI}{\ignorespaces Session Correlator ablation ($n=280$).}}{7}{}\protected@file@percent }
+\newlabel{tab:b3}{{VI}{7}{}{table.6}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {\mbox  {V-D}}Session Correlator}{7}{}\protected@file@percent }
 \@writefile{toc}{\contentsline {subsection}{\numberline {\mbox  {V-E}}Continual Learning}{7}{}\protected@file@percent }
-\@writefile{lof}{\contentsline {figure}{\numberline {4}{\ignorespaces Ablation: recall on \texttt  {union\_based} with (0.959) vs.\ without (0.000) the class present in an identical +1{,}269-row retrain sample.}}{7}{}\protected@file@percent }
-\newlabel{fig:cl-ablation}{{4}{7}{}{figure.4}{}}
-\citation{b11}
+\@writefile{lof}{\contentsline {figure}{\numberline {4}{\ignorespaces Ablation: recall on \texttt  {union\_based} with (0.959) vs.\ without (0.000) the class present in an identical +1{,}269-row retrain sample.}}{8}{}\protected@file@percent }
+\newlabel{fig:cl-ablation}{{4}{8}{}{figure.4}{}}
 \@writefile{lof}{\contentsline {figure}{\numberline {5}{\ignorespaces PSI drift signals through Scenario~1 (vs.\ M0, top) and Scenario~2 (vs.\ M1, bottom). Scenario~1 crosses the alert threshold as \texttt  {union\_based} enters; Scenario~2 stays flat throughout.}}{8}{}\protected@file@percent }
 \newlabel{fig:cl-drift}{{5}{8}{}{figure.5}{}}
 \@writefile{toc}{\contentsline {subsection}{\numberline {\mbox  {V-F}}Latency Budget}{8}{}\protected@file@percent }
 \@writefile{toc}{\contentsline {section}{\numberline {VI}Discussion and Limitations}{8}{}\protected@file@percent }
 \newlabel{sec:discussion}{{VI}{8}{}{section.6}{}}
-\@writefile{toc}{\contentsline {section}{\numberline {VII}Conclusion and Future Work}{8}{}\protected@file@percent }
-\newlabel{sec:conclusion}{{VII}{8}{}{section.7}{}}
+\citation{b11}
 \bibcite{b1}{1}
 \bibcite{b2}{2}
 \bibcite{b3}{3}
@@ -73,5 +71,7 @@
 \bibcite{b9}{9}
 \bibcite{b10}{10}
 \bibcite{b11}{11}
+\@writefile{toc}{\contentsline {section}{\numberline {VII}Conclusion and Future Work}{9}{}\protected@file@percent }
+\newlabel{sec:conclusion}{{VII}{9}{}{section.7}{}}
 \@writefile{toc}{\contentsline {section}{References}{9}{}\protected@file@percent }
 \gdef \@abspage@last{9}
