@@ -34,7 +34,7 @@
 | 13 | **Related Work — toàn đoạn** (tex 84–89) | *"Các related works đưa ra này phải phân tích được những ưu điểm và nhược điểm của nó, để từ đó làm nổi bật lên research gap mà mình cần giải quyết trong bài này là gì."* | | ☐ |
 | 14 | **Related Work — đoạn traditional defenses** (tex 85) | *"Tìm thêm các bài về traditional SQLi defenses, phân tích qua 1 chút ưu điểm, nhược điểm của nó, sau đó kết luận phương pháp này không còn hiệu quả nên mới chuyển sang ML-based methods."* | Cần bổ sung tham khảo [refs] cho WAF/rule-based | ☐ |
 | 15 | **Fig. 1 — vị trí đặt hình** (tex 97) | *"Theo format của IEEE thì Figure phải xuất hiện sau đoạn văn nhắc đến nó. Vì vậy các em nên đặt lại Fig. 1."* | | ✅ |
-| 16 | **Section III Proposed System (toàn section)** (tex 91–137) | *"Nên viết proposed method dưới dạng cấu trúc giải thuật (pseudo-code). Các đoạn văn mô tả proposed method khá dài, toàn chữ. Nên dùng cấu trúc giải thuật hoặc mô hình toán học hoặc hình vẽ để paper có hàm lượng khoa học cao hơn."* | | ☐ |
+| 16 | **Section III Proposed System (toàn section)** (tex 91–137) | *"Nên viết proposed method dưới dạng cấu trúc giải thuật (pseudo-code). Các đoạn văn mô tả proposed method khá dài, toàn chữ. Nên dùng cấu trúc giải thuật hoặc mô hình toán học hoặc hình vẽ để paper có hàm lượng khoa học cao hơn."* | | ✅ |
 
 ### Trang 4 — Dataset & Experimental Setup
 
@@ -93,7 +93,7 @@
 |---|---|---|---|
 | A1 | Thay placeholder Fig. 1 bằng ảnh thật từ `report/conf/diagrams/`, dựng `figure*` double-column, viết caption ngắn + chuyển mô tả vào đoạn văn (mục 8). | #8, #15 | ✅ |
 | A2 | Bổ sung references cho traditional SQLi defenses + phân tích ưu/nhược điểm trước khi chuyển sang ML (mục 13–14). | #13, #14 | ☐ |
-| A3 | Viết pseudo-code (algorithm environment) cho Session Correlator / decision engine (mục 16). | #16 | ☐ |
+| A3 | Viết pseudo-code (algorithm environment) cho Session Correlator / decision engine (mục 16). | #16 | ✅ |
 | A4 | Rút gọn Abstract xuống 200–250 words (mục 1). | #1, #3, #4, #6 | ✅ |
 | A5 | Rút contributions còn 3 bullet (mục 9). | #9 | ☐ |
 | A6 | Thêm citations cho Introduction đoạn 1 (mục 5). | #5 | ☐ |

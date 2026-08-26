@@ -2,16 +2,19 @@
 \IEEEoverridecommandlockouts
 \usepackage{cite}
 \usepackage{amsmath,amssymb,amsfonts}
+\usepackage{algorithm}
 \usepackage{algorithmic}
 \usepackage{graphicx}
 \usepackage{textcomp}
 \usepackage{xcolor}
+\usepackage{placeins}
 \usepackage{booktabs}
 % Figures live in figs/, alongside this file - self-contained for Overleaf upload.
 \graphicspath{{figs/}}
 \def\BibTeX{{\rm B\kern-.05em{\sc i\kern-.025em b}\kern-.08em
     T\kern-.1667em\lower.7ex\hbox{E}\kern-.125emX}}
 \begin{document}
+\raggedbottom
 
 \title{A Multi-Branch AI System for SQL Injection Detection at the Database Proxy with a Zero-Day Generalization Study}
 
@@ -92,14 +95,31 @@ Across this literature, detection is predominantly \emph{query-level}: a verdict
 \section{Proposed System}\label{sec:system}
 
 \subsection{System Placement: The Database Proxy}
-The detector is placed at ``Position~B'': it receives the SQL statement after the application has finished constructing it but before the statement reaches the database. Inspecting the final statement (rather than raw HTTP input) removes ambiguity introduced by application-layer transformations and yields a canonical view of what will actually execute. Fig.~\ref{fig:arch} shows the overall flow: each query is canonicalized and scored by Branch~1 and Branch~2; the Session Correlator correlates both branches' signals over a whole session; the decision engine emits ALLOW/BLOCK/OVERKILL.
+The detector is placed at ``Position~B'': it receives the SQL statement after the application has finished constructing it but before the statement reaches the database. Inspecting the final statement (rather than raw HTTP input) removes ambiguity introduced by application-layer transformations and yields a canonical view of what will actually execute. Fig.~\ref{fig:arch} shows the overall flow: each query is canonicalized and scored by Branch~1 and Branch~2; the Session Correlator correlates both branches' signals over a whole session; the decision engine emits ALLOW/BLOCK/OVERKILL. Algorithm~\ref{alg:detect} summarizes the per-query decision.
 
 % TODO: replace this placeholder box with the real architecture diagram.
 \begin{figure*}[t]
-\centerline{\includegraphics[width=0.8\textwidth]{architecturev2.0.drawio.png}}
+\centerline{\includegraphics[width=0.9\textwidth]{architecturev2.0.drawio.png}}
 \caption{Multi-branch detector at the database proxy.}
 \label{fig:arch}
 \end{figure*}
+
+\begin{algorithm}[htbp]
+\footnotesize
+\caption{Multi-branch detection at Position B (per query)}
+\label{alg:detect}
+\begin{algorithmic}[1]
+\REQUIRE query $q$, models $B_1,B_2$, correlator $S$
+\STATE $q_c \leftarrow \text{canonicalize}(q)$
+\STATE $(p, y_1) \leftarrow B_1.\text{predict}(q_c)$ \COMMENT{$p = 1 - P(\text{normal})$}
+\STATE $s \leftarrow B_2.\text{score}(q_c)$
+\STATE $is\_sqli \leftarrow (p \geq 0.5)$; $is\_anom \leftarrow (s > \tau_q)$
+\STATE \textbf{if} $S.\text{is\_ready}$ \textbf{and} $S.\text{score\_session}([q])$ \textbf{then} \textbf{return} BLOCK
+\STATE \textbf{if} $is\_sqli$ \textbf{then} \textbf{return} BLOCK
+\STATE \textbf{if} $\neg is\_sqli \land is\_anom$ \textbf{then} \textbf{return} OVERKILL
+\STATE \textbf{return} ALLOW
+\end{algorithmic}
+\end{algorithm}
 
 \subsection{Canonicalization}
 To reduce syntactic evasion, each statement is normalized before feature extraction: common encodings (URL, hex, \texttt{CHAR()}/\texttt{ASCII()}) are decoded, SQL keyword casing is normalized, and comment sequences (\texttt{/* */}, \texttt{--}) are \emph{marked as a feature} rather than deleted. The goal is to collapse equivalent syntactic variants so that trivial obfuscation does not change the model's input.
@@ -113,10 +133,45 @@ Branch~2 is trained on benign traffic only, learning the ``normal region'' of qu
 \subsection{Session Correlator (Branch 3) - Session-Level Correlation}
 The Session Correlator targets two attack patterns whose signal no query-level branch can see, because each step looks individually unremarkable: (1) blind SQLi (boolean-blind and time-blind), where an attacker recovers data one bit at a time via a bisection search spread across many queries in a session, and (2) query-splitting, where a single malicious statement is fragmented across multiple consecutive requests. Our first design is a sequence model (a Gated Recurrent Unit (GRU)) consuming, per step, Branch~1's classifier \emph{output} concatenated with Branch~2's anomaly score. A diagnostic investigation, focused on the blind-SQLi scenario, finds this premise does not hold: two consecutive Boolean-blind bisection steps differing only in their comparison bound have TF-IDF cosine similarity 0.961 at the vectorizer stage but near-identical probabilities after Branch~1's classifier (a lossy projection trained to separate attack \emph{type}, not to preserve content) - the very signal a session-level model needs is collapsed before it ever reaches the sequence model. Independently, the live decision engine already blocks most real Boolean/time-blind sessions per-query before enough steps accumulate for a sequence model to matter, and no principled fixed session length exists (real sessions range from a few to over a thousand steps). Section~\ref{sec:setup} describes how each of the two scenarios' session data is constructed, since only the blind-SQLi scenario's bisection structure is what exposed this failure. We therefore replaced the GRU with the Session Correlator: not a trained model, but two independent checks over an already-trained Branch~1 and Branch~2, OR'd together. The \emph{content check} concatenates a session's raw query text and re-scores it with Branch~1's existing classifier against a threshold calibrated separately for session-length text. The \emph{behavior check} aggregates Branch~2's per-query anomaly scores (mean, fraction above a calibrated threshold) across the session, run exactly as trained, per query, so no train/inference distribution shift is introduced. Both checks are calibrated on a disjoint TRAIN split and evaluated on a held-out TEST split (Section~\ref{sec:results}); each covers cases the other misses (content check: structurally-ordinary but lexically attack-like queries; behavior check: lexically-ambiguous but structurally anomalous ones), by design leaving one residual gap: an attacker evading both checks simultaneously, which no combination of the two existing branches' signals can close. Because the boolean-blind/time-blind session generator bisects toward a fixed target value (Section~\ref{sec:setup}), its output is deterministic per target; the target pool is therefore partitioned into disjoint train and test subsets \emph{before} session generation, so that no target used to calibrate the checks is ever reused at test time, and the held-out evaluation measures generalization to unseen targets rather than recall of seen ones.
 
+\vspace{4pt}
+Let $S=[q_1, \dots, q_n]$ be a session consisting of $n$ chronologically ordered queries from the same client. Denote\\[2pt]
+\mbox{$p(S)=1-P_{B_1}(\text{normal}\mid \Vert_{i} q_i)$} for the concatenated text and \mbox{$s_i=B_2.\text{score}(q_i)$} per query. With calibrated thresholds $\tau_c,\tau_q,\tau_{mean},\tau_{frac}$, the checks are defined as:
+\begingroup\small
+\begin{equation}
+\begin{aligned}
+fires_c(S)&=\mathbb{I}[p(S)\geq \tau_c],\\
+frac(S)&=\frac{1}{n}\sum_{i=1}^{n}\mathbb{I}[s_i>\tau_q],\\
+fires_b(S)&=\mathbb{I}[\mu(S)\geq \tau_{mean}] \lor \mathbb{I}[frac(S)\geq \tau_{frac}]
+\end{aligned}
+\end{equation}
+\endgroup
+where $\mu(S)=(1/n)\sum s_i$ and the session verdict is\\[4pt]
+\mbox{$fires_c(S) \lor fires_b(S)$}. Implemented operationally as in Algorithm~\ref{alg:correlator}.
+
+\begin{algorithm}[htbp]
+\footnotesize
+\caption{SessionCorrelator: calibration and scoring (no gradient training)}
+\label{alg:correlator}
+\begin{algorithmic}[1]
+\STATE \textbf{Calibration (on TRAIN sessions only):}
+\STATE $\tau_q \leftarrow$ 90th percentile of
+\STATE \hspace*{1em}$\{B_2.\text{score}(q) \mid q \in \text{benign TRAIN}\}$
+\STATE $\tau_c \leftarrow \arg\max_{\tau} (\text{TPR}-\text{FPR})$ on
+\STATE \hspace*{1em}$\{\text{concat}(S_{\text{train}}) \text{ scored by } B_1\}$
+\STATE $\tau_{mean}, \tau_{frac} \leftarrow$ sweep mean and fraction-above-$\tau_q$
+\STATE \hspace*{1em}on TRAIN
+\STATE \textbf{Scoring a session $S=[q_1..q_n]$:}
+\STATE $a_c \leftarrow 1-P_{B_1}(\text{normal} \mid \text{concat}(q_1..q_n))$; $fires_c \leftarrow (a_c \geq \tau_c)$
+\STATE $scores \leftarrow [B_2.\text{score}(q_i) \; \forall i]$; $\mu \leftarrow \text{mean}(scores)$; $frac \leftarrow |\{s>\tau_q\}|/n$
+\STATE $fires_b \leftarrow (\mu \geq \tau_{mean}) \lor (frac \geq \tau_{frac})$
+\STATE \textbf{return} $fires_c \lor fires_b$ \COMMENT{content check OR behavior check}
+\end{algorithmic}
+\end{algorithm}
+
 \subsection{Decision Engine and Overkill Policy}
 A central decision engine combines the branch outputs into one verdict (Table~\ref{tab:decision}). Any query classified by Branch~1 as an attack class is \textsc{block}ed. A query classified \texttt{normal} but flagged anomalous by Branch~2 is held as an \emph{Overkill} case: it is not executed and is queued for administrator confirmation, defaulting to \emph{deny} on timeout. Confirmed decisions feed a continual-learning loop (proposed). This policy trades a small amount of friction on rare suspicious-but-benign queries for defense-in-depth against zero-days.
 
-\begin{table}[t]
+\begin{table}[htbp]
 \caption{Decision policy combining the two query-level branches.}
 \label{tab:decision}
 \begin{center}
@@ -133,7 +188,33 @@ attack class & any & \textsc{block} + log \\
 \end{table}
 
 \subsection{Continual-Learning Design}
-Confirmed Overkill/Block decisions accumulate into a labeled pool that a continual-learning loop is designed to consume, so that the deployed model can improve without full retraining from scratch. Two parts run in parallel. \emph{Drift monitoring} continuously tracks the Population Stability Index (PSI) of five feature and confidence signals against a fixed reference window, alerting at PSI~$\geq$~0.2; it does not gate anything and can fire independently of the mechanism below. On the other path, a \emph{review queue} holds low-confidence and anomalous queries for administrator confirmation, and a volume-threshold policy decides when retraining actually happens: once confirmed samples relevant to a pending retrain cross a fixed count, a retrain job triggers automatically rather than on a fixed schedule. A \emph{validation gate} then decides whether the resulting candidate may replace the deployed model, distinguishing a \emph{major} bump (the label space itself changes, e.g.\ a genuinely new attack category) from a \emph{minor} one (same labels, more confirmed volume): a major bump has no prior model to compare against on equal footing, so the candidate is instead checked against an absolute floor - no regression on already-known classes, a minimum recall on the new one - and promoted directly if it clears that floor; a minor bump is compared against the current champion's F1/FPR on the frozen benchmark and must match or exceed it. Only a promoted minor-bump candidate then enters \emph{shadow}: its predictions are logged against a further window of traffic while the incumbent continues to serve decisions, and it becomes champion only if its shadow-observed FPR and F1 stay within tolerance of the gate-measured values, otherwise the incumbent is kept. A major-bump candidate skips shadow: there is no incumbent serving that class for it to be compared against, and the floor check above already carries the weight shadow exists to provide. Every promotion retires the model it replaces - Shadow~$\rightarrow$~Champion~$\rightarrow$~Retired is the full lifecycle, with a retired model kept, not deleted, for rollback and audit. Section~\ref{sec:results} evaluates this loop as a full offline experiment.
+Confirmed Overkill/Block decisions accumulate into a labeled pool that a continual-learning loop is designed to consume, so that the deployed model can improve without full retraining from scratch. Two parts run in parallel. \emph{Drift monitoring} continuously tracks the Population Stability Index (PSI) of five feature and confidence signals against a fixed reference window, alerting at PSI~$\geq$~0.2; it does not gate anything and can fire independently of the mechanism below. On the other path, a \emph{review queue} holds low-confidence and anomalous queries for administrator confirmation, and a volume-threshold policy decides when retraining actually happens: once confirmed samples relevant to a pending retrain cross a fixed count, a retrain job triggers automatically rather than on a fixed schedule. A \emph{validation gate} then decides whether the resulting candidate may replace the deployed model, distinguishing a \emph{major} bump (the label space itself changes, e.g.\ a genuinely new attack category) from a \emph{minor} one (same labels, more confirmed volume): a major bump has no prior model to compare against on equal footing, so the candidate is instead checked against an absolute floor - no regression on already-known classes, a minimum recall on the new one - and promoted directly if it clears that floor; a minor bump is compared against the current champion's F1/FPR on the frozen benchmark and must match or exceed it. Only a promoted minor-bump candidate then enters \emph{shadow}: its predictions are logged against a further window of traffic while the incumbent continues to serve decisions, and it becomes champion only if its shadow-observed FPR and F1 stay within tolerance of the gate-measured values, otherwise the incumbent is kept. A major-bump candidate skips shadow: there is no incumbent serving that class for it to be compared against, and the floor check above already carries the weight shadow exists to provide. Algorithm~\ref{alg:cl} summarizes the continual-learning loop. Every promotion retires the model it replaces - Shadow~$\rightarrow$~Champion~$\rightarrow$~Retired is the full lifecycle, with a retired model kept, not deleted, for rollback and audit. Section~\ref{sec:results} evaluates this loop as a full offline experiment.
+
+
+\begin{algorithm}[htbp]
+\footnotesize
+\caption{Continual-learning loop (offline, Branch 1)}
+\label{alg:cl}
+\begin{algorithmic}[1]
+\WHILE{streaming}
+\STATE monitor PSI on 5 signals vs. reference; alert if $\text{PSI} \geq 0.2$
+\STATE \hspace*{1em}for 2 sustained windows \COMMENT{drift, does not gate}
+\STATE enqueue low-confidence and anomalous queries for admin review
+\IF{$|\text{confirmed}| \geq 500$}
+\STATE assemble $D' \leftarrow D_{\text{train}} \cup \text{confirmed}$
+\STATE \hspace*{1em}(dedup by \texttt{query\_canonical})
+\STATE seal data version $v=\text{infer\_bump}(v_{\text{old}}, v_{\text{new}})$
+\IF{$v$ is major}
+\STATE check floor: no known-class recall drop $>0.02$
+\STATE \hspace*{1em}and new-class recall $\geq 0.80$; promote directly if pass
+\ELSE
+\STATE gate: $F1_{cand} \geq F1_{champ} \land \text{FPR}_{cand} \leq \text{FPR}_{champ}$
+\STATE \hspace*{1em}\COMMENT{shadow 2000 queries if pass}
+\ENDIF
+\ENDIF
+\ENDWHILE
+\end{algorithmic}
+\end{algorithm}
 
 \section{Dataset and Experimental Setup}\label{sec:setup}
 
@@ -196,7 +277,7 @@ After excluding \texttt{stacked}, deduplicating query text before the train/test
 \end{center}
 \end{table}
 
-\begin{figure}[t]
+\begin{figure}[htbp]
 \centerline{\includegraphics[width=\columnwidth]{branch1_roc_per_class.png}}
 \caption{Branch~1 per-class ROC curves.}
 \label{fig:b1roc}
@@ -205,7 +286,7 @@ After excluding \texttt{stacked}, deduplicating query text before the train/test
 \subsection{Branch 2 - Query-Level Anomaly Detection}
 Table~\ref{tab:b2} compares three anomaly algorithms on the same benign/anomalous pools (Section~\ref{sec:setup}). One-Class SVM under-performs on this 12-feature representation; Isolation Forest is a substantial improvement but still leaves most attacks undetected at its operating point; LocalOutlierFactor was selected for its higher AUC and detection rate. At its chosen operating point (contamination~=~0.05), it produces 427 false positives on 7{,}929 benign queries (FPR~=~5.4\%) and flags 81.4\% of the 270{,}002 held-out anomalous queries, with average precision~=~0.996. A 21-point threshold sweep (Fig.~\ref{fig:b2}) provides the basis for choosing a deployment operating point.
 
-\begin{table}[t]
+\begin{table}[htbp]
 \caption{Branch~2 algorithm comparison (same benign/anomalous pools).}
 \label{tab:b2}
 \begin{center}
@@ -221,13 +302,14 @@ LocalOutlierFactor (chosen) & 0.05 & 5.39\% & 81.37\% & 0.929 \\
 \end{tabular}
 \end{center}
 \end{table}
-
-\begin{figure}[t]
-\centerline{\includegraphics[width=\columnwidth]{branch2_threshold_tradeoff.png}}
+\vspace{-6pt}
+\begin{figure}[htbp]
+\centerline{\includegraphics[width=0.9\columnwidth]{branch2_threshold_tradeoff.png}}
 \caption{Branch~2 threshold trade-off: false-positive rate vs.\ detection rate across 21 operating points.}
 \label{fig:b2}
 \end{figure}
 
+\FloatBarrier
 \subsection{Zero-Day Generalization Study}
 To probe robustness to \emph{unseen} attack categories, we run a leave-one-out protocol: for each SQLi class, that class is removed and Branch~1 is retrained on the remaining four; Branch~2 is not retrained per fold, since it is trained only on benign traffic and never sees attack labels to begin with, so the same fixed anomaly detector is evaluated against every held-out class's queries. We report the Branch~1 \emph{miss rate} (fraction predicted \texttt{normal}, i.e.\ bypassing the supervised branch), the Branch~2 detection rate on the same held-out queries, and their \emph{combined coverage} (fraction caught by at least one branch) in Table~\ref{tab:zeroday}.
 
