@@ -14,7 +14,7 @@
 
 | # | Vị trí | Comment của thầy | Ghi chú | Tiến độ |
 |---|---|---|---|---|
-| 1 | **Abstract** — highlight mở đầu "Abstract—SQL Injection (SQLi) remains one of the most…" (tex 59–61) | *"Nên viết ngắn gọn hơn. Chỉ khoảng 200–250 words thôi."* | Abstract hiện ~380 words | ☐ |
+| 1 | **Abstract** — highlight mở đầu "Abstract—SQL Injection (SQLi) remains one of the most…" (tex 59–61) | *"Nên viết ngắn gọn hơn. Chỉ khoảng 200–250 words thôi."* | Abstract hiện ~380 words | ✅ |
 | 2 | **Khối tác giả** — vùng highlight quanh `[TODO: dept] … International School, Vietnam National University, Hanoi` (tex 21–54) | *"Bỏ ':', có thể ghi 'including'."* | Anchor chính xác chưa rõ từ extract — khả năng cao là câu có dấu hai chấm ở trang 1; cần mở PDF đối chiếu trực tiếp | ☐ |
 | 3 | **Abstract — chỗ dùng dấu gạch ngang** — câu `"…a validation gate --- backed by an ablation confirming the gain is attributable to the class itself, not merely to more data --- promotes…"` (tex 60) | *"Hạn chế các dấu '-' vì người đọc sẽ nghĩ rằng mình đang dùng ChatGPT để viết hộ."* | | ✅ |
 | 4 | **Abstract — câu có dấu hai chấm** — khả năng: `"…unseen at training time: supervised classification remains robust…"` hoặc `"…rather than a synthetic stand-in: a review queue and…"` (tex 60) | *"Including."* | Thay cấu trúc hai chấm bằng cách viết dùng "including"; cần đối chiếu PDF để biết đúng câu | ✅ |
@@ -94,7 +94,7 @@
 | A1 | Thay placeholder Fig. 1 bằng ảnh thật từ `report/conf/diagrams/`, dựng `figure*` double-column, viết caption ngắn + chuyển mô tả vào đoạn văn (mục 8). | #8, #15 | ✅ |
 | A2 | Bổ sung references cho traditional SQLi defenses + phân tích ưu/nhược điểm trước khi chuyển sang ML (mục 13–14). | #13, #14 | ☐ |
 | A3 | Viết pseudo-code (algorithm environment) cho Session Correlator / decision engine (mục 16). | #16 | ☐ |
-| A4 | Rút gọn Abstract xuống 200–250 words (mục 1). | #1, #3, #4, #6 | ☐ |
+| A4 | Rút gọn Abstract xuống 200–250 words (mục 1). | #1, #3, #4, #6 | ✅ |
 | A5 | Rút contributions còn 3 bullet (mục 9). | #9 | ☐ |
 | A6 | Thêm citations cho Introduction đoạn 1 (mục 5). | #5 | ☐ |
 | A7 | So sánh dataset với các paper gần đây (độ lớn, độ mới) và biện luận (mục 20). | #20 | ☐ |
