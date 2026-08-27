@@ -25,9 +25,9 @@
 
 | # | Vị trí | Comment của thầy | Ghi chú | Tiến độ |
 |---|---|---|---|---|
-| 7 | **Introduction — đoạn trước danh sách contributions** (tex 72–80) | *"Mô tả tóm tắt thêm 1 chút về proposed method của mình. Sau đó thêm 1–2 câu tóm tắt kết quả đạt được trước khi nói về main contributions của paper này."* | | ☐ |
+| 7 | **Introduction — đoạn trước danh sách contributions** (tex 72–80) | *"Mô tả tóm tắt thêm 1 chút về proposed method của mình. Sau đó thêm 1–2 câu tóm tắt kết quả đạt được trước khi nói về main contributions của paper này."* | Thêm 2 câu: tóm tắt 2 nhánh + Session Correlator, và số F1/AUC headline, trước "The contributions of this paper are:" | ✅ |
 | 8 | **Fig. 1 (kiến trúc hệ thống)** (tex 97–103, caption dòng 101) | *"Figure này khá mờ. Caption dài quá. Nên để hình này trải dài trên double column (`figure*`) và phần mô tả hình nên để ở đoạn văn."* | Tex hiện vẫn là placeholder box `[Architecture diagram --- TODO]`; ảnh thật nằm ở `report/conf/diagrams/` | ✅ |
-| 9 | **Danh sách Contributions** (tex 74–80, hiện 5 bullet) | *"Contributions quá dài. Ngắn gọn lại — đâu mới thực sự là cái mới, cái đóng góp khoa học của paper. Paper hội thảo chỉ nên để 3 contributions và viết ngắn gọn hơn."* | | ☐ |
+| 9 | **Danh sách Contributions** (tex 74–80, hiện 5 bullet) | *"Contributions quá dài. Ngắn gọn lại — đâu mới thực sự là cái mới, cái đóng góp khoa học của paper. Paper hội thảo chỉ nên để 3 contributions và viết ngắn gọn hơn."* | Gộp còn 3 bullet: (1) kiến trúc multi-branch + Session Correlator (đã gộp bullet ablation session-level vào đây), (2) zero-day study, (3) continual-learning loop. Bỏ bullet "empirical evaluation/label noise" riêng (đã có trong Dataset section) | ✅ |
 | 10 | ⚠️ **Toàn paper — dấu gạch ngang** (`---` / em-dash, ví dụ tex dòng 79, 145, 151, 159…) | *"Rà soát toàn bộ paper, chỗ nào có '-' thì bỏ và viết lại câu, để tránh người đọc bảo mình dùng ChatGPT."* | | ✅ |
 | 11 | ⚠️ **Toàn paper — từ viết tắt** | *"Rà soát lại từ viết tắt. Nếu xuất hiện lần đầu thì phải ghi tên đầy đủ."* | Ví dụ cần kiểm tra: WAF, ML, FPR, DR, PSI, TF-IDF, LOF, CNN, GRU, LSTM, CAPEC… | ✅ |
 | 12 | **Related Work — câu có ':' giữa câu** (tex 85–88, đoạn "Traditional SQLi defenses rely on input validation…" và "ML-based detectors extract features from queries—bag-of-words, TF-IDF, or character/word n-grams—and train classifiers…") | *"Nên rà soát lại các câu này. Tại sao lại ':' ở giữa câu. Câu này nên tách thành các câu nhỏ hoặc viết đơn giản hơn cho dễ hiểu."* | | ☐ |
@@ -50,7 +50,7 @@
 | # | Vị trí | Comment của thầy | Ghi chú | Tiến độ |
 |---|---|---|---|---|
 | 21 | **Table II (Branch 1 architecture comparison)** — highlight "Table II compares the four candidate architectures…" (tex 159–163) | *"Lưu ý cách trình bày. Table và figures phải xuất hiện sau khi đã nhắc tới trong đoạn văn."* | | ✅ |
-| 22 | **Fig. 3 (Branch 2 threshold trade-off)** — vùng highlight caption Fig. 2/Fig. 3 (tex 224–228) | *"Phân tích chi tiết hơn kết quả Figure 3. Chú ý rà soát lại kết quả của các Figure, cần phân tích chi tiết."* | | ☐ |
+| 22 | **Fig. 3 (Branch 2 threshold trade-off)** — vùng highlight caption Fig. 2/Fig. 3 (tex 224–228) | *"Phân tích chi tiết hơn kết quả Figure 3. Chú ý rà soát lại kết quả của các Figure, cần phân tích chi tiết."* | Viết lại câu mô tả Fig.3: chỉ rõ FPR giảm nhanh ở các threshold đầu, DR giảm chậm hơn, vùng sau threshold~10 không còn lợi; giải thích vì sao contamination=0.05 nằm trong vùng dốc đầu | ✅ |
 | 23 | ⚠️ **Phần Results nói chung** (tex 156–305) | *"Nhiều đoạn nên viết ngắn gọn hơn hoặc cắt bớt đi. Nếu có dùng ChatGPT để phân tích kết quả thì nên viết lại cho ngắn gọn hơn. Thế mới đủ được 6 trang đôi."* | | ☐ |
 
 ### Trang 6 — Session Correlator results
@@ -95,7 +95,7 @@
 | A2 | Bổ sung references cho traditional SQLi defenses + phân tích ưu/nhược điểm trước khi chuyển sang ML (mục 13–14). | #13, #14 | ☐ |
 | A3 | Viết pseudo-code (algorithm environment) cho Session Correlator / decision engine (mục 16). | #16 | ✅ |
 | A4 | Rút gọn Abstract xuống 200–250 words (mục 1). | #1, #3, #4, #6 | ✅ |
-| A5 | Rút contributions còn 3 bullet (mục 9). | #9 | ☐ |
+| A5 | Rút contributions còn 3 bullet (mục 9). | #9 | ✅ |
 | A6 | Thêm citations cho Introduction đoạn 1 (mục 5). | #5 | ☐ |
 | A7 | So sánh dataset với các paper gần đây (độ lớn, độ mới) và biện luận (mục 20). | #20 | ☐ |
 | A8 | Co paper về đúng 6 trang đôi. | #23, #25, #26, G7 | ☐ |
