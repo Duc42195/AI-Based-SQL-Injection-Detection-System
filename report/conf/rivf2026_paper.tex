@@ -2,62 +2,66 @@
 \IEEEoverridecommandlockouts
 \usepackage{cite}
 \usepackage{amsmath,amssymb,amsfonts}
+\usepackage{algorithm}
 \usepackage{algorithmic}
 \usepackage{graphicx}
 \usepackage{textcomp}
 \usepackage{xcolor}
+\usepackage{placeins}
 \usepackage{booktabs}
-% Figures live in ../metrics/figures/ ; compile this file from report/conf/.
-\graphicspath{{../metrics/figures/}}
+% Figures live in figs/, alongside this file - self-contained for Overleaf upload.
+\graphicspath{{figs/}}
 \def\BibTeX{{\rm B\kern-.05em{\sc i\kern-.025em b}\kern-.08em
     T\kern-.1667em\lower.7ex\hbox{E}\kern-.125emX}}
 \begin{document}
+\raggedbottom
 
 \title{A Multi-Branch AI System for SQL Injection Detection at the Database Proxy with a Zero-Day Generalization Study}
 
 % ==== TODO before submission: fill in [dept/major], [email or ORCID], and Bach's campus city. ====
 \author{
 \IEEEauthorblockN{1\textsuperscript{st} Bach Luong-Chi}
-\IEEEauthorblockA{\textit{[TODO: dept/major]} \\
+\IEEEauthorblockA{\textit{School of Science, Engineering \& Technology} \\
 \textit{RMIT University Vietnam}\\
-{[TODO: city]}, Vietnam \\
-{[TODO: email or ORCID]}}
+{Hanoi}, Vietnam \\
+{chibachluong@gmail.com}}
 \and
 \IEEEauthorblockN{2\textsuperscript{nd} Minh-Duc Do-Xuan}
-\IEEEauthorblockA{\textit{[TODO: dept/major]} \\
-\textit{International School, Vietnam National University, Hanoi}\\
+\IEEEauthorblockA{\textit{International School} \\
+\textit{Vietnam National University Hanoi}\\
 Hanoi, Vietnam \\
-{[TODO: email or ORCID]}}
+{minhdc42195@gmail.com}}
 \and
 \IEEEauthorblockN{3\textsuperscript{rd} Diep Dinh-Ngoc}
-\IEEEauthorblockA{\textit{[TODO: dept/major]} \\
-\textit{International School, Vietnam National University, Hanoi}\\
+\IEEEauthorblockA{\textit{ International School} \\
+\textit{Vietnam National University Hanoi}\\
 Hanoi, Vietnam \\
-{[TODO: email or ORCID]}}
+{dinhngocdiep281104.work@gmail.com}}
 \and
 \IEEEauthorblockN{4\textsuperscript{th} Minh Nguyen-Quang}
-\IEEEauthorblockA{\textit{[TODO: dept/major]} \\
-\textit{International School, Vietnam National University, Hanoi}\\
+\IEEEauthorblockA{\textit{International School} \\
+\textit{Vietnam National University Hanoi}\\
 Hanoi, Vietnam \\
-{[TODO: email or ORCID]}}
+{quangminhdang1703@gmail.com}}
 \and
 \IEEEauthorblockN{5\textsuperscript{th} Linh Dinh-Van}
 \IEEEauthorblockA{\textit{[TODO: dept]} \\
-\textit{International School, Vietnam National University, Hanoi}\\
+\textit{Academy of Cryptography Techniques
+}\\
 Hanoi, Vietnam \\
-{[TODO: email or ORCID]}}
+{vanlinh@actvn.edu.vn}}
 \and
-\IEEEauthorblockN{6\textsuperscript{th} Thai Kim-Dinh}
-\IEEEauthorblockA{\textit{[TODO: dept]} \\
-\textit{International School, Vietnam National University, Hanoi}\\
+\IEEEauthorblockN{6\textsuperscript{th} Dinh\-Thai Kim}
+\IEEEauthorblockA{\textit{International School} \\
+\textit{Vietnam National University Hanoi}\\
 Hanoi, Vietnam \\
-{[TODO: email or ORCID]}}
+{thaikd@vnu.edu.vn}}
 }
 
 \maketitle
 
 \begin{abstract}
-SQL Injection (SQLi) remains one of the most damaging web application vulnerabilities, and signature-based Web Application Firewalls struggle with obfuscated payloads and previously unseen attacks. This paper presents a multi-branch, AI-based SQLi detection system positioned at the database proxy, where the final SQL statement is inspected after the application builds it but before it reaches the database. The system combines a supervised multi-class classifier (Branch~1) with a query-level anomaly detector trained only on benign traffic (Branch~2), and a session-level correlation mechanism, the \textbf{Session Correlator}, that re-uses both branches' existing signals, with no additional training, to catch blind and multi-step attacks. On a combined, carefully cleaned public dataset, Branch~1 reaches an F1-macro of 0.9907 across five SQLi categories, and Branch~2 (LocalOutlierFactor) attains an AUC of 0.929, detecting 81.4\% of anomalous queries at a 5.4\% false-positive rate. We further report a leave-one-out zero-day study that isolates how detection degrades when an attack category is unseen at training time: supervised classification remains robust for structurally distinctive attacks but bypasses at an 87\% rate for boolean-blind payloads, which resemble benign queries; the benign-only anomaly branch independently recovers most of these on structural grounds alone, yet the two combined still leave roughly one in nine such queries undetected at the query level. The Session Correlator is evaluated on a held-out set of self-generated attack sessions, where it recovers such cases with zero observed false positives; we report this as preliminary evidence pending validation on independently-captured attacker traffic. We further evaluate a continual-learning loop offline using a real held-out attack class rather than a synthetic stand-in: a review queue and, at this experiment's traffic concentration, drift monitoring both surface the new class, a volume-threshold policy triggers retraining automatically, and a validation gate --- backed by an ablation confirming the gain is attributable to the class itself, not merely to more data --- promotes the resulting model through a shadow stage before it becomes champion. These results quantify the limits of query-level detection and motivate session-level correlation and disciplined retraining as low-cost mitigations.
+SQL Injection (SQLi) remains a damaging web application vulnerability. Signature-based Web Application Firewalls (WAFs) struggle with obfuscated payloads and previously unseen attacks. This paper presents a multi-branch artificial intelligence system for SQLi detection. We position the system at the database proxy to inspect the final SQL statement after application construction but before database execution. The architecture combines a supervised multi-class classifier (Branch 1) and a query-level anomaly detector (Branch 2). Branch 2 trains exclusively on benign traffic. We introduce the Session Correlator to catch blind and multi-step attacks. This mechanism reuses signals from both branches without additional training. The evaluation combines four public datasets spanning structurally distinct traffic; a leave-one-out ablation confirms each source is necessary, since dropping any one leaves its own held-out benign traffic with a 65-80 percent false-positive rate. Branch 1 (DistilBERT) reaches a 0.9699 F1-macro across six SQLi categories, including a real stacked-query class previously represented only by synthetic templates, chosen over a TF-IDF plus Logistic Regression baseline for markedly better accuracy on the two hardest classes at a latency that remains real-time-compatible. Branch 2 uses Local Outlier Factor (LOF) to attain a 0.915 Area Under the Curve (AUC), detecting 78.4 percent of anomalous queries at a 5.3 percent false-positive rate (FPR). A zero-day study shows supervised classification remains robust for distinctive attacks but misses Boolean-blind payloads at an 87 percent rate. The anomaly branch independently recovers most of these on structural grounds alone. The Session Correlator recovers residual cases on a held-out set of self-generated attack sessions with zero observed false positives. We report this as preliminary evidence pending validation on independently-captured attacker traffic. Finally, we evaluate an offline continual-learning loop using drift monitoring and a review queue to surface a new class and trigger automatic retraining; a validation gate promotes the resulting major-bump model directly, then correctly rejects a subsequent minor-bump candidate with higher F1 but higher FPR before it reaches shadow, evidence the gate weighs more than a single metric. These results quantify the limits of query-level detection and motivate session-level correlation and disciplined retraining as low-cost mitigations.
 \end{abstract}
 
 \begin{IEEEkeywords}
@@ -65,59 +69,107 @@ SQL injection, intrusion detection, anomaly detection, machine learning, web sec
 \end{IEEEkeywords}
 
 \section{Introduction}
-Web applications store increasingly sensitive data, making their back-end databases a persistent target. SQL Injection (SQLi), in which unsanitized user input is concatenated into a SQL statement, is among the oldest and most severe such threats: successful exploitation can disclose, alter, or destroy data and escalate privileges. Although Web Application Firewalls (WAFs) are widely deployed, rule-based defenses depend on predefined signatures; obfuscated payloads and zero-day techniques bypass them, while overly strict rules raise the false-positive rate (FPR) on legitimate traffic.
+Web applications store increasingly sensitive data, making their back-end databases a persistent target. SQL Injection (SQLi), in which unsanitized user input is concatenated into a SQL statement, remains one of the oldest and most severe such threats, ranked among the OWASP Top 10 web application risks \cite{b12}. Successful exploitation can disclose, alter, or destroy data and escalate privileges. Although Web Application Firewalls (WAFs) are widely deployed, rule-based defenses depend on predefined signatures; obfuscated payloads and zero-day techniques bypass them, while overly strict rules raise the false-positive rate (FPR) on legitimate traffic.
 
 Machine learning (ML) and deep learning have emerged as promising alternatives because they learn attack patterns from data rather than from hand-written rules \cite{b1,b2,b3}. However, most published AI-based SQLi detectors classify a \emph{single} query in isolation. This is a structural limitation: Boolean-blind and time-blind SQLi, and query-splitting attacks, distribute their malicious intent across many individually innocuous-looking queries within one session. Their signal only becomes visible when a sequence of related queries is analyzed together.
 
-This paper describes a multi-branch AI system that performs SQLi detection at the \emph{database proxy}, inspecting the fully-built SQL statement before it reaches the database server. The contributions of this paper are:
+This paper describes a multi-branch AI system that performs SQLi detection at the \emph{database proxy}, inspecting the fully-built SQL statement before it reaches the database server. Two query-level branches, a supervised multi-class classifier and a benign-only anomaly detector, feed a session-level correlation mechanism that catches blind and multi-step attacks neither branch sees alone. On a combined public dataset, the system reaches an F1-macro of 0.9699 for query-level classification and an AUC of 0.915 for anomaly detection, and a leave-one-out study shows the two branches together recover most attacks that either one misses individually. The contributions of this paper are:
 
 \begin{itemize}
-\item A multi-branch detector architecture placed at the database proxy, combining a supervised multi-class classifier (Branch~1) and a benign-only query-level anomaly detector (Branch~2) under a single decision policy, with a session-level correlation mechanism (the Session Correlator) for blind and multi-step SQLi.
-\item An empirical evaluation on a combined public dataset with a documented, measured account of the label-noise problems encountered during data construction, rather than assumed clean labels.
+\item A multi-branch detector architecture combining a supervised multi-class classifier (Branch~1) and a benign-only anomaly detector (Branch~2) under a single decision policy, with a session-level correlation mechanism (the Session Correlator) that reuses both branches' existing signals, with no additional training, to catch blind and multi-step SQLi; evaluated with a mandatory ablation over its two constituent checks.
 \item A leave-one-out \emph{zero-day} study that quantifies, per attack category, how far each branch generalizes to an attack type it never saw during training, and what this implies for the value of the anomaly branch.
-\item A session-level correlation mechanism that re-uses Branch~1 and Branch~2's existing signals with no additional model training, evaluated with a mandatory ablation (content check alone, behavior check alone, and combined) on held-out sessions.
-\item An offline evaluation of a continual-learning loop --- drift monitoring, a threshold-triggered review queue, and a validation gate with a shadow stage --- using a real held-out attack class, with an ablation isolating the retrain gain to the class itself rather than to added data volume.
+\item An offline evaluation of a continual-learning loop - drift monitoring, a threshold-triggered review queue, and a validation gate with a shadow stage - using a real held-out attack class, with an ablation isolating the retrain gain to the class itself rather than to added data volume.
 \end{itemize}
 
 The remainder of the paper reviews related work (Section~\ref{sec:related}), describes the proposed system (Section~\ref{sec:system}) and the experimental setup (Section~\ref{sec:setup}), reports results (Section~\ref{sec:results}), discusses limitations (Section~\ref{sec:discussion}), and concludes (Section~\ref{sec:conclusion}).
 
 \section{Related Work}\label{sec:related}
-Traditional SQLi defenses rely on input validation, parameterized queries, and rule-based WAFs such as ModSecurity with the OWASP Core Rule Set. These are fast and interpretable for known attacks but require constant manual updates and are evaded by payload obfuscation \cite{b1}.
+Traditional SQLi defenses rely on input validation, parameterized queries, and rule-based WAFs such as ModSecurity with the OWASP Core Rule Set \cite{b13}. These are fast, interpretable for known attacks, and need no training data; their weakness is the flip side of that same strength, since a fixed rule set cannot anticipate a payload it has never seen, so obfuscated or novel injections bypass it while overly strict rules raise false positives on legitimate traffic \cite{b1,b13}. This trade-off, not a failure specific to any one rule set, is what motivates learning-based detection below.
 
-ML-based detectors extract features from queries---bag-of-words, TF-IDF, or character/word $n$-grams---and train classifiers such as SVM, Random Forest, or gradient-boosted trees \cite{b2}. Deep models remove the need for handcrafted features: CNNs capture local token patterns \cite{b3}, while recurrent models (LSTM/GRU) and Transformer-based encoders such as DistilBERT model longer-range structure \cite{b5,b6,b7,b8}. For unseen attacks, anomaly and ensemble approaches have been proposed, including autoencoder/LSTM/GRU ensembles for zero-day web attacks \cite{b4}. Classic one-class methods---Isolation Forest \cite{b9} and One-Class SVM \cite{b10}---model the support of the benign distribution and flag deviations, and adversarial tools such as WAF-A-MoLE \cite{b11} expose the fragility of detectors under deliberate evasion.
+ML-based detectors extract features from queries, including bag-of-words, Term Frequency-Inverse Document Frequency (TF-IDF), or character/word $n$-grams, and train classifiers such as SVM, Random Forest, or gradient-boosted trees \cite{b2}. Deep models remove the need for handcrafted features. CNNs capture local token patterns \cite{b3}, while recurrent models (LSTM/GRU) and Transformer-based encoders such as DistilBERT model longer-range structure \cite{b5,b6,b7,b8}. For unseen attacks, anomaly and ensemble approaches have been proposed, including autoencoder/LSTM/GRU ensembles for zero-day web attacks \cite{b4}. Classic one-class methods, including Isolation Forest \cite{b9} and One-Class SVM \cite{b10}, model the support of the benign distribution and flag deviations, and adversarial tools such as WAF-A-MoLE \cite{b11} expose the fragility of detectors under deliberate evasion. Recent work continues to report competitive results from classical ML with careful feature selection \cite{b14,b15}, alongside the deep-learning direction this paper also pursues.
 
-Across this literature, detection is predominantly \emph{query-level}: a verdict is issued per query. Session-level modeling, which is required to expose blind SQLi spread over many requests, is comparatively underexplored. Our work targets that gap while grounding the design in a measured evaluation of the two query-level branches it builds on.
+Across this literature, detection is predominantly \emph{query-level}, issuing a verdict per query. Session-level modeling, which is required to expose blind SQLi spread over many requests, is comparatively underexplored. Our work targets that gap while grounding the design in a measured evaluation of the two query-level branches it builds on.
 
 \section{Proposed System}\label{sec:system}
 
 \subsection{System Placement: The Database Proxy}
-The detector is placed at ``Position~B'': it receives the SQL statement after the application has finished constructing it but before the statement reaches the database. Inspecting the final statement (rather than raw HTTP input) removes ambiguity introduced by application-layer transformations and yields a canonical view of what will actually execute. Fig.~\ref{fig:arch} shows the overall flow.
+The detector is placed at ``Position~B'': it receives the SQL statement after the application has finished constructing it but before the statement reaches the database. Inspecting the final statement (rather than raw HTTP input) removes ambiguity introduced by application-layer transformations and yields a canonical view of what will actually execute. Fig.~\ref{fig:arch} shows the overall flow: each query is canonicalized and scored by Branch~1 and Branch~2; the Session Correlator correlates both branches' signals over a whole session; the decision engine emits ALLOW/BLOCK/OVERKILL. Algorithm~\ref{alg:detect} summarizes the per-query decision.
 
 % TODO: replace this placeholder box with the real architecture diagram.
-\begin{figure}[t]
-\centering
-\fbox{\parbox[c][3.2cm][c]{0.9\columnwidth}{\centering \textbf{[Architecture diagram --- TODO]}\\[2pt]
-\footnotesize Query $\rightarrow$ Canonicalize $\rightarrow$ \{Branch~1, Branch~2\} $\rightarrow$ Session Correlator $\rightarrow$ Decision Engine $\rightarrow$ ALLOW / BLOCK / OVERKILL}}
-\caption{Multi-branch detector at the database proxy. Each query is canonicalized and scored by Branch~1 and Branch~2; the Session Correlator correlates both branches' signals over a whole session; the decision engine emits ALLOW/BLOCK/OVERKILL.}
+\begin{figure*}[t]
+\centerline{\includegraphics[width=0.9\textwidth]{architecturev2.0.drawio.png}}
+\caption{Multi-branch detector at the database proxy.}
 \label{fig:arch}
-\end{figure}
+\end{figure*}
+
+\begin{algorithm}[htbp]
+\footnotesize
+\caption{Multi-branch detection at Position B (per query)}
+\label{alg:detect}
+\begin{algorithmic}[1]
+\REQUIRE query $q$, models $B_1,B_2$, correlator $S$
+\STATE $q_c \leftarrow \text{canonicalize}(q)$
+\STATE $(p, y_1) \leftarrow B_1.\text{predict}(q_c)$ \COMMENT{$p = 1 - P(\text{normal})$}
+\STATE $s \leftarrow B_2.\text{score}(q_c)$
+\STATE $is\_sqli \leftarrow (p \geq 0.5)$; $is\_anom \leftarrow (s > \tau_q)$
+\STATE \textbf{if} $S.\text{is\_ready}$ \textbf{and} $S.\text{score\_session}([q])$ \textbf{then} \textbf{return} BLOCK
+\STATE \textbf{if} $is\_sqli$ \textbf{then} \textbf{return} BLOCK
+\STATE \textbf{if} $\neg is\_sqli \land is\_anom$ \textbf{then} \textbf{return} OVERKILL
+\STATE \textbf{return} ALLOW
+\end{algorithmic}
+\end{algorithm}
 
 \subsection{Canonicalization}
 To reduce syntactic evasion, each statement is normalized before feature extraction: common encodings (URL, hex, \texttt{CHAR()}/\texttt{ASCII()}) are decoded, SQL keyword casing is normalized, and comment sequences (\texttt{/* */}, \texttt{--}) are \emph{marked as a feature} rather than deleted. The goal is to collapse equivalent syntactic variants so that trivial obfuscation does not change the model's input.
 
-\subsection{Branch 1 --- Supervised Multi-Class Classification}
-Branch~1 assigns each query to one of five classes: \texttt{normal}, \texttt{union\_based}, \texttt{error\_based}, \texttt{boolean\_blind}, and \texttt{time\_blind}. We compared four candidate architectures (Section~\ref{sec:results}) and selected TF-IDF features with a Logistic Regression classifier for its accuracy/latency/size trade-off. Multi-class (rather than binary) output lets the decision engine and human administrators reason about \emph{which} attack technique was detected.
+\subsection{Branch 1 - Supervised Multi-Class Classification}
+Branch~1 assigns each query to one of six classes: \texttt{normal}, \texttt{union\_based}, \texttt{error\_based}, \texttt{boolean\_blind}, \texttt{time\_blind}, and \texttt{stacked}. We compare four candidate architectures (Section~\ref{sec:results}) and select a fine-tuned DistilBERT classifier for its accuracy on the two hardest classes at a latency that remains real-time-compatible. Multi-class (rather than binary) output lets the decision engine and human administrators reason about \emph{which} attack technique is detected.
 
-\subsection{Branch 2 --- Query-Level Anomaly Detection}
-Branch~2 is trained on benign traffic only, learning the ``normal region'' of query behavior and emitting a continuous anomaly score for each query. Twelve lightweight features are used: four whole-string statistics (query length, special-character ratio, SQL-keyword count, Shannon entropy), a quote-imbalance count, and six ``local-peak'' features (longest same-type token run, maximum token length, token count, longest special-character run, longest digit run, and parenthesis imbalance) that measure a local run or token rather than a whole-string ratio, so that long parameter strings from HTTP-derived sources do not dilute the signal. A single global One-Class SVM decision boundary initially misclassified genuinely benign traffic from one data source as anomalous simply for not resembling another source's benign traffic; a per-source ensemble (one model per data source, OR'd) was tried next and rejected for an unacceptably high false-positive rate ($\approx$41\%). LocalOutlierFactor was adopted instead: its local-density notion judges each query against its own neighborhood rather than a single global boundary, which better accommodates a benign pool spanning structurally distinct sources. Training without any attack labels makes the branch, in principle, sensitive to attack shapes never seen by Branch~1---the property we probe in the zero-day study. The score also serves as an input feature to the Session Correlator.
+\subsection{Branch 2 - Query-Level Anomaly Detection}
+Branch~2 is trained on benign traffic only, learning the ``normal region'' of query behavior and emitting a continuous anomaly score per query, from twelve lightweight features: four whole-string statistics (length, special-character ratio, SQL-keyword count, Shannon entropy), a quote-imbalance count, and six ``local-peak'' features (longest same-type token run, max token length, token count, longest special-character run, longest digit run, parenthesis imbalance) chosen so long parameter strings from HTTP-derived sources do not dilute the signal. A global One-Class SVM boundary misclassified benign traffic from one source as anomalous merely for not resembling another's; a per-source ensemble was tried next and rejected for an unacceptably high FPR ($\approx$41\%). LocalOutlierFactor was adopted instead: its local-density notion judges each query against its own neighborhood rather than one global boundary, better accommodating a benign pool spanning structurally distinct sources. Training without attack labels makes the branch, in principle, sensitive to attack shapes never seen by Branch~1, the property probed in the zero-day study; its score also feeds the Session Correlator.
 
-\subsection{Session Correlator (Branch 3) --- Session-Level Correlation}
-The Session Correlator targets two attack patterns whose signal no query-level branch can see, because each step looks individually unremarkable: (1) \textbf{blind SQLi} (boolean-blind and time-blind), where an attacker recovers data one bit at a time via a bisection search spread across many queries in a session, and (2) \textbf{query-splitting}, where a single malicious statement is fragmented across multiple consecutive requests. Our first design was a sequence model (a GRU) consuming, per step, Branch~1's classifier \emph{output} concatenated with Branch~2's anomaly score. A diagnostic investigation, focused on the blind-SQLi scenario, found this premise did not hold: two consecutive Boolean-blind bisection steps differing only in their comparison bound have TF-IDF cosine similarity 0.961 at the vectorizer stage but near-identical probabilities after Branch~1's classifier (a lossy projection trained to separate attack \emph{type}, not to preserve content) --- the very signal a session-level model needs is collapsed before it ever reaches the sequence model. Independently, the live decision engine already blocks most real Boolean/time-blind sessions per-query before enough steps accumulate for a sequence model to matter, and no principled fixed session length exists (real sessions range from a few to over a thousand steps). Section~\ref{sec:setup} describes how each of the two scenarios' session data is constructed, since only the blind-SQLi scenario's bisection structure is what exposed this failure. We therefore replaced the GRU with the \textbf{Session Correlator}: not a trained model, but two independent checks over an already-trained Branch~1 and Branch~2, OR'd together. The \emph{content check} concatenates a session's raw query text and re-scores it with Branch~1's existing classifier against a threshold calibrated separately for session-length text. The \emph{behavior check} aggregates Branch~2's per-query anomaly scores (mean, fraction above a calibrated threshold) across the session, run exactly as trained, per query, so no train/inference distribution shift is introduced. Both checks are calibrated on a disjoint TRAIN split and evaluated on a held-out TEST split (Section~\ref{sec:results}); each covers cases the other misses (content check: structurally-ordinary but lexically attack-like queries; behavior check: lexically-ambiguous but structurally anomalous ones), by design leaving one residual gap: an attacker evading both checks simultaneously, which no combination of the two existing branches' signals can close. Because the boolean-blind/time-blind session generator bisects toward a fixed target value (Section~\ref{sec:setup}), its output is deterministic per target; the target pool is therefore partitioned into disjoint train and test subsets \emph{before} session generation, so that no target used to calibrate the checks is ever reused at test time, and the held-out evaluation measures generalization to unseen targets rather than recall of seen ones.
+\subsection{Session Correlator (Branch 3) - Session-Level Correlation}
+The Session Correlator targets two attack patterns invisible to any query-level branch, since each step looks individually unremarkable: (1) blind SQLi (boolean-blind, time-blind), where an attacker recovers data one bit at a time via a bisection search across many queries, and (2) query-splitting, where a single malicious statement is fragmented across consecutive requests. Our first design, a Gated Recurrent Unit (GRU) consuming Branch~1's classifier output concatenated with Branch~2's anomaly score per step, fails a diagnostic check: two consecutive Boolean-blind bisection steps differing only in comparison bound have TF-IDF cosine similarity 0.961 at the vectorizer stage but near-identical probabilities after Branch~1's classifier, a lossy projection trained to separate attack \emph{type}, not preserve content - the signal a sequence model needs is collapsed before it arrives. We therefore replaced the GRU with the Session Correlator: not a trained model, but two independent checks over the already-trained Branch~1 and Branch~2, OR'd together. The \emph{content check} concatenates a session's raw query text and re-scores it with Branch~1's classifier against a threshold calibrated for session-length text. The \emph{behavior check} aggregates Branch~2's per-query anomaly scores (median, fraction above a calibrated threshold), run exactly as trained, so no train/inference shift is introduced. Both checks are calibrated on a disjoint TRAIN split and evaluated on a held-out TEST split (Section~\ref{sec:results}); each covers cases the other misses, leaving one residual gap by design: an attacker evading both checks simultaneously, which neither branch's signal can close. Because the blind-SQLi session generator bisects toward a fixed target value, its target pool is partitioned into disjoint train and test subsets \emph{before} session generation, so the held-out evaluation measures generalization to unseen targets rather than recall of seen ones.
+
+\vspace{4pt}
+Let $S=[q_1, \dots, q_n]$ be a session consisting of $n$ chronologically ordered queries from the same client. Denote\\[2pt]
+\mbox{$p(S)=1-P_{B_1}(\text{normal}\mid \Vert_{i} q_i)$} for the concatenated text and \mbox{$s_i=B_2.\text{score}(q_i)$} per query. With calibrated thresholds $\tau_c,\tau_q,\tau_{med},\tau_{frac}$, the checks are defined as:
+\begingroup\small
+\begin{equation}
+\begin{aligned}
+fires_c(S)&=\mathbb{I}[p(S)\geq \tau_c],\\
+frac(S)&=\frac{1}{n}\sum_{i=1}^{n}\mathbb{I}[s_i>\tau_q],\\
+fires_b(S)&=\mathbb{I}[m(S)\geq \tau_{med}] \lor \mathbb{I}[frac(S)\geq \tau_{frac}]
+\end{aligned}
+\end{equation}
+\endgroup
+where $m(S)=\mathrm{median}(s_1,\ldots,s_n)$ and the session verdict is\\[4pt]
+\mbox{$fires_c(S) \lor fires_b(S)$}. Implemented operationally as in Algorithm~\ref{alg:correlator}.
+
+\begin{algorithm}[htbp]
+\footnotesize
+\caption{SessionCorrelator: calibration and scoring (no gradient training)}
+\label{alg:correlator}
+\begin{algorithmic}[1]
+\STATE \textbf{Calibration (on TRAIN sessions only):}
+\STATE $\tau_q \leftarrow$ 95th percentile of
+\STATE \hspace*{1em}$\{B_2.\text{score}(q) \mid q \in \text{benign TRAIN}\}$
+\STATE $\tau_c \leftarrow \arg\max_{\tau} (\text{TPR}-\text{FPR})$ on
+\STATE \hspace*{1em}$\{\text{concat}(S_{\text{train}}) \text{ scored by } B_1\}$
+\STATE $\tau_{med}, \tau_{frac} \leftarrow$ sweep median and fraction-above-$\tau_q$
+\STATE \hspace*{1em}on TRAIN
+\STATE \textbf{Scoring a session $S=[q_1..q_n]$:}
+\STATE $a_c \leftarrow 1-P_{B_1}(\text{normal} \mid \text{concat}(q_1..q_n))$; $fires_c \leftarrow (a_c \geq \tau_c)$
+\STATE $scores \leftarrow [B_2.\text{score}(q_i) \; \forall i]$; $m \leftarrow \text{median}(scores)$; $frac \leftarrow |\{s>\tau_q\}|/n$
+\STATE $fires_b \leftarrow (m \geq \tau_{med}) \lor (frac \geq \tau_{frac})$
+\STATE \textbf{return} $fires_c \lor fires_b$ \COMMENT{content check OR behavior check}
+\end{algorithmic}
+\end{algorithm}
 
 \subsection{Decision Engine and Overkill Policy}
 A central decision engine combines the branch outputs into one verdict (Table~\ref{tab:decision}). Any query classified by Branch~1 as an attack class is \textsc{block}ed. A query classified \texttt{normal} but flagged anomalous by Branch~2 is held as an \emph{Overkill} case: it is not executed and is queued for administrator confirmation, defaulting to \emph{deny} on timeout. Confirmed decisions feed a continual-learning loop (proposed). This policy trades a small amount of friction on rare suspicious-but-benign queries for defense-in-depth against zero-days.
 
-\begin{table}[t]
+\begin{table}[htbp]
 \caption{Decision policy combining the two query-level branches.}
 \label{tab:decision}
 \begin{center}
@@ -134,104 +186,153 @@ attack class & any & \textsc{block} + log \\
 \end{table}
 
 \subsection{Continual-Learning Design}
-Confirmed Overkill/Block decisions accumulate into a labeled pool that a continual-learning loop is designed to consume, so that the deployed model can improve without full retraining from scratch. Two parts run in parallel. \emph{Drift monitoring} continuously tracks the Population Stability Index (PSI) of five feature and confidence signals against a fixed reference window, alerting at PSI~$\geq$~0.2; it does not gate anything and can fire independently of the mechanism below. On the other path, a \emph{review queue} holds low-confidence and anomalous queries for administrator confirmation, and a volume-threshold policy decides when retraining actually happens: once confirmed samples relevant to a pending retrain cross a fixed count, a retrain job triggers automatically rather than on a fixed schedule. A \emph{validation gate} then decides whether the resulting candidate may replace the deployed model, distinguishing a \emph{major} bump (the label space itself changes, e.g.\ a genuinely new attack category) from a \emph{minor} one (same labels, more confirmed volume): a major bump has no prior model to compare against on equal footing, so the candidate is instead checked against an absolute floor --- no regression on already-known classes, a minimum recall on the new one --- and promoted directly if it clears that floor; a minor bump is compared against the current champion's F1/FPR on the frozen benchmark and must match or exceed it. Only a promoted minor-bump candidate then enters \emph{shadow}: its predictions are logged against a further window of traffic while the incumbent continues to serve decisions, and it becomes champion only if its shadow-observed FPR and F1 stay within tolerance of the gate-measured values, otherwise the incumbent is kept. A major-bump candidate skips shadow: there is no incumbent serving that class for it to be compared against, and the floor check above already carries the weight shadow exists to provide. Every promotion retires the model it replaces --- Shadow~$\rightarrow$~Champion~$\rightarrow$~Retired is the full lifecycle, with a retired model kept, not deleted, for rollback and audit. Section~\ref{sec:results} evaluates this loop as a full offline experiment.
+Confirmed Overkill/Block decisions accumulate into a labeled pool that a continual-learning loop consumes, so the deployed model can improve without full retraining. \emph{Drift monitoring} tracks the Population Stability Index (PSI) of five feature and confidence signals against a fixed reference window, alerting at PSI~$\geq$~0.2, independently of the mechanism below. A \emph{review queue} holds low-confidence and anomalous queries for administrator confirmation; a volume-threshold policy triggers a retrain automatically once confirmed samples cross a fixed count, rather than on a fixed schedule. A \emph{validation gate} then decides whether the candidate may replace the deployed model, distinguishing a \emph{major} bump (the label space changes) from a \emph{minor} one (same labels, more volume): a major bump has no prior model to compare against, so it is checked instead against an absolute floor (no regression on known classes, a minimum recall on the new one) and promoted directly if it clears that floor; a minor bump must match or exceed the current champion's F1/FPR on the frozen benchmark. Only a promoted minor-bump candidate then enters \emph{shadow}, logging predictions against further traffic while the incumbent keeps serving, becoming champion only if shadow-observed FPR and F1 stay within tolerance of the gate-measured values. A major-bump candidate skips shadow, since no incumbent exists for that class and the floor check already carries that weight. Algorithm~\ref{alg:cl} summarizes the loop. Every promotion retires the model it replaces (Shadow~$\rightarrow$~Champion~$\rightarrow$~Retired), with retired models kept for rollback and audit. Section~\ref{sec:results} evaluates this loop as a full offline experiment.
+
+
+\begin{algorithm}[htbp]
+\footnotesize
+\caption{Continual-learning loop (offline, Branch 1)}
+\label{alg:cl}
+\begin{algorithmic}[1]
+\WHILE{streaming}
+\STATE monitor PSI on 5 signals vs. reference; alert if $\text{PSI} \geq 0.2$
+\STATE \hspace*{1em}for 2 sustained windows \COMMENT{drift, does not gate}
+\STATE enqueue low-confidence and anomalous queries for admin review
+\IF{$|\text{confirmed}| \geq 500$}
+\STATE assemble $D' \leftarrow D_{\text{train}} \cup \text{confirmed}$
+\STATE \hspace*{1em}(dedup by \texttt{query\_canonical})
+\STATE seal data version $v=\text{infer\_bump}(v_{\text{old}}, v_{\text{new}})$
+\IF{$v$ is major}
+\STATE check floor: no known-class recall drop $>0.02$
+\STATE \hspace*{1em}and new-class recall $\geq 0.80$; promote directly if pass
+\ELSE
+\STATE gate: $F1_{cand} \geq F1_{champ} \land \text{FPR}_{cand} \leq \text{FPR}_{champ}$
+\STATE \hspace*{1em}\COMMENT{shadow 2000 queries if pass}
+\ENDIF
+\ENDIF
+\ENDWHILE
+\end{algorithmic}
+\end{algorithm}
 
 \section{Dataset and Experimental Setup}\label{sec:setup}
 
 \subsection{Data Sources}
-Four public datasets were combined: \emph{SQLiV3} (D1, a Kaggle SQLi query collection; license provenance unclear, see Section~\ref{sec:discussion}); \emph{CSIC 2010} (D2, HTTP traffic, used both for benign enrichment and, held out, as a labeled anomalous evaluation set); \emph{payload-box} (D3, MIT-licensed SQLi payload strings); and \emph{SR-BH 2020} (D4, a CC0 honeypot dataset of 527{,}813 rows, 250{,}285 originally tagged \texttt{SQL Injection}). Because D4's labels are coarse and multi-attack (CAPEC-tagged), rows were re-tagged into SQLi sub-types by rule-based matching rather than trusted as-is.
+Four public datasets are combined: \emph{SQLiV3} (D1, a Kaggle SQLi query collection; license provenance unclear); \emph{CSIC 2010} (D2, HTTP traffic, used for benign enrichment and, held out, as a labeled anomalous set); \emph{Superviz25} (D3, a $\approx$3.69M-row Kaggle dataset of real \texttt{sqlmap} runs against a seeded relational schema; license also unverified); and \emph{SR-BH 2020} (D4, a CC0 honeypot dataset of 527{,}813 rows, 250{,}285 originally tagged \texttt{SQL Injection}) (Section~\ref{sec:discussion}). D4's labels are coarse and multi-attack (Common Attack Pattern Enumeration and Classification (CAPEC)-tagged), so rows are re-tagged into SQLi sub-types by rule-based matching; D3's own \texttt{attack\_technique} column is instead trusted directly, since each row is generated for a known technique against a real database, so its ground truth comes from construction, and a majority are also obfuscated by a real WAF-evasion transform (character-case randomization, whitespace-to-comment substitution) that can break a hand-written regex tagger. Recent SQLi detection papers typically train on tens of thousands to a few hundred thousand rows scraped from Kaggle collections or CSIC 2010 alone \cite{b14,b15}; D3 alone, at $\approx$3.69M rows, is well over an order of magnitude larger, and CSIC 2010, though dated to 2010, remains in active use in 2025 work \cite{b15}, which is why it is retained here alongside newer sources rather than replaced outright.
+
+These four sources are chosen to cover structurally distinct traffic, a claim checked rather than assumed. A leave-one-out ablation retrains Branch~2's benign pool with each source held out in turn, evaluating FPR against every source's own held-out traffic, including the excluded one (Table~\ref{tab:ablation}). Excluding any single source leaves that source's own FPR at 65--80\%, while the other three stay in the 2--7\% range the full model achieves overall, direct evidence that no source is redundant. An earlier pass of this same ablation, which measured FPR only against each reduced combination's own held-out set, had suggested D1 and D2 could be dropped at negligible cost; that conclusion did not survive testing against the excluded sources' own traffic, an artifact of the narrower test rather than a real property of the data, and was not used to guide the final data composition.
 
 \subsection{Branch 1 Dataset}
-Sub-type re-labeling of D4 supplied most per-class volume. The \texttt{stacked} class had \emph{zero} naturally-occurring samples across D1/D3/D4; 363 synthetic samples were templated to represent it, but all four candidate models achieved 100\% recall on them---evidence of trivial separability rather than a solved sub-problem---so \texttt{stacked} was excluded from the reported training set entirely (the continual-learning experiment in Section~\ref{sec:results} instead holds out a real class, \texttt{union\_based}, from its own separate training pool --- see Section~\ref{sec:results} for why). Content-based signature filtering (independent of source labels) removed mislabeled attacks from the \texttt{normal} pool over three iterative rounds. Before splitting, \texttt{query\_canonical} text is deduplicated, so no query text appears verbatim in both the train and test partitions; this also lets class balancing draw from a larger pool of distinct rows. The final dataset used for training is 67{,}796 rows over five classes, split 54{,}236 train / 13{,}560 test (stratified, seed~$=42$); the three largest classes were undersampled to $\approx$15{,}000 rows each. F1-macro is the headline metric because accuracy would be distorted by the underlying class imbalance.
+D3 supplies real \texttt{stacked}-query examples in addition to real examples of the other four attack sub-types (the continual-learning experiment in Section~\ref{sec:results} separately holds out a real class, \texttt{union\_based}, from its own training pool, unrelated to \texttt{stacked}).
+
+Each D3 attack row carries an \texttt{attack\_id} identifying its multi-step \texttt{sqlmap} campaign; rows from the same campaign are near-duplicates, differing mainly in a narrowing bisection bound, so a plain per-row split would leak near-duplicate content across train/test. D3's attack rows are therefore split by whole campaign, every row sharing an \texttt{attack\_id} landing on the same side, while D1/D2/D4 keep the original per-row stratified split. D3's campaigns further split into a \texttt{recon} stage (probing and setup queries, lexically close to legitimate traffic) and an \texttt{exploit} stage (queries carrying the payload); Branch~1 detects \texttt{exploit}-stage rows at 100.0\% but \texttt{recon}-stage rows at only 94.0\%. Because campaign-level splitting means a class's test set can draw disproportionately from a handful of \texttt{recon}-heavy campaigns, per-class recall for the classes D3 dominates (\texttt{stacked}, \texttt{time\_blind}) is sensitive to which campaigns land in the held-out split (Section~\ref{sec:results}).
+
+Content-based signature filtering removes mislabeled attacks from the \texttt{normal} pool over three iterative rounds, and \texttt{query\_canonical} text is deduplicated before splitting, so no query text appears verbatim in both partitions. The final dataset is 90{,}000 rows over six classes (each undersampled to 15{,}000, seed~$=42$), split 71{,}705 train and 18{,}295 test. F1-macro is the headline metric since accuracy would be distorted by class imbalance.
 
 \subsection{Branch 2 Dataset}
-Branch~2 pools clean benign rows from D1, D2, and D4, using a broader content filter that rejects \emph{any} attack-like traffic (not only SQLi). D2 and D4 are captured as full HTTP requests (scheme, host, path, query/body), not raw SQL; since the system consumes only the query/parameter text an application would build (Section~\ref{sec:system}), each such row is first stripped to its query-string/body parameters, and rows with nothing left after stripping (bare static-asset requests) are dropped. After filtering, de-duplication, and stripping, the benign pool contains 36{,}502 rows (28{,}573 train / 7{,}929 test). A held-out evaluation set of 270{,}002 confirmed-SQLi rows spanning D1, D2, and D4 (D4 via its own CAPEC ``SQL Injection'' column) is used only for evaluation, not training.
+Branch~2 pools clean benign rows from all four sources, using a broader content filter that rejects any attack-like traffic. D2 and D4 are captured as full HTTP requests, not raw SQL; since the system consumes only the query/parameter text an application would build (Section~\ref{sec:system}), each such row is stripped to its query-string/body parameters, dropping rows with nothing left after stripping. D3 is already query-shaped, but its benign rows are legitimate multi-table and analytical SQL (joins, sub-queries, geographic functions) against a real schema, structurally unlike the simple parameter lookups the other three sources provide, and, before adding D3's benign traffic, the source of a 69--95\% FPR on this kind of legitimate-but-unfamiliar traffic in a zero-shot check run to decide whether adding D3 was warranted. After filtering, de-duplication, and stripping, the benign pool contains 72{,}162 rows (57{,}321 train and 14{,}841 test); a held-out set of 370{,}002 confirmed-SQLi rows spanning all four sources is used only for evaluation.
 
 \subsection{Session Correlator Dataset}
-No public dataset provides session-level SQLi labels, so sessions for the two target scenarios (Section~\ref{sec:system}) are constructed differently, reflecting how each attack actually unfolds. \textbf{Blind-SQLi sessions} (boolean-blind, time-blind) run the same bisection algorithm real SQLi tools use --- length probing followed by per-character ASCII probing, $\sim$7 requests per character --- against a real, self-hosted SQLite database, so every probe's true/false outcome is a genuine row-count difference or a genuine measured \texttt{SLEEP()} delay, not a templated guess; this is the scenario whose bisection structure exposed the GRU's failure (Section~\ref{sec:system}). \textbf{Query-splitting sessions} instead use heuristic token-fragmentation of a single real attack payload across consecutive requests, since no bisection-style shared search exists for this attack type. Together this yields 1{,}400 sessions across four classes (benign, boolean-blind, time-blind, query-splitting), split 1{,}120 train / 280 test. The 100-user synthetic target pool used for boolean-blind/time-blind generation is itself partitioned into disjoint train/test target subsets before sessions are generated (Section~\ref{sec:system}). Collecting an independent dataset from real \texttt{sqlmap} traffic against a deliberately vulnerable application is future work (Section~\ref{sec:conclusion}); Section~\ref{sec:discussion} states plainly what this means for how the Session Correlator results below should be read.
+No public dataset provides session-level SQLi labels, so sessions for the two target scenarios are constructed differently, reflecting how each attack unfolds. Blind-SQLi sessions run the same bisection algorithm real SQLi tools use, length probing followed by per-character ASCII probing ($\sim$7 requests per character), against a real, self-hosted SQLite database, so every probe's outcome is a genuine row-count difference or measured \texttt{SLEEP()} delay, not a templated guess; this is the scenario whose bisection structure exposed the GRU's failure. Query-splitting sessions instead use heuristic token-fragmentation of a single real attack payload across consecutive requests, since no bisection-style search exists for this attack type. Together this yields 1{,}400 sessions across four classes (benign, boolean-blind, time-blind, query-splitting), split 1{,}120 training and 280 test, with the 100-user synthetic target pool itself partitioned into disjoint train/test subsets before sessions are generated. Collecting an independent dataset from real \texttt{sqlmap} traffic against a deliberately vulnerable application is future work (Section~\ref{sec:conclusion}).
 
 \subsection{Evaluation Protocol}
-Metric choice follows from each branch's task rather than a single convention across all three. Branch~1 is a multi-class classifier over an imbalanced label set, so F1-macro (not accuracy, which the majority classes would inflate) is the headline metric, alongside per-class precision/recall/F1, a confusion matrix, and per-class ROC to show where errors concentrate. Branch~2 is a one-class anomaly detector with no fixed decision boundary a priori, so we report FPR and detection rate at a specific operating point (the deployment-relevant trade-off), AUC (a threshold-independent summary of ranking quality), and a 21-point threshold sweep to make the trade-off curve, not just one point on it, inspectable. The Session Correlator issues a binary per-class flag from two independently OR'd checks, so FPR on benign sessions and detection rate per attack class are reported separately for each check alone and combined --- an ablation, not just a combined number, so neither check's contribution is left unmeasured. All experiments are deterministic (seed~$=42$); latency was measured on a single RTX~3050 (6~GB) workstation.
+Metric choice follows from each branch's task rather than a single convention across all three. Branch~1 is a multi-class classifier over an imbalanced label set, so F1-macro (not accuracy, which the majority classes would inflate) is the headline metric, alongside per-class precision/recall/F1, a confusion matrix, and per-class ROC to show where errors concentrate. Branch~2 is a one-class anomaly detector with no fixed decision boundary a priori, so we report FPR and detection rate at a specific operating point (the deployment-relevant trade-off), AUC (a threshold-independent summary of ranking quality), and a 21-point threshold sweep to make the trade-off curve, not just one point on it, inspectable. The Session Correlator issues a binary per-class flag from two independently OR'd checks, so FPR on benign sessions and detection rate per attack class are reported separately for each check alone and combined - an ablation, not just a combined number, so neither check's contribution is left unmeasured. All experiments are deterministic (seed~$=42$); latency was measured on a single RTX~3050 (6~GB) workstation.
 
 \section{Experimental Results}\label{sec:results}
 
-\subsection{Branch 1 --- Supervised Multi-Class}
-Table~\ref{tab:b1arch} compares the four candidate architectures. LightGBM reaches the highest F1-macro (0.998) but at $\approx$115$\times$ the per-query latency (60.4~ms, unworkable for a real-time proxy); DistilBERT (0.996) needs a GPU, a 256~MB artifact, and $\approx$25~minutes to train, for no deployment benefit. The CNN tokenizer (0.991) is essentially tied with the chosen Logistic Regression (0.991) while being faster and an order of magnitude smaller, but is kept as a fallback rather than the primary model since it still requires a custom tokenizer and a deep-learning framework dependency that Logistic Regression does not. TF-IDF~+~Logistic Regression was selected for its negligible F1 cost relative to the two higher-scoring models, and the simplicity of a pure linear model with no extra deep-learning framework dependency.
+\subsection{Branch 1 - Supervised Multi-Class}
+Table~\ref{tab:b1arch} compares four candidate architectures on the six-class dataset (Section~\ref{sec:setup}); Logistic Regression and LightGBM use a TF-IDF representation retuned by grid search for this evasion-heavy data (character n-grams (1,2), $C=10$, vocabulary shrunk from 50{,}000 to 5{,}037 terms), while DistilBERT and the CNN use their own tokenizers. DistilBERT reaches the highest F1-macro (0.965), with LightGBM close behind (0.962) at a similar latency (3.0~ms vs.\ 2.8~ms): the smaller TF-IDF vocabulary cut LightGBM's latency by $\approx$20$\times$, removing the reason it was earlier ruled out for a real-time proxy. The CNN tokenizer (0.749) is the weakest candidate, its small (37K-parameter) capacity not holding up against D3's harder, evasion-heavy attack distribution. Logistic Regression (0.898) is cheapest by two orders of magnitude (0.4~MB, 0.5~ms) but trails DistilBERT by 6.7 points, concentrated in the two classes discussed below; Table~\ref{tab:b1perclass} reports the deployed DistilBERT model's own held-out result (F1-macro~=~0.9699), independently retrained with the same data and configuration.
 
 \begin{table}[t]
-\caption{Branch~1 architecture comparison (5-class data, post-deduplication).}
+\caption{Branch~1 architecture comparison (tuned TF-IDF configuration).}
 \label{tab:b1arch}
 \begin{center}
 \begin{tabular}{@{}lcccc@{}}
 \toprule
 \textbf{Model} & \textbf{F1-macro} & \textbf{p50 lat.} & \textbf{Size} & \textbf{Train} \\
 \midrule
-TF-IDF + LogReg (chosen) & 0.991 & 0.5~ms & 3.7~MB & 13~s \\
-TF-IDF + LightGBM & 0.998 & 60.4~ms & 5.9~MB & 195~s \\
-DistilBERT & 0.996 & 2.8~ms$^{\ast}$ & 256~MB & 1{,}499~s \\
-CNN + SQL-tokenizer & 0.991 & 0.3~ms & 118~KB & 10~s \\
+TF-IDF + LogReg & 0.898 & 0.5~ms & 0.4~MB & 32~s \\
+TF-IDF + LightGBM & 0.962 & 3.0~ms & 4.5~MB & 110~s \\
+DistilBERT (chosen) & 0.965 & 2.8~ms$^{\ast}$ & 256~MB & 1{,}970~s \\
+CNN + SQL-tokenizer & 0.749 & 0.3~ms & 152~KB & 13~s \\
 \bottomrule
 \multicolumn{5}{l}{\footnotesize $^{\ast}$GPU.}
 \end{tabular}
 \end{center}
 \end{table}
 
-After excluding \texttt{stacked}, deduplicating query text before the train/test split, and retraining on the five real classes, the chosen model reaches \textbf{F1-macro~=~0.9907}. Table~\ref{tab:b1perclass} gives the per-class breakdown; the only material confusion is between \texttt{normal} and \texttt{boolean\_blind}, consistent with the $\approx$13\% label noise measured in the \texttt{boolean\_blind} catch-all class (Section~\ref{sec:discussion}). \texttt{time\_blind} reaches an exact 1.000 on all three metrics --- checked directly rather than accepted at face value, given this project's own history of misleadingly-perfect scores: every one of its 15{,}000 rows contains one of a small, deterministic keyword family (\texttt{SLEEP(}, \texttt{BENCHMARK(}, \texttt{WAITFOR DELAY}, \texttt{PG\_SLEEP(}) that the labeling rule itself requires, and which never occurs in any other class's rows; the 15{,}000 texts are also all distinct, ruling out duplicate memorization. Perfect separation here reflects a near-unique lexical signature the tagging rule guarantees, not overfitting --- though it also means this number does not test generalization to time-based techniques that avoid this specific keyword family. Per-class ROC curves are shown in Fig.~\ref{fig:b1roc}. This F1 is measured on a clean test split, not on adversarially perturbed input, and should be read accordingly.
+DistilBERT was chosen over the cheaper Logistic Regression because that 6.7-point gap concentrates in \texttt{stacked} and \texttt{time\_blind}: 0.700/0.812 F1 for Logistic Regression against 0.932/0.973 for DistilBERT. DistilBERT's 2.8~ms latency remains real-time-compatible, so the accuracy gain is not traded against deployment feasibility; the costs accepted instead are a GPU dependency, a 256~MB artifact (640 times Logistic Regression's), and a roughly 33-minute training time.
+
+Table~\ref{tab:b1perclass} gives the per-class breakdown. \texttt{union\_based}, \texttt{error\_based}, and \texttt{boolean\_blind} are robust (F1~$\geq$~0.99); \texttt{normal} (0.930) and \texttt{time\_blind} (0.973) trail slightly, and \texttt{stacked} (0.932) remains hardest, though markedly less so than under Logistic Regression: its test split draws from only 8 of D3's 45 \texttt{stacked} campaigns, a consequence of the campaign-level split required to avoid near-duplicate leakage, and those 8 are recon-heavy, so a small, unlucky campaign sample concentrates the residual error even for a higher-capacity model. Per-class ROC, which measures ranking quality independent of the 0.5 decision threshold, stays high across all six classes (AUC~$\geq$~0.964) even where F1 is lower, so the residual error is specifically between attack sub-types, not between attack and benign. This F1 is measured on a clean test split, not on adversarially perturbed input.
 
 \begin{table}[t]
-\caption{Branch~1 per-class results (test set, $n=13{,}560$).}
+\caption{Branch~1 per-class test results ($n=18{,}295$).}
 \label{tab:b1perclass}
 \begin{center}
 \begin{tabular}{@{}lcccc@{}}
 \toprule
 \textbf{Class} & \textbf{Prec.} & \textbf{Recall} & \textbf{F1} & \textbf{Support} \\
 \midrule
-\texttt{normal}        & 0.986 & 0.968 & 0.977 & 3{,}000 \\
-\texttt{union\_based}  & 0.999 & 0.994 & 0.996 & 3{,}000 \\
-\texttt{error\_based}  & 0.999 & 1.000 & 0.999 & 1{,}560 \\
-\texttt{boolean\_blind}& 0.969 & 0.992 & 0.981 & 3{,}000 \\
-\texttt{time\_blind}   & 1.000 & 1.000 & 1.000 & 3{,}000 \\
+\texttt{normal}        & 0.890 & 0.973 & 0.930 & 3{,}000 \\
+\texttt{union\_based}  & 1.000 & 0.994 & 0.997 & 3{,}027 \\
+\texttt{error\_based}  & 0.999 & 0.989 & 0.994 & 3{,}033 \\
+\texttt{boolean\_blind}& 0.990 & 0.997 & 0.994 & 3{,}016 \\
+\texttt{time\_blind}   & 0.984 & 0.962 & 0.973 & 3{,}007 \\
+\texttt{stacked}       & 0.959 & 0.905 & 0.932 & 3{,}212 \\
 \bottomrule
 \end{tabular}
 \end{center}
 \end{table}
 
-\begin{figure}[t]
-\centerline{\includegraphics[width=\columnwidth]{branch1_roc_per_class.png}}
-\caption{Branch~1 per-class ROC curves.}
-\label{fig:b1roc}
-\end{figure}
+\subsection{Branch 2 - Query-Level Anomaly Detection}
+Table~\ref{tab:b2} compares three anomaly algorithms on the same benign/anomalous pools (Section~\ref{sec:setup}). One-Class SVM under-performs badly now that the benign pool spans four structurally distinct sources; Isolation Forest improves substantially but still leaves most attacks undetected; LocalOutlierFactor was selected for its higher AUC and detection rate, since its local-density notion accommodates a four-source benign pool without one source's traffic looking anomalous merely for not resembling another's. At its chosen operating point (contamination~=~0.05), it produces 782 false positives on 14{,}841 benign queries (FPR~=~5.3\%) and flags 78.4\% of the 370{,}002 held-out anomalous queries, with average precision~=~0.994. Fig.~\ref{fig:b2} shows the resulting 21-point threshold sweep: the false-positive rate falls sharply over the first few thresholds, while the detection rate declines more gradually across the same range, so the steep initial region trades a small detection loss for a large FPR reduction. Past roughly the tenth threshold, further FPR reduction flattens while detection keeps falling, making that region unattractive; the chosen operating point (contamination~=~0.05) sits inside the steep initial region, where the FPR/detection trade-off is most favorable.
 
-\subsection{Branch 2 --- Query-Level Anomaly Detection}
-Table~\ref{tab:b2} compares three anomaly algorithms on the same benign/anomalous pools (Section~\ref{sec:setup}). One-Class SVM under-performs on this 12-feature representation; Isolation Forest is a substantial improvement but still leaves most attacks undetected at its operating point; LocalOutlierFactor was selected for its higher AUC and detection rate. At its chosen operating point (contamination~=~0.05), it produces 427 false positives on 7{,}929 benign queries (FPR~=~5.4\%) and flags 81.4\% of the 270{,}002 held-out anomalous queries, with average precision~=~0.996. A 21-point threshold sweep (Fig.~\ref{fig:b2}) provides the basis for choosing a deployment operating point.
-
-\begin{table}[t]
-\caption{Branch~2 algorithm comparison (same benign/anomalous pools).}
+\begin{table}[htbp]
+\caption{Branch~2 algorithm comparison.}
 \label{tab:b2}
 \begin{center}
 \begin{tabular}{@{}lcccc@{}}
 \toprule
 \textbf{Algorithm} & \textbf{Contam.} & \textbf{FPR} & \textbf{Detection} & \textbf{AUC} \\
 \midrule
-One-Class SVM & 0.001 & 0.23\% & 7.83\% & 0.422 \\
-Isolation Forest & 0.01 & 1.90\% & 37.60\% & 0.860 \\
-LocalOutlierFactor (chosen) & 0.05 & 5.39\% & 81.37\% & 0.929 \\
+One-Class SVM & 0.001 & 0.20\% & 11.08\% & 0.579 \\
+Isolation Forest & 0.01 & 1.22\% & 47.23\% & 0.903 \\
+LocalOutlierFactor (chosen) & 0.05 & 5.27\% & 78.42\% & 0.915 \\
+\bottomrule
+\multicolumn{5}{l}{\footnotesize DR = detection rate; FPR = false-positive rate.}
+\end{tabular}
+\end{center}
+\end{table}
+\vspace{-6pt}
+\begin{figure}[htbp]
+\centerline{\includegraphics[width=0.9\columnwidth]{branch2_threshold_tradeoff.png}}
+\caption{Branch~2 threshold trade-off: false-positive rate vs.\ detection rate across 21 operating points.}
+\label{fig:b2}
+\end{figure}
+
+\begin{table}[t]
+\caption{Benign-source leave-one-out ablation (bold: FPR on the excluded source).}
+\label{tab:ablation}
+\begin{center}
+\begin{tabular}{@{}lcccc@{}}
+\toprule
+\textbf{Trained on} & \textbf{D1 FPR} & \textbf{D2 FPR} & \textbf{D3 FPR} & \textbf{D4 FPR} \\
+\midrule
+All four            & 4.8\%          & 2.8\%          & 7.2\%          & 2.8\%          \\
+Minus D1            & \textbf{79.0\%} & 2.9\%          & 7.1\%          & 2.7\%          \\
+Minus D2            & 4.5\%          & \textbf{64.8\%} & 6.8\%          & 2.8\%          \\
+Minus D3            & 6.3\%          & 3.8\%          & \textbf{72.3\%} & 4.4\%          \\
+Minus D4            & 4.0\%          & 2.0\%          & 6.3\%          & \textbf{79.8\%} \\
 \bottomrule
 \end{tabular}
 \end{center}
 \end{table}
 
-\begin{figure}[t]
-\centerline{\includegraphics[width=\columnwidth]{branch2_threshold_tradeoff.png}}
-\caption{Branch~2 threshold trade-off: false-positive rate vs.\ detection rate across 21 operating points.}
-\label{fig:b2}
-\end{figure}
-
+\FloatBarrier
 \subsection{Zero-Day Generalization Study}
-To probe robustness to \emph{unseen} attack categories, we run a leave-one-out protocol: for each SQLi class, that class is removed and Branch~1 is retrained on the remaining four; Branch~2 is not retrained per fold, since it is trained only on benign traffic and never sees attack labels to begin with, so the same fixed anomaly detector is evaluated against every held-out class's queries. We report the Branch~1 \emph{miss rate} (fraction predicted \texttt{normal}, i.e.\ bypassing the supervised branch), the Branch~2 detection rate on the same held-out queries, and their \emph{combined coverage} (fraction caught by at least one branch) in Table~\ref{tab:zeroday}.
+To probe robustness to \emph{unseen} attack categories, we run a leave-one-out protocol over five labels (\texttt{normal}, \texttt{union\_based}, \texttt{error\_based}, \texttt{boolean\_blind}, \texttt{time\_blind}): for each attack class, that class is removed and Branch~1 is retrained on the remaining four labels; Branch~2, benign-only and never exposed to attack labels, is not retrained per fold. Table~\ref{tab:zeroday} reports the Branch~1 \emph{miss rate} (fraction predicted \texttt{normal}), the Branch~2 detection rate on the same held-out queries, and their \emph{combined coverage} (caught by at least one branch).
 
 \begin{table}[t]
-\caption{Leave-one-out zero-day results. B1 miss = fraction of the unseen class predicted \texttt{normal} (bypass); B2 detection = fraction independently flagged anomalous; Combined = fraction caught by either branch.}
+\caption{Leave-one-out zero-day results (per unseen class).}
 \label{tab:zeroday}
 \begin{center}
 \begin{tabular}{@{}lccc@{}}
@@ -247,86 +348,70 @@ To probe robustness to \emph{unseen} attack categories, we run a leave-one-out p
 \end{center}
 \end{table}
 
-Two findings stand out. First, supervised classification generalizes well to unseen classes that are \emph{structurally distinctive}: when \texttt{union\_based}, \texttt{error\_based}, or \texttt{time\_blind} is withheld, Branch~1 still flags almost all of its queries as \emph{some} attack (miss rate $\leq$2.6\%), because their tokens differ sharply from benign traffic --- and, independently, the anomaly branch also catches nearly all of them (98.3--99.1\%), since these payloads' distinctive structure registers as anomalous regardless of whether Branch~1 was trained to recognize the specific class. Second, and critically, \texttt{boolean\_blind} is still the failure mode, but not as starkly as a single branch's numbers suggest: with that class unseen, Branch~1 misclassifies \textbf{86.5\%} of its queries as \texttt{normal}, because Boolean-blind payloads are lexically close to legitimate queries --- yet the anomaly branch independently catches \textbf{87.8\%} of the same queries on structural grounds alone, and the two combined still leave \textbf{11.2\%} uncaught, the lowest combined coverage of any class by a wide margin (88.8\% vs.\ $\geq$99.8\% elsewhere). This residual gap, not an absence of anomaly coverage, is the empirical motivation for session-level correlation: query-level detection alone still misses roughly one in nine unseen boolean-blind queries, and closing that gap is precisely what accumulating signal across a session is positioned to do. At the session level, this same zero-day condition closes entirely: the Session Correlator's behavior check, which depends only on Branch~2 and is therefore unaffected by Branch~1's blindness, independently flags all 70 held-out \texttt{boolean\_blind} sessions (Section~\ref{sec:results}) --- though this is a session-level, not query-level, result on a different (self-generated) evaluation set, and should be read as complementary evidence rather than a directly comparable number.
+Two findings stand out. First, supervised classification generalizes well to structurally distinctive unseen classes: withholding \texttt{union\_based}, \texttt{error\_based}, or \texttt{time\_blind} still leaves Branch~1 flagging almost all of its queries as \emph{some} attack (miss rate $\leq$2.6\%), and the anomaly branch independently catches nearly all of them too (98.3--99.1\%), since their distinctive structure registers as anomalous regardless of what Branch~1 was trained on. Second, \texttt{boolean\_blind} remains the failure mode, though not as starkly as either branch alone suggests: Branch~1 misclassifies 86.5\% of its queries as \texttt{normal} (Boolean-blind payloads are lexically close to legitimate queries), yet the anomaly branch independently catches 87.8\% on structural grounds alone, and the two combined still leave 11.2\% uncaught, the lowest combined coverage of any class by a wide margin. This residual gap is the empirical motivation for session-level correlation: query-level detection alone still misses roughly one in nine unseen boolean-blind queries. At the session level this same condition closes entirely: the Session Correlator's behavior check, depending only on Branch~2 and thus unaffected by Branch~1's blindness, independently flags all 70 held-out \texttt{boolean\_blind} sessions (Section~\ref{sec:results}), though on a different, self-generated evaluation set, so this is complementary evidence rather than a directly comparable number.
 
 \subsection{Session Correlator}
-Table~\ref{tab:b3} reports the mandatory ablation on the 280-session held-out self-hosted test set (disjoint train/test target pools, Section~\ref{sec:system}): each row runs \emph{only} the named mechanism (the other disabled) to isolate its individual contribution, except the last, which is how the deployed system actually runs the two OR'd together. Content check (session text) and Combined (OR) reach zero observed false positives and perfect detection on all three attack classes; Behavior check (B2 scores), run alone, does not fully catch \texttt{query\_splitting} (0.457) --- a genuine, distinct blind spot the content check closes, which is why the two are OR'd rather than either being used alone.
+Table~\ref{tab:b3} reports the mandatory ablation on the 280-session held-out self-hosted test set (disjoint train/test target pools, Section~\ref{sec:system}), recalibrated against the deployed DistilBERT Branch~1: each row runs \emph{only} the named mechanism, except the last, which is how the deployed system runs the two OR'd together. The behavior check's session-level aggregate is each session's \emph{median}, not mean, per-query Branch~2 score: LocalOutlierFactor's score is mathematically unbounded, and a handful of structurally degenerate short queries (from \texttt{query\_splitting} fragmentation) score many orders of magnitude above the rest, which a raw mean let dominate a session's aggregate, pushing benign-session FPR from 0\% to 37\% before this fix (Section~\ref{sec:discussion}).
+
+Content check and Combined (OR) reach zero observed false positives and near-perfect detection on all three attack classes (\texttt{query\_splitting}: 67/70); Behavior check alone does not fully catch \texttt{query\_splitting} (0.386) and, with DistilBERT in place, no longer independently catches \texttt{time\_blind} (0.0, versus 1.0 under the original TF-IDF calibration), both blind spots the content check closes, which is why the checks are OR'd rather than used alone.
 
 \begin{table}[t]
-\caption{Session Correlator ablation on held-out self-hosted sessions ($n=280$; 70 benign, 70 per attack class). Content check = concatenated session text re-scored by Branch~1; behavior check = aggregated Branch~2 anomaly scores. DR = detection rate.}
+\caption{Session Correlator ablation ($n=280$ held-out sessions).}
 \label{tab:b3}
 \begin{center}
 \begin{tabular}{@{}lcccc@{}}
 \toprule
 \textbf{Configuration} & \textbf{FPR} & \textbf{DR bool.} & \textbf{DR time} & \textbf{DR split} \\
 \midrule
-Content check  & 0/70 & 1.0 & 1.0 & 1.0 \\
-Behavior check & 0/70 & 1.0 & 1.0 & 0.457 \\
-Combined (OR)  & 0/70 & 1.0 & 1.0 & 1.0 \\
+Content check  & 0/70 & 1.0 & 1.0 & 0.957 \\
+Behavior check & 0/70 & 1.0 & 0.0 & 0.386 \\
+Combined (OR)  & 0/70 & 1.0 & 1.0 & 0.957 \\
 \bottomrule
 \end{tabular}
 \end{center}
 \end{table}
 
-A separate zero-day ablation re-scores the content check on boolean-blind test sessions using the leave-one-out Branch~1 variant from Section~\ref{sec:results}'s zero-day study (never trained on boolean-blind). Detection rate drops to \textbf{0.0}, with mean attack probability stuck around 0.22 regardless of how much of the session is concatenated --- concatenation amplifies a signal Branch~1 already recognizes; it cannot rescue a classifier that never learned the class at all. We report this as a stated limitation, not as a caveat that quietly disappears: it is a direct consequence of the Session Correlator re-using Branch~1's signal rather than learning an independent one.
+A separate ablation re-scores the content check on boolean-blind sessions using the leave-one-out Branch~1 variant (never trained on boolean-blind); detection rate drops to 0.0, with mean attack probability stuck around 0.22 regardless of how much of the session is concatenated. Concatenation amplifies a signal Branch~1 already recognizes; it cannot rescue a classifier that never learned the class, a direct consequence of the Session Correlator re-using Branch~1's signal rather than learning an independent one.
 
-\emph{Reading these numbers narrowly.} Zero observed false positives on 70 benign sessions bounds the true FPR only loosely (a 95\% Wilson interval reaches roughly 4\%), and benign sessions are drawn from the same generation process Branch~1 and Branch~2 were built around, not independently-captured production traffic. The disjoint train/test target-pool design (Section~\ref{sec:system}) means these numbers at least reflect generalization to unseen targets within that generation process, which is a real, if narrow, form of held-out evaluation. We read this table as evidence the correlation mechanism works as designed --- each check independently covers the weak-signal cases the other might miss, which we verified directly rather than assumed --- and not yet as evidence of generalization to adversarially-diverse real traffic, which independently-captured attacker traffic (Section~\ref{sec:conclusion}) is intended to test.
+\emph{Reading these numbers narrowly.} Zero observed false positives on 70 benign sessions bounds the true FPR only loosely (a 95\% Wilson interval reaches roughly 4\%), and benign sessions are drawn from the same generation process Branch~1 and Branch~2 were built around, not independently-captured production traffic. The disjoint train/test target-pool design (Section~\ref{sec:system}) at least reflects generalization to unseen targets within that process. We read this table as evidence the mechanism works as designed, not yet as evidence of generalization to adversarially-diverse real traffic, which independently-captured attacker traffic (Section~\ref{sec:conclusion}) is intended to test.
 
 \subsection{Continual Learning}
-Unlike \texttt{stacked} in Branch~1's main results, this experiment holds out a \emph{real} class: \texttt{union\_based} is entirely absent from an initial training pool (\textbf{M0}, 20{,}194 rows over the remaining four classes --- deliberately about half of what those four classes have available, so a later retrain has real held-back volume to draw on, not merely a few leftover rows), and a frozen golden set (6{,}780 rows, all five classes, disjoint from anything below) is set aside for evaluation throughout. A two-pour replay stream follows (12{,}955 queries, padded with real held-out benign traffic from Branch~2's pool): \emph{Scenario~1} interleaves \texttt{union\_based} into ordinary traffic after a quiet head; \emph{Scenario~2} is more volume of the four known classes only, no new class. A review queue and a drift monitor watch both pours independently.
+This experiment uses its own dedicated training and replay pool, reused for all three retraining stages (M0/M1/M2), independent of the main Branch~1 pipeline; it runs against the current, DistilBERT-based architecture and data. \texttt{union\_based} is entirely absent from an initial training pool (M0, 28{,}688 rows over the remaining five known classes, including real \texttt{stacked} examples), with a frozen golden set (9{,}000 rows, all six classes, disjoint from anything below) held out for evaluation throughout. A two-pour replay stream follows, padded with real held-out benign traffic from Branch~2's pool: \emph{Scenario~1} interleaves \texttt{union\_based} into ordinary traffic after a quiet head; \emph{Scenario~2} is more volume of the five known classes only, no new class. A review queue and a drift monitor watch both pours independently.
 
-\textbf{Pre-bump: M0 facing a class it has never seen.} On the golden set's four known classes, M0 reaches F1-macro~=~0.9868 (FPR~=~0.0333). On \texttt{union\_based}'s golden rows (n~=~1{,}500, unseen by M0), Branch~1 alone misses \textbf{12.3\%} (predicts \texttt{normal}); Branch~2 --- fixed for this entire experiment, exactly as in the zero-day study above, since it is benign-only and never sees attack labels --- independently flags \textbf{99.5\%} of them, for \textbf{99.7\%} combined coverage. (This is not the same number as Table~\ref{tab:zeroday}'s 2.6\%/99.1\%/99.8\% for the same class: that study trains Branch~1 on one large 80/20 split, whereas M0 here trains on deliberately half of the four known classes' available volume, to keep ``half the data, missing one label'' a true description of this experiment's Base rather than an overstatement.)
+Pre-bump: M0 facing a class it has never seen. On the golden set's five known classes, M0 reaches F1-macro~=~0.9712 (FPR~=~0.0073). On \texttt{union\_based}'s golden rows (n~=~1{,}500, unseen by M0), Branch~1 alone misses 2.1\% (predicts \texttt{normal}); Branch~2, fixed throughout this experiment since it never sees attack labels, independently flags 77.4\%, for 99.5\% combined coverage. (This differs from Table~\ref{tab:zeroday}'s 2.6\%/99.1\%/99.8\% for the same class: that study uses Logistic Regression over the five-label setup above, whereas M0 here is DistilBERT trained on deliberately half of the five known classes' volume, keeping ``half the data, missing one label'' accurate for this experiment's Base.)
 
-\textbf{The review queue triggers a major bump.} As \texttt{union\_based} traffic streams in, flagged occurrences accumulate in the review queue; once 500 confirmed \texttt{union\_based} samples are reached --- \textbf{47.5\%} through Scenario~1's pour --- a retrain triggers automatically. The resulting candidate (\textbf{M1}, 21{,}463 rows) reaches F1-macro~=~0.9806 on the full five-class golden set (FPR~=~0.0333) and \textbf{95.9\%} recall on \texttt{union\_based}, clearing the promotion floor (no known-class regression, new-class recall~$\geq$~0.80); with no prior model to compare against on equal footing, M1 is promoted directly and M0 is retired. On the remainder of Scenario~1's pour --- traffic M1 was never trained on --- it independently recalls \textbf{95.4\%} of the 1{,}486 remaining \texttt{union\_based} occurrences, confirming the golden-set number holds on genuinely fresh stream data.
+The review queue triggers a major bump. As \texttt{union\_based} traffic streams in, flagged occurrences accumulate in the review queue; once 500 confirmed samples are reached (39.9\% through Scenario~1's pour), a retrain triggers automatically. The resulting candidate (M1, 9{,}000 rows) reaches F1-macro~=~0.9711 on the golden set (FPR~=~0.0100) and 98.6\% recall on \texttt{union\_based}, clearing the promotion floor (no known-class regression beyond 0.02 tolerance, new-class recall~$\geq$~0.80); with no prior model to compare against, M1 is promoted directly and M0 is retired. On the remainder of Scenario~1's pour, traffic M1 was never trained on, it independently recalls 98.7\% of the 1{,}484 remaining occurrences, confirming the golden-set number holds on fresh stream data.
 
-\textbf{Ablation: is the gain from the class, or just from more rows?} A control retrains M0's pool with the identical +1{,}269-row budget, resampled entirely from the four known classes --- no \texttt{union\_based} at all. Fig.~\ref{fig:cl-ablation} shows the result: \textbf{0.000} recall for the control versus \textbf{0.959} for M1, on identical row counts. Since row count is held fixed and only composition varies, the gain is attributable to learning the class itself, not to having more training data.
+Ablation: is the gain from the class, or just from more rows? A control retrains M0's pool with the identical +1{,}753-row budget, resampled entirely from the five known classes, no \texttt{union\_based} at all. The result: 0.000 recall for the control versus 0.986 for M1, on identical row counts. Since row count is held fixed and only composition varies, the gain is attributable to learning the class itself, not to having more training data.
 
-\begin{figure}[t]
-\centerline{\includegraphics[width=\columnwidth]{cl_scenario_ablation.png}}
-\caption{Ablation: recall on \texttt{union\_based} with (0.959) vs.\ without (0.000) the class present in an identical +1{,}269-row retrain sample.}
-\label{fig:cl-ablation}
-\end{figure}
+Drift monitoring sees it too, at this concentration. Tracking five PSI signals through Scenario~1 against M0, the flagged-traffic confidence signal crosses the 0.2 alert threshold and is confirmed (two sustained windows) by window~3, the same window the queue's own retrain trigger falls in. This does not overturn a low-concentration negative result reported for a rare ($<$1\%) synthetic class elsewhere in this project's development; at the substantially higher concentration used here, drift and the review queue agree rather than the queue being the only signal that notices.
 
-\textbf{Drift monitoring sees it too, at this concentration.} Fig.~\ref{fig:cl-drift} (top) tracks five PSI signals through Scenario~1 against M0: the flagged-traffic structural-feature signal crosses the 0.2 alert threshold by window~2 and is confirmed (two sustained windows) by window~3 --- the same window the queue's own retrain trigger falls in. This does not overturn a low-concentration negative result reported for a rare ($<$1\%) synthetic class elsewhere in this project's development; at the substantially higher concentration used here (\texttt{union\_based} $\approx$29\% of Scenario~1's traffic, sized to what the $\approx$8.7K-row benign-padding budget available at experiment scale could plausibly support, not to match a specific production rate), drift and the review queue agree rather than the queue being the only signal that notices.
+Scenario 2: a minor bump, correctly rejected. With M1 now champion, Scenario~2 replays known-class volume only, with no new class. Once 500 confirmed samples accumulate (position 2{,}497 of 9{,}049), a class-balanced pool (325 rows, the smallest confirmed class, \texttt{normal} false positives, sets the size) is added and M2 is trained. M2 reaches F1-macro~=~0.9739 on the full golden set, higher than M1, but FPR~=~0.0207, nearly double M1's 0.0100; the zero-slack gate rejects M2 on FPR alone ($0.0207 > 0.0100$), so M1 remains champion and never enters shadow. An F1-only comparison would have promoted M2 instead; the gate's multi-criterion check catches this regression. An earlier run of the same experiment, on a Logistic-Regression-based Branch~1, saw the analogous candidate clear both criteria and reach shadow; we report this run's actual outcome rather than that one, consistent with this project's practice of not re-rolling a result to fit an expected story (Section~\ref{sec:discussion}).
 
-\textbf{Scenario 2: a minor bump, then shadow.} With M1 now champion, Scenario~2 replays known-class volume only. Once 500 confirmed samples accumulate (position 2{,}093 of 6{,}026), a class-balanced pool (112 rows --- the smallest confirmed class, \texttt{normal} false positives, sets the size) is added and \textbf{M2} is trained. On the full golden set, M2 reaches F1-macro~=~0.9811 and FPR~=~0.0293, a \textbf{12\%} relative FPR cut versus M1 with no per-class regression; the gate promotes it to \emph{shadow}. Observed against the next 2{,}000 queries (predictions logged, M1 still deciding live), M2's FPR (1.0\%) and F1-macro (0.9863) both stay within tolerance of the gate-measured values, so M2 is promoted to champion and M1 is retired.
+Replayed against M1, Scenario~2's drift signals stay flat throughout, confirming the expected contrast: ordinary volume growth alone does not look like drift.
 
-\begin{figure}[t]
-\centerline{\includegraphics[width=\columnwidth]{cl_scenario_drift.png}}
-\caption{PSI drift signals through Scenario~1 (vs.\ M0, top) and Scenario~2 (vs.\ M1, bottom). Scenario~1 crosses the alert threshold as \texttt{union\_based} enters; Scenario~2 stays flat throughout.}
-\label{fig:cl-drift}
-\end{figure}
-
-Fig.~\ref{fig:cl-drift} (bottom) confirms the expected contrast: replayed against M1, Scenario~2's drift signals stay flat throughout --- ordinary volume growth alone does not look like drift.
-
-\emph{Reading these numbers narrowly.} Both pours are padded with real benign traffic, but at a higher attack concentration than production would see, bounded by the $\approx$8.7K held-out benign rows available for padding at this scale; \texttt{union\_based}'s pour is similarly a subsample (2{,}000 of the 13{,}500 non-golden rows available) sized for the same reason, not because more of the class was unavailable. Labelling is simulated (ground truth stands in for a human reviewer), and traffic is a replay of held-out data, not live production traffic. The review queue and validation gate are implemented and tested as a library, but production wiring into the deployed service (an administrator-facing queue, a live drift dashboard) is not yet complete for all branches --- this offline result validates the mechanism, not a running deployment.
+\emph{Reading these numbers narrowly.} Both pours are padded with real benign traffic, but at a higher attack concentration than production would see. Labelling is simulated (ground truth stands in for a human reviewer), and traffic is a replay of held-out data, not live production traffic. The review queue and validation gate are implemented and tested as a library, but production wiring into the deployed service is not yet complete for all branches, so this offline result validates the mechanism, not a running deployment. Because M2 was rejected before reaching shadow, this run does not exercise the shadow-validation path for a promoted minor bump; that path is covered by this project's own library tests, not by this specific run.
 
 \subsection{Latency Budget}
-End-to-end per-query latency is estimated from measured per-branch costs rather than benchmarked under load on the live service. Branch~1 inference is 0.5~ms (Table~\ref{tab:b1arch}). Branch~2's LocalOutlierFactor scores each query against its stored training set (a $k$-nearest-neighbor lookup, not a fixed decision boundary like the One-Class SVM baseline), which costs substantially more than a linear model: an offline benchmark on the same workstation measures $\approx$15--18~ms per query. Decision-engine logic is negligible. The combined query-level budget is therefore on the order of 16--19~ms per query, dominated by Branch~2 --- still compatible with a real-time proxy, but a materially different profile from the sub-2~ms budget a linear anomaly model would have given, and one this offline figure should be re-measured against the live \texttt{/api/v1/detect} endpoint before being treated as a deployment guarantee. Sustained-throughput benchmarking is left to future work (Section~\ref{sec:conclusion}).
+End-to-end per-query latency is estimated from measured per-branch costs, not benchmarked under load on the live service. Branch~1 (DistilBERT) inference is 2.8~ms on GPU (Table~\ref{tab:b1arch}). Branch~2's LocalOutlierFactor scores each query against its stored training set (a $k$-nearest-neighbor lookup, not a fixed boundary like One-Class SVM), costing substantially more than a linear model: $\approx$15--18~ms per query, measured on the same workstation. Decision-engine logic is negligible. The combined budget is therefore $\approx$18--21~ms per query, dominated by Branch~2, still compatible with a real-time proxy but one this offline figure should be re-measured against the live \texttt{/api/v1/detect} endpoint before being treated as a deployment guarantee, particularly since Branch~1's GPU dependency is a new cost Logistic Regression did not carry. Sustained-throughput benchmarking is left to future work.
 
 \section{Discussion and Limitations}\label{sec:discussion}
-\textbf{Label noise.} Two measured noise sources were found during data construction: mislabeled attacks in the D4 \texttt{normal} pool (requiring three rounds of content filtering) and $\approx$13\% mislabels in the \texttt{boolean\_blind} catch-all class (30-sample manual audit). Both plausibly explain the dominant confusion in Table~\ref{tab:b1perclass}; the clean-label ceiling for this task is unknown.
+Label noise. Two measured noise sources are found during data construction: mislabeled attacks in the D4 \texttt{normal} pool (requiring three rounds of content filtering) and $\approx$13\% mislabels in the \texttt{boolean\_blind} catch-all class (30-sample manual audit, a small sample). Both remain real, secondary contributors to Table~\ref{tab:b1perclass}'s errors, but the dominant confusion (\texttt{stacked}$\leftrightarrow$\texttt{time\_blind}) is explained separately in Section~\ref{sec:results} by D3's recon/exploit campaign structure; the clean-label ceiling for this task is unknown.
 
-\textbf{Dataset licensing.} D3 (MIT) and D4 (CC0) have confirmed licenses, but D1 (SQLiV3) has no explicit license; the combined dataset should be treated as provenance-unclear pending resolution.
+Dataset licensing. D4 (CC0) has a confirmed license; D1 (SQLiV3) and D3 (Superviz25) both lack an explicit license; D2 (CSIC 2010)'s license was not independently re-verified for this revision. The combined dataset should be treated as provenance-unclear pending resolution.
 
-\textbf{Synthetic \texttt{stacked} class.} No public source contained natural stacked-query samples; the templated substitutes were trivially separable and were excluded from the reported results.
+Threat-model and robustness boundaries. Second-order and out-of-band SQLi, and non-SQL web attacks (Cross-Site Scripting (XSS), Cross-Site Request Forgery (CSRF)), are out of scope by the proxy placement. All results are on clean test splits; no adversarial evaluation (e.g.\ WAF-A-MoLE \cite{b11}) was run, so the reported figures are an upper bound on robustness to deliberate evasion.
 
-\textbf{Threat-model boundaries.} Second-order and out-of-band SQLi, and non-SQL web attacks (XSS, CSRF), are out of scope by the proxy placement.
+LocalOutlierFactor's costs. Unlike a fixed-boundary model (One-Class SVM, Isolation Forest), LocalOutlierFactor retains its full training feature matrix and scores each query via a $k$-nearest-neighbor lookup, giving a larger artifact and higher latency (Section~\ref{sec:results}) in exchange for its higher detection rate. Its raw anomaly score is also mathematically unbounded (scores in the billions on a handful of structurally degenerate short queries, versus under 15 for the other two algorithms); this leaves Table~\ref{tab:b2}'s threshold- and rank-based metrics unaffected, but once silently broke the Session Correlator's behavior check, whose mean-based aggregate a single such outlier could dominate, pushing benign-session FPR from 0\% to 37\% before switching the aggregate to the median (Section~\ref{sec:results}).
 
-\textbf{Adversarial robustness gap.} All results are on clean test splits; no adversarial evaluation (e.g.\ WAF-A-MoLE \cite{b11}) was run, so the reported figures are an upper bound on robustness to deliberate evasion.
+The continual-learning gate's zero FPR slack. The minor-bump path (Section~\ref{sec:results}) requires no FPR regression at all against the champion, unlike the separate shadow-stage tolerance applied only after a candidate has already passed the gate; this is a stricter bar than an F1-only comparison would apply, and one sensitive to how precisely FPR is estimated on a finite golden set.
 
-\textbf{LocalOutlierFactor's deployment cost.} Unlike a fixed-boundary model (One-Class SVM, Isolation Forest), LocalOutlierFactor retains its full training feature matrix and scores each query via a $k$-nearest-neighbor lookup, giving a larger deployment artifact and higher per-query latency (Section~\ref{sec:results}) in exchange for its higher detection rate. This is a stated trade-off, not an oversight.
-
-\textbf{Session Correlator generalization gap.} All Session Correlator results (Section~\ref{sec:results}) are on self-generated, self-hosted sessions; the content check's calibrated threshold is lower than Branch~1's single-query threshold specifically to catch weak-signal steps, and that trade-off has not been tested against the diversity of real production benign traffic --- independently-captured attacker and benign traffic (Section~\ref{sec:conclusion}) is the intended validation, not yet done. An attacker evading both the content and behavior checks simultaneously is a residual gap the current design cannot close (Section~\ref{sec:system}).
-
-\textbf{Session Correlator operational scope.} The single-query endpoint currently invokes the Session Correlator with only that one query as a degenerate one-step session; realizing session-level correlation across separate requests over time requires a session store (keyed by session/IP with a TTL) that has not yet been built. The dedicated session endpoint, evaluated in Section~\ref{sec:results}, already accepts a complete session's queries in one call.
-
-\textbf{Methodological open points.} Manual label-noise audits so far cover small per-class samples.
+Session Correlator operational scope. The single-query endpoint currently invokes the Session Correlator with only that one query as a degenerate one-step session; realizing session-level correlation across separate requests over time requires a session store (keyed by session/IP with a TTL) that has not yet been built. The dedicated session endpoint, evaluated in Section~\ref{sec:results}, already accepts a complete session's queries in one call.
 
 \section{Conclusion and Future Work}\label{sec:conclusion}
-We presented a multi-branch AI system for SQLi detection at the database proxy. Two query-level branches are implemented and evaluated on combined public data: a supervised multi-class classifier (F1-macro~=~0.9907) and a benign-only anomaly detector (AUC~=~0.929, 81.4\% detection at 5.4\% FPR). A leave-one-out zero-day study shows that supervised detection stays robust for structurally distinctive unseen attacks but bypasses at an 87\% rate for boolean-blind SQLi; the anomaly branch independently recovers most of these on structural grounds, but the two combined still leave an 11\% residual gap, the lowest combined coverage of any class by a wide margin. This residual gap quantifies the ceiling of purely query-level detection and motivates the Session Correlator, a session-level correlation mechanism that re-uses both query-level branches' existing signals --- with no additional training --- and reaches zero observed false positives with perfect detection on held-out self-generated sessions, at the cost of not yet being validated on independently-captured attacker traffic. We also report, as a methodological finding in its own right, that our first design for this mechanism (a GRU over per-step classifier probabilities) reached a suspiciously perfect score that a follow-up diagnostic investigation traced to an information bottleneck in its input features rather than genuine session-level learning --- a caution against trusting a perfect score without ablating it, which we apply to the Session Correlator's own reported numbers above and to the continual-learning results below. Evaluated offline using a real held-out attack class rather than a synthetic stand-in, a continual-learning loop shows a review queue and, at this experiment's traffic concentration, drift monitoring both surfacing the new class; a volume-threshold policy triggers retraining automatically; and a validation gate safely promoting the resulting model --- directly for the label-space-changing major bump, and through a shadow stage for the minor one --- with an ablation confirming the recall gain is attributable to the class itself, not merely to more training rows.
+We presented a multi-branch AI system for SQLi detection at the database proxy, combining a supervised six-class classifier (Branch~1, DistilBERT, F1-macro~=~0.9699) with a benign-only anomaly detector (Branch~2, LocalOutlierFactor, AUC~=~0.915, 78.4\% detection at 5.3\% FPR) over four public datasets, each shown individually necessary by a leave-one-out ablation (Table~\ref{tab:ablation}). A leave-one-out zero-day study shows supervised detection stays robust for structurally distinctive unseen attacks but bypasses boolean-blind SQLi at an 87\% rate, with the two branches combined still leaving an 11\% residual gap; this ceiling on query-level detection motivates the Session Correlator, which re-uses both branches' existing signals with no additional training and reaches zero observed false positives with near-perfect detection (95.7--100\%) on held-out self-generated sessions, not yet validated on independently-captured attacker traffic. An offline continual-learning loop, evaluated using a real held-out attack class, shows a review queue and drift monitoring both surfacing the new class, automatic volume-triggered retraining, a validation gate promoting the resulting major-bump model after an absolute-floor check, and the same gate correctly rejecting a subsequent minor-bump candidate with higher F1 but higher FPR, evidence the gate weighs more than a single metric.
 
-Future work centers on validating the Session Correlator beyond its current self-generated data: standing up a network-isolated vulnerable lab (DVWA/WebGoat) driven by real \texttt{sqlmap} traffic, captured via an intermediate proxy, to test whether the calibrated thresholds and near-perfect detection rate hold against independently-generated attack traffic and more diverse benign sessions. Further items include a production session store to correlate a session incrementally across separate requests, wiring the review queue and drift dashboard into the deployed service for all branches (validated as a library, not yet fully live), concept-drift monitoring beyond the single-branch case already evaluated, adversarial hardening, re-measuring Branch~2's latency against the live endpoint, and throughput benchmarking under realistic load.
+Future work centers on validating the Session Correlator against real \texttt{sqlmap} traffic from a network-isolated vulnerable lab (DVWA/WebGoat), captured via an intermediate proxy, rather than self-generated sessions. Further items include a production session store for incremental cross-request correlation, wiring the review queue and drift dashboard into the deployed service for all branches, adversarial hardening, and re-measuring latency and throughput against the live endpoint under realistic load.
 
 \begin{thebibliography}{00}
 \bibitem{b1} A. Paul, V. Sharma, and O. Olukoya, ``SQL injection attack: Detection, prioritization \& prevention,'' \emph{J. Inf. Secur. Appl.}, vol. 85, art. 103871, 2024.
@@ -340,6 +425,10 @@ Future work centers on validating the Session Correlator beyond its current self
 \bibitem{b9} F. T. Liu, K. M. Ting, and Z.-H. Zhou, ``Isolation forest,'' in \emph{Proc. IEEE ICDM}, 2008, pp. 413--422.
 \bibitem{b10} B. Sch\"olkopf, J. C. Platt, J. Shawe-Taylor, A. J. Smola, and R. C. Williamson, ``Estimating the support of a high-dimensional distribution,'' \emph{Neural Comput.}, vol. 13, no. 7, pp. 1443--1471, 2001.
 \bibitem{b11} L. Demetrio, A. Valenza, G. Costa, and G. Lagorio, ``WAF-A-MoLE: Evading web application firewalls through adversarial machine learning,'' in \emph{Proc. ACM SAC}, 2020. arXiv:2001.01952.
+\bibitem{b12} OWASP Foundation, ``A03:2021 -- Injection,'' \emph{OWASP Top 10:2021}, 2021. [Online]. Available: https://owasp.org/Top10/2021/A03\_2021-Injection/
+\bibitem{b13} M. Al-olaqi, A. Al-gailani, and M. M. H. Rahman, ``Comprehensive study of SQL injection attacks mitigation methods and future directions,'' \emph{J. Cyber Secur. Risk Audit.}, vol. 2025, no. 4, pp. 347--365, 2025.
+\bibitem{b14} C.-M. Ro\c{s}ca, A. Stancu, and C. Popescu, ``Machine learning models for SQL injection detection,'' \emph{Electronics}, vol. 14, no. 17, art. 3420, 2025.
+\bibitem{b15} E. Casmiry, N. Mduma, and R. Sinde, ``Enhanced SQL injection detection using chi-square feature selection and machine learning classifiers,'' \emph{Front. Big Data}, vol. 8, art. 1686479, 2025.
 \end{thebibliography}
 
 \end{document}
