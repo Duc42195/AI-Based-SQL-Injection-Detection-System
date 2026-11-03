@@ -15,7 +15,7 @@ pipeline_tag: text-classification
 Trained model artifacts for a **3-branch** AI-based SQL Injection detection system, deployed at
 the Database Proxy layer:
 
-- **Branch 1** — supervised multi-class classifier (Normal + SQLi variants), per query.
+- **Branch 1** — supervised multi-class classifier (Normal + 5 SQLi variants), per query.
 - **Branch 2** — anomaly detector trained on benign traffic only (generalises to unseen syntax).
 - **Branch 3** — Session Correlator: not a separately-trained model, re-uses Branch 1 + Branch 2 and correlates their signals over a session (the main contribution).
 
@@ -25,12 +25,13 @@ Training data: [Jason-42195/VNU-SQLi-Detection](https://huggingface.co/datasets/
 
 | Folder | Branch | Model | Headline metric |
 |---|---|---|---|
-| `branch1_v1/` | 1 | TF-IDF (char) + Logistic Regression | F1-macro **0.9907** (5 classes, leakage-free) |
-| `branch1_comparison/` | 1 | 4 candidate architectures (5-class) | see table below |
-| `branch1_no_*/` | 1 | Leave-one-class-out ablations (zero-day coverage) | F1 ~0.98 on remaining |
-| `branch2_v1/` | 2 | One-Class SVM (4 structural features) | avg-precision **0.982** |
-| `branch2_zeroday/` | 2 | One-Class SVM (zero-day coverage variant) | — |
-| `branch3_v2/` | 3 | Session Correlator (no weights — reuses `branch1_v1`/`branch2_v1`, 4 calibrated thresholds) | FPR=0.0, detection rate=1.0 on 3 session-attack classes, 280-session held-out test set |
+| `branch1_v1/` | 1 | **DistilBERT** (fine-tuned, 6-class) | F1-macro **0.9699** |
+| `branch1_v1_logreg_backup/` | 1 | TF-IDF (char) + Logistic Regression — former production champion, superseded | F1-macro 0.8977 |
+| `branch1_comparison/` | 1 | 4 candidate architectures (6-class) | see table below |
+| `branch1_no_*/` | 1 | Leave-one-class-out ablations (zero-day coverage) | F1 ~0.98–0.99 on remaining |
+| `branch2_v1/` | 2 | **Local Outlier Factor** (12 structural/lexical features) | AUC **0.915**, detection 78.4% @ FPR 5.3% |
+| `branch2_zeroday/` | 2 | Local Outlier Factor (zero-day coverage variant) | — |
+| `branch3_v2/` | 3 | Session Correlator (no weights — reuses `branch1_v1`/`branch2_v1`, 4 calibrated thresholds) | FPR=0.0, detection rate 95.7–100% on 3 session-attack classes, 280-session held-out test set |
 
 Download everything: `hf download Jason-42195/VNU-SQLi-Detection-Models --local-dir models/`
 
@@ -38,67 +39,73 @@ Download everything: `hf download Jason-42195/VNU-SQLi-Detection-Models --local-
 
 ## `branch1_v1/` — Branch 1 (supervised multiclass) — **production**
 
-TF-IDF (`char_wb`, 2–4 gram, 50k features) + Logistic Regression. Classifies a query into one of
-**5 classes**: `normal`, `union_based`, `error_based`, `boolean_blind`, `time_blind`.
+Fine-tuned `distilbert-base-uncased` (max_length 128, 3 epochs). Classifies a query into one of
+**6 classes**: `normal`, `union_based`, `error_based`, `boolean_blind`, `time_blind`, `stacked`.
 
-- **F1-macro: 0.9907** on the held-out test set (13,560 rows), **leakage-free split** (dataset
-  deduplicated by `query_canonical` before the train/test split — see the audit note below).
-- p50 latency ~0.5 ms, size ~3.5 MB.
-- Files: `vectorizer.joblib` (TfidfVectorizer), `model.joblib` (LogisticRegression), `metadata.json`.
+- **F1-macro: 0.9699** on the held-out test set (18,295 rows; 71,705 train rows).
+- p50 latency ~2.8 ms (GPU), size ~256 MB.
+- Chosen over the lighter TF-IDF+LogReg baseline (`branch1_v1_logreg_backup/`, F1-macro 0.8977)
+  because the gap concentrates in the two hardest classes: `stacked` (0.700 → 0.932) and
+  `time_blind` (0.812 → 0.973) — see `branch1_comparison/` below. Latency is still real-time.
+- Files: `model.safetensors`, `tokenizer.json`, `tokenizer_config.json`, `config.json`, `metadata.json`.
 
 ```python
-import joblib
-vectorizer = joblib.load("branch1_v1/vectorizer.joblib")
-clf = joblib.load("branch1_v1/model.joblib")
+from src.models.branch1_loader import load_branch1_artifacts
 
+vectorizer, clf = load_branch1_artifacts("branch1_v1")  # auto-detects DistilBERT vs sklearn layout
 X = vectorizer.transform(["1' OR '1'='1"])
 clf.predict(X)  # -> array([3])  (3 = boolean_blind)
 ```
 
-## `branch1_comparison/` — Branch 1 architecture comparison (5-class)
+## `branch1_v1_logreg_backup/` — former production model (superseded)
 
-Four candidates trained on the same 5-class data (`train/compare_branch1_architectures.py`).
-The neural heads are sized from the data (true 5-class, no dead `stacked` neuron). TF-IDF+LogReg
-was chosen for production on the latency/size trade-off — the F1 gap is negligible.
+TF-IDF (`char_wb`, 2–4 gram, 50k features) + Logistic Regression. Kept as a lightweight fallback
+and as the baseline in the architecture comparison. F1-macro **0.8977** on the same 6-class split
+— same loader (`load_branch1_artifacts`) works on this folder too (`vectorizer.joblib` +
+`model.joblib` layout).
 
-Numbers are on the **leakage-free split** (deduped by `query_canonical` before splitting):
+## `branch1_comparison/` — Branch 1 architecture comparison (6-class)
+
+Four candidates trained on the same 6-class data, including `stacked`
+(`train/compare_branch1_architectures.py`). DistilBERT was chosen for production: the F1 gap over
+TF-IDF+LogReg concentrates in `stacked`/`time_blind`, and latency/size are still acceptable.
 
 | Candidate | F1-macro | p50 latency | Size |
 |---|---|---|---|
-| `candidate_tfidf_logreg` | 0.9907 | 0.5 ms | 3.5 MB |
-| `candidate_tfidf_lightgbm` | 0.9977 | 60.4 ms | 5.6 MB |
-| `candidate_distilbert` | 0.9957 | 2.8 ms (GPU) | 256 MB |
-| `candidate_cnn_sqltok` | 0.9906 | 0.3 ms | 0.11 MB (28.5K params) |
+| `candidate_tfidf_logreg` | 0.8977 | 0.5 ms | 0.4 MB |
+| `candidate_tfidf_lightgbm` | 0.9624 | 3.0 ms | 4.7 MB |
+| `candidate_distilbert` | 0.9648 | 2.8 ms (GPU) | 256 MB |
+| `candidate_cnn_sqltok` | 0.7490 | 0.3 ms | 0.15 MB |
+
+(Deployed `branch1_v1/` scores slightly higher, 0.9699, because it was retrained afterwards on a
+larger train split — see `metadata.json` in each folder for exact row counts.)
 
 Only the two neural candidates' weights are hosted here (`candidate_distilbert/`:
 `model.safetensors` + tokenizer/config; `candidate_cnn_sqltok/`: `model.pt` + `vocab.json`).
 
-```python
-# DistilBERT candidate
-from transformers import AutoModelForSequenceClassification, AutoTokenizer
-tok = AutoTokenizer.from_pretrained("branch1_comparison/candidate_distilbert")
-model = AutoModelForSequenceClassification.from_pretrained("branch1_comparison/candidate_distilbert")
-# model.config.num_labels == 5
-```
-
 The CNN candidate is a small TextCNN over a char-level SQL tokenizer; reconstruct it with the
-helper in `train/compare_branch1_architectures.py` (`_build_textcnn_class`, `_encode_texts`) and the
-saved `vocab.json` — see `train/notebooks/demo_detect.ipynb` for a runnable example.
+helper in `train/compare_branch1_architectures.py` (`_build_textcnn_class`, `_encode_texts`) and
+the saved `vocab.json`.
 
 ## `branch1_no_*/` — leave-one-class-out ablations (zero-day coverage)
 
 Four Branch-1 models, each trained with **one attack class excluded**
 (`branch1_no_union_based`, `branch1_no_error_based`, `branch1_no_boolean_blind`,
 `branch1_no_time_blind`). Used to measure whether the anomaly branch / combined system still
-catches an attack family the supervised model was never trained on. Each scores F1-macro ~0.98 on
-its remaining classes. Same file layout as `branch1_v1/`; `metadata.json` records `excluded_label`.
+catches an attack family the supervised model was never trained on. Each scores F1-macro
+~0.98–0.99 on its remaining classes. `metadata.json` records `excluded_label`.
 
-## `branch2_v1/` — Branch 2 (anomaly detection)
+## `branch2_v1/` — Branch 2 (anomaly detection) — **production**
 
-One-Class SVM trained on benign traffic only, using 4 structural features
-(`length`, `special_char_ratio`, `sql_keyword_count`, `entropy`) — not TF-IDF, so it can
-generalise to unseen attack syntax. Average precision ~0.982 (full PR curve / threshold sweep in
-the project repo's `report/metrics/`).
+**Local Outlier Factor** (`n_neighbors=5`, `contamination=0.05`) trained on benign traffic only,
+using 12 structural/lexical features (length, special-char ratio, SQL keyword count, entropy,
+bigram entropy, quote/paren imbalance, token-length/run stats) — not TF-IDF, so it generalises to
+unseen attack syntax.
+
+- **AUC 0.915**, detection rate **78.4%** at FPR 5.3% (full PR curve / threshold sweep in the
+  project repo's `report/metrics/`).
+- Chosen over Isolation Forest (AUC 0.903) and One-Class SVM (AUC 0.579, which misclassified
+  benign traffic from sources unlike its training distribution as anomalous).
 
 ```python
 # From within the project repo (needs src.models.branch2_anomaly.AnomalyDetector):
@@ -106,26 +113,33 @@ from src.models.branch2_anomaly import AnomalyDetector
 import numpy as np
 
 detector = AnomalyDetector.load("branch2_v1")
-X = np.array([[40, 0.05, 1, 3.6]])  # [length, special_char_ratio, sql_keyword_count, entropy]
+X = np.array([[40, 0.05, 1, 3.6, 0, 0, 0, 5, 8, 0, 0, 0]])  # 12 features, see feature_names in metadata.json
 detector.score(X)          # continuous anomaly score
-detector.anomaly_flags(X)  # boolean flag
+detector.predict(X)        # boolean/label flag
 ```
 
 ## `branch2_zeroday/` — Branch 2 (zero-day coverage variant)
 
-One-Class SVM with the same config as `branch2_v1`, used in the zero-day coverage experiment
-(pairs with the `branch1_no_*` ablations). Same loader as `branch2_v1`.
+Local Outlier Factor with the same config as `branch2_v1`, used in the zero-day coverage
+experiment (pairs with the `branch1_no_*` ablations). Same loader as `branch2_v1`.
 
 ## `branch3_v2/` — Branch 3 (Session Correlator)
 
 Not a trained model — no weights, just `metadata.json` holding 4 calibrated scalar thresholds
-(`content_threshold`, `per_query_threshold`, `mean_threshold`, `fraction_threshold`). At inference
-time it re-uses `branch1_v1`'s classifier (re-scores the session's concatenated query text) and
-`branch2_v1`'s anomaly detector (aggregates its per-query scores), OR'ing the two checks together.
-Classifies a **session** into 4 classes: `benign`, `boolean_blind`, `time_blind`,
+(`content_threshold`, `per_query_threshold`, `median_threshold`, `fraction_threshold`). At
+inference time it re-uses `branch1_v1`'s classifier (re-scores the session's concatenated query
+text) and `branch2_v1`'s anomaly detector (aggregates its per-query scores), OR'ing the two checks
+together. Classifies a **session** into 4 classes: `benign`, `boolean_blind`, `time_blind`,
 `query_splitting`. See the project repo's `src/models/branch3_session.py`
 (`SessionCorrelator`) for the scoring logic, and `report/plan/data_contract.md` §4.2 for why
-this replaced an earlier trained GRU design (`branch3_v1`, removed).
+this replaced an earlier trained GRU design (`branch3_v1`, removed) — a diagnostic found the GRU's
+dense projection collapsed a clear bisection signal (cosine similarity 0.961 between consecutive
+steps) into near-identical post-classifier probabilities.
+
+Content-check alone and the combined check both reach FPR=0.0 with detection 95.7–100% across the
+3 session-attack classes on 280 held-out sessions; the behavior-check alone misses `time_blind`
+entirely (0% — the content check is what carries that class), which is why the two are OR'd rather
+than used separately.
 
 ---
 
@@ -133,12 +147,15 @@ this replaced an earlier trained GRU design (`branch3_v1`, removed).
 
 - Branch 1's `boolean_blind` class has ~13% measured label noise (catch-all bucket for unmatched
   attack rows) — see `data_contract.md` in the project repo.
-- The uniformly high Branch-1 F1 (~0.99 across all 4 architectures) indicates the current dataset
-  is easy to separate; it is **not** an adversarial/obfuscation benchmark. A `/blog/index.php/...`
-  request format makes up ~17.6% of rows (content-format duplication), further limiting diversity.
-- Cross-split leakage (949 identical texts straddling train & test) was found and **fixed** on
-  20/8 by deduplicating `query_canonical` before the split; the numbers here are leakage-free.
+- The architecture-comparison numbers are on a harder 6-class split (adds `stacked`, previously a
+  dead neuron in older 5-class experiments) — don't compare them to earlier 5-class READMEs.
+- Cross-split leakage (949 identical texts straddling train & test) was found and **fixed** by
+  deduplicating `query_canonical` before the split; the numbers here are leakage-free.
 - No adversarial/obfuscation robustness testing yet.
+- Branch 3's session data is self-generated (bisection algorithm against a self-hosted demo DB),
+  not independently-captured attacker traffic — near-perfect detection reflects both branches
+  scoring data from the same generation process they were built around, not generalization to
+  novel evasive traffic.
 - License: mixed/unclear for the underlying training data (see the dataset repo's card) — treat as
   research / course-project artifacts, not cleared for unrestricted reuse.
 
