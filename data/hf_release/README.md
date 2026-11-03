@@ -18,6 +18,12 @@ pretty_name: VNU SQLi Detection Dataset (Branch 1 multiclass + Branch 2 anomaly)
 
 # VNU SQLi Detection Dataset
 
+> **Private internal backup.** This repo mirrors the team's `data/processed/` directory as-is —
+> it is not a curated public release, and the schema/numbers below describe an earlier snapshot
+> (5-class, pre-`stacked`-reintroduction) that may not match every file currently in the repo. For
+> the current, authoritative data contract (columns, classes, cleaning rules), see
+> `report/plan/data_contract.md` in the project repo, not this card.
+
 Data for a 3-branch AI-based SQL Injection detection system, combining 3+ public
 sources plus a small synthetic supplement:
 

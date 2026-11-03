@@ -153,21 +153,28 @@ Goal: reduce evasion risk from syntactically-equivalent transformations.
 
 > ⚠️ **TODO:** some claims in the report need Web Search verification before submission. Session data is mostly synthetic — call this out clearly in the Limitations section.
 
-## Processed data — where to download
+## Processed data — build it yourself
 
-The repo's `data/` directory **only has empty folders** (raw/large model files aren't committed — see `AGENTS.md`). All processed data lives on Hugging Face:
+The repo's `data/` directory **only has empty folders** (raw/large data files aren't committed —
+see `AGENTS.md`). Processed data is **not published** — the raw sources above include real-traffic
+logs (D7, D6) and a held-out zero-day/zero-shot eval set whose value depends on staying unseen, so
+instead of downloading a ready-made CSV, run the pipeline yourself from raw → processed
+(deterministic, seed=42 — see each script's `--help` / `report/plan/data_contract.md` for exact
+steps):
 
-👉 **https://huggingface.co/datasets/Jason-42195/VNU-SQLi-Detection**
+```bash
+uv run python train/build_branch1_dataset.py    # -> data/processed/branch1_train.csv
+uv run python train/build_branch2_dataset.py    # -> data/processed/branch2_normal.csv
+uv run python train/build_session_dataset.py    # -> data/processed/branch3_sessions_cach_a.csv
+```
 
-| File | Used for | Rows |
-|---|---|---|
-| `branch1_train.csv` | Branch 1 (train/eval) | 68,159 |
-| `branch2_normal.csv` | Branch 2 (train, 100% benign) | 91,935 |
-| `branch2_anomalous_eval.csv` | Branch 2 (FPR/detection-rate evaluation) | 25,065 |
+See `report/plan/data_contract.md` for the full raw→processed contract (cleaning rules, dedup by
+`query_canonical`, label definitions) and `train/` for the remaining `build_*`/`audit_*` scripts
+that produce the continual-learning (`cl_scenario_*`) and MLOps-demo (`mlops_*`) artifacts.
 
-Quick download: `huggingface-cli download Jason-42195/VNU-SQLi-Detection --repo-type dataset --local-dir data/processed/`
-
-To rebuild from scratch (raw → processed): see `train/build_branch1_dataset.py`, `train/build_branch2_dataset.py`, `report/plan/data_contract.md`.
+A snapshot of the processed data is kept on a **private** HF dataset repo
+(`Jason-42195/VNU-SQLi-Detection`) as an internal backup for the team — it is not a public
+download, request access from the author if you need it.
 
 ## Trained models — where to download
 
