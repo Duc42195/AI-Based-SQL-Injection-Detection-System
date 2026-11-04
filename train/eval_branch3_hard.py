@@ -33,6 +33,7 @@ from pathlib import Path
 import joblib
 import pandas as pd
 
+from src.models.branch1_loader import load_branch1_artifacts
 from src.models.branch3_features import (
     branch1_probabilities,
     class_names_from_config,
@@ -65,8 +66,7 @@ def main() -> None:
                 test_df["session_id"].nunique())
 
     hard_model_dir = models_dir / "branch1_no_boolean_blind"
-    vectorizer = joblib.load(hard_model_dir / "vectorizer.joblib")
-    clf = joblib.load(hard_model_dir / "model.joblib")
+    vectorizer, clf = load_branch1_artifacts(hard_model_dir, cfg.get_path("branch1_supervised.distilbert", {}))
 
     rows = []
     for sid, group in test_df.sort_values("step_index").groupby("session_id", sort=False):

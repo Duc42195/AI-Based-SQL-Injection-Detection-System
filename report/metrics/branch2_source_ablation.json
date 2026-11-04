@@ -1,0 +1,413 @@
+{
+  "description": "Branch 2 training-source ablation: for each candidate TRAINING combo (subset of D1/D3/D6/D7), reports FPR against EVERY source's held-out benign test set (fpr_by_source_ALL_4), not just the sources trained on \u2014 this is the corrected version of the first ablation pass, which only measured FPR on each combo's own (reduced) test set and so made dropping a hard source look artificially better. detection_rate_fixed_anomalous is measured against the same full D1+D3+D6+D7 attack set for every combo.",
+  "results": {
+    "all4": {
+      "eval": {
+        "trained_on": [
+          "d1",
+          "d3",
+          "d6",
+          "d7"
+        ],
+        "n_train": 69462,
+        "matched_threshold": 0.066359,
+        "own_test_fpr": 0.05004,
+        "fpr_by_source_ALL_4": {
+          "d1": 0.047768,
+          "d3": 0.027927,
+          "d6": 0.072033,
+          "d7": 0.028061
+        },
+        "detection_rate_fixed_anomalous": 0.799068,
+        "auc_own_test_vs_anomalous": 0.921812
+      },
+      "per_feature": {
+        "length": {
+          "cohens_d_vs_anomalous": 0.1687,
+          "cohens_d_d6_vs_other_benign": 0.9629
+        },
+        "special_char_ratio": {
+          "cohens_d_vs_anomalous": 0.5229,
+          "cohens_d_d6_vs_other_benign": 0.1648
+        },
+        "sql_keyword_count": {
+          "cohens_d_vs_anomalous": 0.3433,
+          "cohens_d_d6_vs_other_benign": 1.8248
+        },
+        "entropy": {
+          "cohens_d_vs_anomalous": -0.1014,
+          "cohens_d_d6_vs_other_benign": 0.6562
+        },
+        "bigram_entropy": {
+          "cohens_d_vs_anomalous": -0.1128,
+          "cohens_d_d6_vs_other_benign": 0.8658
+        },
+        "quote_imbalance": {
+          "cohens_d_vs_anomalous": 0.4206,
+          "cohens_d_d6_vs_other_benign": -0.4145
+        },
+        "same_type_run_ratio": {
+          "cohens_d_vs_anomalous": -0.4068,
+          "cohens_d_d6_vs_other_benign": -0.5029
+        },
+        "max_token_length": {
+          "cohens_d_vs_anomalous": 0.1337,
+          "cohens_d_d6_vs_other_benign": -0.8666
+        },
+        "token_count": {
+          "cohens_d_vs_anomalous": 0.1381,
+          "cohens_d_d6_vs_other_benign": 1.9489
+        },
+        "max_special_run": {
+          "cohens_d_vs_anomalous": 0.0809,
+          "cohens_d_d6_vs_other_benign": 0.3602
+        },
+        "max_digit_run": {
+          "cohens_d_vs_anomalous": 0.1537,
+          "cohens_d_d6_vs_other_benign": -0.2956
+        },
+        "paren_imbalance": {
+          "cohens_d_vs_anomalous": 0.139,
+          "cohens_d_d6_vs_other_benign": 0.5443
+        }
+      }
+    },
+    "minus_d1": {
+      "eval": {
+        "trained_on": [
+          "d3",
+          "d6",
+          "d7"
+        ],
+        "n_train": 54138,
+        "matched_threshold": 0.063042,
+        "own_test_fpr": 0.050018,
+        "fpr_by_source_ALL_4": {
+          "d1": 0.789611,
+          "d3": 0.029001,
+          "d6": 0.071459,
+          "d7": 0.026573
+        },
+        "detection_rate_fixed_anomalous": 0.805388,
+        "auc_own_test_vs_anomalous": 0.927122
+      },
+      "per_feature": {
+        "length": {
+          "cohens_d_vs_anomalous": 0.1313,
+          "cohens_d_d6_vs_other_benign": 0.7176
+        },
+        "special_char_ratio": {
+          "cohens_d_vs_anomalous": 0.4245,
+          "cohens_d_d6_vs_other_benign": -0.2385
+        },
+        "sql_keyword_count": {
+          "cohens_d_vs_anomalous": 0.3265,
+          "cohens_d_d6_vs_other_benign": 2.3384
+        },
+        "entropy": {
+          "cohens_d_vs_anomalous": -0.3668,
+          "cohens_d_d6_vs_other_benign": 0.1395
+        },
+        "bigram_entropy": {
+          "cohens_d_vs_anomalous": -0.3786,
+          "cohens_d_d6_vs_other_benign": 0.5458
+        },
+        "quote_imbalance": {
+          "cohens_d_vs_anomalous": 0.3784,
+          "cohens_d_d6_vs_other_benign": -0.606
+        },
+        "same_type_run_ratio": {
+          "cohens_d_vs_anomalous": -0.1953,
+          "cohens_d_d6_vs_other_benign": -0.2665
+        },
+        "max_token_length": {
+          "cohens_d_vs_anomalous": 0.118,
+          "cohens_d_d6_vs_other_benign": -1.8813
+        },
+        "token_count": {
+          "cohens_d_vs_anomalous": 0.0794,
+          "cohens_d_d6_vs_other_benign": 2.1316
+        },
+        "max_special_run": {
+          "cohens_d_vs_anomalous": 0.052,
+          "cohens_d_d6_vs_other_benign": -0.0503
+        },
+        "max_digit_run": {
+          "cohens_d_vs_anomalous": 0.0541,
+          "cohens_d_d6_vs_other_benign": -0.5274
+        },
+        "paren_imbalance": {
+          "cohens_d_vs_anomalous": 0.164,
+          "cohens_d_d6_vs_other_benign": 0.7613
+        }
+      }
+    },
+    "minus_d3": {
+      "eval": {
+        "trained_on": [
+          "d1",
+          "d6",
+          "d7"
+        ],
+        "n_train": 62014,
+        "matched_threshold": 0.062317,
+        "own_test_fpr": 0.050052,
+        "fpr_by_source_ALL_4": {
+          "d1": 0.045158,
+          "d3": 0.648228,
+          "d6": 0.067872,
+          "d7": 0.027636
+        },
+        "detection_rate_fixed_anomalous": 0.792402,
+        "auc_own_test_vs_anomalous": 0.925155
+      },
+      "per_feature": {
+        "length": {
+          "cohens_d_vs_anomalous": 0.1806,
+          "cohens_d_d6_vs_other_benign": 1.3003
+        },
+        "special_char_ratio": {
+          "cohens_d_vs_anomalous": 0.524,
+          "cohens_d_d6_vs_other_benign": 0.1818
+        },
+        "sql_keyword_count": {
+          "cohens_d_vs_anomalous": 0.2928,
+          "cohens_d_d6_vs_other_benign": 1.6622
+        },
+        "entropy": {
+          "cohens_d_vs_anomalous": -0.0513,
+          "cohens_d_d6_vs_other_benign": 0.8369
+        },
+        "bigram_entropy": {
+          "cohens_d_vs_anomalous": -0.0465,
+          "cohens_d_d6_vs_other_benign": 1.1682
+        },
+        "quote_imbalance": {
+          "cohens_d_vs_anomalous": 0.4036,
+          "cohens_d_d6_vs_other_benign": -0.4838
+        },
+        "same_type_run_ratio": {
+          "cohens_d_vs_anomalous": -0.3807,
+          "cohens_d_d6_vs_other_benign": -0.4841
+        },
+        "max_token_length": {
+          "cohens_d_vs_anomalous": 0.143,
+          "cohens_d_d6_vs_other_benign": -0.7242
+        },
+        "token_count": {
+          "cohens_d_vs_anomalous": 0.093,
+          "cohens_d_d6_vs_other_benign": 1.8611
+        },
+        "max_special_run": {
+          "cohens_d_vs_anomalous": 0.072,
+          "cohens_d_d6_vs_other_benign": 0.2494
+        },
+        "max_digit_run": {
+          "cohens_d_vs_anomalous": 0.37,
+          "cohens_d_d6_vs_other_benign": -0.0125
+        },
+        "paren_imbalance": {
+          "cohens_d_vs_anomalous": 0.0903,
+          "cohens_d_d6_vs_other_benign": 0.4729
+        }
+      }
+    },
+    "minus_d6": {
+      "eval": {
+        "trained_on": [
+          "d1",
+          "d3",
+          "d7"
+        ],
+        "n_train": 41587,
+        "matched_threshold": 0.047341,
+        "own_test_fpr": 0.050014,
+        "fpr_by_source_ALL_4": {
+          "d1": 0.06343,
+          "d3": 0.037594,
+          "d6": 0.723203,
+          "d7": 0.044005
+        },
+        "detection_rate_fixed_anomalous": 0.833989,
+        "auc_own_test_vs_anomalous": 0.93247
+      },
+      "per_feature": {
+        "length": {
+          "cohens_d_vs_anomalous": 0.2286
+        },
+        "special_char_ratio": {
+          "cohens_d_vs_anomalous": 0.5478
+        },
+        "sql_keyword_count": {
+          "cohens_d_vs_anomalous": 0.6163
+        },
+        "entropy": {
+          "cohens_d_vs_anomalous": 0.0892
+        },
+        "bigram_entropy": {
+          "cohens_d_vs_anomalous": 0.1463
+        },
+        "quote_imbalance": {
+          "cohens_d_vs_anomalous": 0.3238
+        },
+        "same_type_run_ratio": {
+          "cohens_d_vs_anomalous": -0.6029
+        },
+        "max_token_length": {
+          "cohens_d_vs_anomalous": 0.1096
+        },
+        "token_count": {
+          "cohens_d_vs_anomalous": 0.5346
+        },
+        "max_special_run": {
+          "cohens_d_vs_anomalous": 0.0968
+        },
+        "max_digit_run": {
+          "cohens_d_vs_anomalous": 0.0047
+        },
+        "paren_imbalance": {
+          "cohens_d_vs_anomalous": 0.3421
+        }
+      }
+    },
+    "minus_d7": {
+      "eval": {
+        "trained_on": [
+          "d1",
+          "d3",
+          "d6"
+        ],
+        "n_train": 50647,
+        "matched_threshold": 0.070742,
+        "own_test_fpr": 0.050071,
+        "fpr_by_source_ALL_4": {
+          "d1": 0.040459,
+          "d3": 0.019871,
+          "d6": 0.063424,
+          "d7": 0.797832
+        },
+        "detection_rate_fixed_anomalous": 0.846822,
+        "auc_own_test_vs_anomalous": 0.946617
+      },
+      "per_feature": {
+        "length": {
+          "cohens_d_vs_anomalous": 0.1412,
+          "cohens_d_d6_vs_other_benign": 0.8099
+        },
+        "special_char_ratio": {
+          "cohens_d_vs_anomalous": 0.5972,
+          "cohens_d_d6_vs_other_benign": 0.6856
+        },
+        "sql_keyword_count": {
+          "cohens_d_vs_anomalous": 0.1934,
+          "cohens_d_d6_vs_other_benign": 1.362
+        },
+        "entropy": {
+          "cohens_d_vs_anomalous": -0.0384,
+          "cohens_d_d6_vs_other_benign": 1.0394
+        },
+        "bigram_entropy": {
+          "cohens_d_vs_anomalous": -0.1251,
+          "cohens_d_d6_vs_other_benign": 1.0516
+        },
+        "quote_imbalance": {
+          "cohens_d_vs_anomalous": 0.5613,
+          "cohens_d_d6_vs_other_benign": -0.0111
+        },
+        "same_type_run_ratio": {
+          "cohens_d_vs_anomalous": -0.5023,
+          "cohens_d_d6_vs_other_benign": -0.9133
+        },
+        "max_token_length": {
+          "cohens_d_vs_anomalous": 0.1559,
+          "cohens_d_d6_vs_other_benign": -0.4462
+        },
+        "token_count": {
+          "cohens_d_vs_anomalous": -0.0696,
+          "cohens_d_d6_vs_other_benign": 1.4793
+        },
+        "max_special_run": {
+          "cohens_d_vs_anomalous": 0.1077,
+          "cohens_d_d6_vs_other_benign": 1.3565
+        },
+        "max_digit_run": {
+          "cohens_d_vs_anomalous": 0.1245,
+          "cohens_d_d6_vs_other_benign": -0.419
+        },
+        "paren_imbalance": {
+          "cohens_d_vs_anomalous": 0.0067,
+          "cohens_d_d6_vs_other_benign": 0.361
+        }
+      }
+    },
+    "minus_d1_d3": {
+      "eval": {
+        "trained_on": [
+          "d6",
+          "d7"
+        ],
+        "n_train": 46690,
+        "matched_threshold": 0.048877,
+        "own_test_fpr": 0.05003,
+        "fpr_by_source_ALL_4": {
+          "d1": 0.775255,
+          "d3": 0.700322,
+          "d6": 0.068159,
+          "d7": 0.023172
+        },
+        "detection_rate_fixed_anomalous": 0.803277,
+        "auc_own_test_vs_anomalous": 0.929646
+      },
+      "per_feature": {
+        "length": {
+          "cohens_d_vs_anomalous": 0.1414,
+          "cohens_d_d6_vs_other_benign": 1.0925
+        },
+        "special_char_ratio": {
+          "cohens_d_vs_anomalous": 0.4113,
+          "cohens_d_d6_vs_other_benign": -0.3314
+        },
+        "sql_keyword_count": {
+          "cohens_d_vs_anomalous": 0.2575,
+          "cohens_d_d6_vs_other_benign": 2.1617
+        },
+        "entropy": {
+          "cohens_d_vs_anomalous": -0.3414,
+          "cohens_d_d6_vs_other_benign": 0.3141
+        },
+        "bigram_entropy": {
+          "cohens_d_vs_anomalous": -0.3319,
+          "cohens_d_d6_vs_other_benign": 1.0115
+        },
+        "quote_imbalance": {
+          "cohens_d_vs_anomalous": 0.3499,
+          "cohens_d_d6_vs_other_benign": -0.8173
+        },
+        "same_type_run_ratio": {
+          "cohens_d_vs_anomalous": -0.1265,
+          "cohens_d_d6_vs_other_benign": -0.0771
+        },
+        "max_token_length": {
+          "cohens_d_vs_anomalous": 0.1281,
+          "cohens_d_d6_vs_other_benign": -1.8966
+        },
+        "token_count": {
+          "cohens_d_vs_anomalous": 0.0108,
+          "cohens_d_d6_vs_other_benign": 2.1013
+        },
+        "max_special_run": {
+          "cohens_d_vs_anomalous": 0.0359,
+          "cohens_d_d6_vs_other_benign": -0.3976
+        },
+        "max_digit_run": {
+          "cohens_d_vs_anomalous": 0.3227,
+          "cohens_d_d6_vs_other_benign": -0.1584
+        },
+        "paren_imbalance": {
+          "cohens_d_vs_anomalous": 0.1033,
+          "cohens_d_d6_vs_other_benign": 0.695
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,169 @@
+{
+  "description": "Zero-shot evaluation of models/branch1_v1 + models/branch2_v1 (no retraining) against a stratified sample of the newly-found Kaggle dataset data/raw/superviz25/dataset.csv. Purpose: decide whether this dataset's pattern is compatible enough to cite as an additional validation set, or whether it requires retraining.",
+  "caveats": [
+    "Source dataset's own `split` column is unusable for supervised training as given (train split = 100% benign, all attacks in test) \u2014 ignored here in favor of our own stratified sample.",
+    "attack_technique='insider' rows inspected by hand and look mislabeled (plain session-init SQL like 'SET NAMES utf8mb4' tagged as attack) \u2014 reported separately, not treated as ground truth.",
+    "attack_technique='inline' does not map to any of Branch 1's 5 classes (canary/fuzz-probe payloads, not a SQLi sub-technique) \u2014 reported separately, unmapped.",
+    "This is a stratified sample (reservoir sampling per stratum, seed =42), not the full 3.69M-row dataset \u2014 sized for stable FPR/DR estimates, not exhaustive coverage."
+  ],
+  "strata": {
+    "benign_plain": {
+      "n": 3000,
+      "branch1": {
+        "mean_attack_probability": 0.065415,
+        "flag_rate": 0.011,
+        "predicted_label_distribution": {
+          "normal": 2975,
+          "boolean_blind": 25
+        }
+      },
+      "branch2": {
+        "mean_anomaly_score": 2.660274,
+        "flag_rate": 0.692667
+      },
+      "interpretation": "flag_rate here = false positive rate (ground truth is benign)"
+    },
+    "benign_union_like": {
+      "n": 2000,
+      "branch1": {
+        "mean_attack_probability": 0.036048,
+        "flag_rate": 0.0,
+        "predicted_label_distribution": {
+          "normal": 2000
+        }
+      },
+      "branch2": {
+        "mean_anomaly_score": 0.381613,
+        "flag_rate": 0.947
+      },
+      "interpretation": "flag_rate here = false positive rate (ground truth is benign)"
+    },
+    "union": {
+      "n": 1500,
+      "branch1": {
+        "mean_attack_probability": 0.283646,
+        "flag_rate": 0.207333,
+        "predicted_label_distribution": {
+          "normal": 1195,
+          "union_based": 284,
+          "boolean_blind": 21
+        }
+      },
+      "branch2": {
+        "mean_anomaly_score": 8.034607,
+        "flag_rate": 0.881333
+      },
+      "interpretation": "flag_rate here = detection rate (ground truth is attack)",
+      "mapped_branch1_label": "union_based"
+    },
+    "error": {
+      "n": 1500,
+      "branch1": {
+        "mean_attack_probability": 0.320798,
+        "flag_rate": 0.253333,
+        "predicted_label_distribution": {
+          "normal": 1237,
+          "boolean_blind": 220,
+          "error_based": 41,
+          "time_blind": 2
+        }
+      },
+      "branch2": {
+        "mean_anomaly_score": 2.770355,
+        "flag_rate": 0.822667
+      },
+      "interpretation": "flag_rate here = detection rate (ground truth is attack)",
+      "mapped_branch1_label": "error_based"
+    },
+    "boolean": {
+      "n": 1500,
+      "branch1": {
+        "mean_attack_probability": 0.620705,
+        "flag_rate": 0.652667,
+        "predicted_label_distribution": {
+          "boolean_blind": 867,
+          "normal": 617,
+          "time_blind": 11,
+          "error_based": 4,
+          "union_based": 1
+        }
+      },
+      "branch2": {
+        "mean_anomaly_score": 9056166.302977,
+        "flag_rate": 0.81
+      },
+      "interpretation": "flag_rate here = detection rate (ground truth is attack)",
+      "mapped_branch1_label": "boolean_blind"
+    },
+    "time": {
+      "n": 1500,
+      "branch1": {
+        "mean_attack_probability": 0.231942,
+        "flag_rate": 0.170667,
+        "predicted_label_distribution": {
+          "normal": 1312,
+          "time_blind": 167,
+          "boolean_blind": 21
+        }
+      },
+      "branch2": {
+        "mean_anomaly_score": 2.818284,
+        "flag_rate": 0.836
+      },
+      "interpretation": "flag_rate here = detection rate (ground truth is attack)",
+      "mapped_branch1_label": "time_blind"
+    },
+    "stacked": {
+      "n": 1500,
+      "branch1": {
+        "mean_attack_probability": 0.16842,
+        "flag_rate": 0.105333,
+        "predicted_label_distribution": {
+          "normal": 1417,
+          "time_blind": 75,
+          "boolean_blind": 8
+        }
+      },
+      "branch2": {
+        "mean_anomaly_score": 3.668957,
+        "flag_rate": 0.862
+      },
+      "interpretation": "flag_rate here = detection rate (ground truth is attack)",
+      "mapped_branch1_label": "stacked"
+    },
+    "inline": {
+      "n": 1000,
+      "branch1": {
+        "mean_attack_probability": 0.255274,
+        "flag_rate": 0.039,
+        "predicted_label_distribution": {
+          "normal": 971,
+          "boolean_blind": 28,
+          "error_based": 1
+        }
+      },
+      "branch2": {
+        "mean_anomaly_score": 3.358752,
+        "flag_rate": 0.755
+      },
+      "interpretation": "unmapped attack_technique, not one of Branch 1's 5 classes \u2014 reported for reference only, not scored as detection rate"
+    },
+    "insider": {
+      "n": 1089,
+      "branch1": {
+        "mean_attack_probability": 0.369088,
+        "flag_rate": 0.348026,
+        "predicted_label_distribution": {
+          "normal": 840,
+          "union_based": 4,
+          "boolean_blind": 245
+        }
+      },
+      "branch2": {
+        "mean_anomaly_score": 7.487672,
+        "flag_rate": 0.979798
+      },
+      "interpretation": "unmapped attack_technique, not one of Branch 1's 5 classes \u2014 reported for reference only, not scored as detection rate"
+    }
+  }
+}

@@ -1,0 +1,37 @@
+{
+  "description": "Held-out D6 (Superviz25) evaluation on the REAL train/test split written by build_branch1_dataset.py/build_branch2_dataset.py after D6 was added to training (26/8) - not a fresh ad-hoc sample. Compare against report/metrics/superviz25_zeroshot_eval.json (the pre-retrain zero-shot numbers) to see the effect of retraining.",
+  "branch1_d6_test": {
+    "normal": {
+      "n": 1820,
+      "flag_rate": 0.069231,
+      "interpretation": "false_positive_rate"
+    },
+    "union_based": {
+      "n": 1673,
+      "flag_rate": 0.75792,
+      "interpretation": "detection_rate"
+    },
+    "error_based": {
+      "n": 2042,
+      "flag_rate": 0.991675,
+      "interpretation": "detection_rate"
+    },
+    "boolean_blind": {
+      "n": 512,
+      "flag_rate": 0.970703,
+      "interpretation": "detection_rate"
+    },
+    "time_blind": {
+      "n": 1251,
+      "flag_rate": 0.933653,
+      "interpretation": "detection_rate"
+    },
+    "stacked": {
+      "n": 3012,
+      "flag_rate": 0.903054,
+      "interpretation": "detection_rate"
+    }
+  },
+  "branch2_d6_test_benign_fpr": 0.07267,
+  "branch2_d6_test_n": 7018
+}

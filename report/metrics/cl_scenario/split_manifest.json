@@ -1,45 +1,53 @@
 {
   "partitions": {
-    "unused": 32958,
-    "base_train": 20194,
-    "golden": 6780,
-    "base_valid": 3564,
-    "stream_q3_new_class": 2000,
+    "unused": 42950,
+    "base_train": 28688,
+    "golden": 9000,
+    "base_valid": 5062,
     "stream_q4": 2000,
+    "stream_q3_new_class": 2000,
     "stream_q3_trickle": 300
   },
   "per_class": {
     "boolean_blind": {
-      "unused": 6084,
-      "base_train": 5733,
+      "unused": 6264,
+      "base_train": 5727,
       "golden": 1500,
-      "base_valid": 1017,
-      "stream_q4": 584,
-      "stream_q3_trickle": 82
+      "base_valid": 1023,
+      "stream_q4": 423,
+      "stream_q3_trickle": 63
     },
     "error_based": {
-      "unused": 3176,
-      "base_train": 2956,
-      "golden": 780,
-      "base_valid": 552,
-      "stream_q4": 286,
-      "stream_q3_trickle": 46
+      "unused": 6312,
+      "base_train": 5729,
+      "golden": 1500,
+      "base_valid": 1021,
+      "stream_q4": 386,
+      "stream_q3_trickle": 52
     },
     "normal": {
-      "unused": 6081,
-      "base_train": 5772,
+      "unused": 6275,
+      "base_train": 5784,
       "golden": 1500,
-      "base_valid": 978,
-      "stream_q4": 575,
-      "stream_q3_trickle": 94
+      "base_valid": 966,
+      "stream_q4": 403,
+      "stream_q3_trickle": 72
+    },
+    "stacked": {
+      "unused": 6313,
+      "base_train": 5709,
+      "golden": 1500,
+      "base_valid": 1041,
+      "stream_q4": 377,
+      "stream_q3_trickle": 60
     },
     "time_blind": {
-      "unused": 6117,
-      "base_train": 5733,
+      "unused": 6286,
+      "base_train": 5739,
       "golden": 1500,
-      "base_valid": 1017,
-      "stream_q4": 555,
-      "stream_q3_trickle": 78
+      "base_valid": 1011,
+      "stream_q4": 411,
+      "stream_q3_trickle": 53
     },
     "union_based": {
       "unused": 11500,
@@ -48,24 +56,25 @@
     }
   },
   "stream": {
-    "rows": 12955,
-    "windows": 13,
+    "rows": 19455,
+    "windows": 20,
     "window_size": 1000,
-    "q3_rows": 6929,
-    "q4_rows": 6026,
+    "q3_rows": 10406,
+    "q4_rows": 9049,
     "quiet_head_rows": 2000,
-    "q3_attack_rate": 0.3184,
-    "q4_attack_rate": 0.2365,
-    "benign_pool_available": 8655,
-    "benign_pool_used": 8655,
+    "q3_attack_rate": 0.2141,
+    "q4_attack_rate": 0.1765,
+    "benign_pool_available": 15155,
+    "benign_pool_used": 15155,
     "class_mix": {
-      "normal": 9324,
+      "normal": 15630,
       "union_based": 2000,
-      "boolean_blind": 666,
-      "time_blind": 633,
-      "error_based": 332
+      "boolean_blind": 486,
+      "time_blind": 464,
+      "error_based": 438,
+      "stacked": 437
     },
-    "unused_held_out_rows": 6220
+    "unused_held_out_rows": 4000
   },
   "invariants": [
     {

@@ -1,0 +1,276 @@
+{
+  "results": [
+    {
+      "name": "ngram(1,4)",
+      "analyzer": "char_wb",
+      "ngram_range": [
+        1,
+        4
+      ],
+      "max_features": 50000,
+      "C": 1.0,
+      "class_weight": null,
+      "f1_macro": 0.8499,
+      "stacked_f1": 0.533,
+      "time_blind_f1": 0.7342,
+      "vocab_size": 50000,
+      "fit_time_s": 32.8,
+      "pred_p50_est_ms": 0.001
+    },
+    {
+      "name": "analyzer=char",
+      "analyzer": "char",
+      "ngram_range": [
+        2,
+        4
+      ],
+      "max_features": 50000,
+      "C": 1.0,
+      "class_weight": null,
+      "f1_macro": 0.8375,
+      "stacked_f1": 0.4854,
+      "time_blind_f1": 0.7294,
+      "vocab_size": 50000,
+      "fit_time_s": 31.5,
+      "pred_p50_est_ms": 0.002
+    },
+    {
+      "name": "analyzer=char,ngram(2,5)",
+      "analyzer": "char",
+      "ngram_range": [
+        2,
+        5
+      ],
+      "max_features": 50000,
+      "C": 1.0,
+      "class_weight": null,
+      "f1_macro": 0.8371,
+      "stacked_f1": 0.4868,
+      "time_blind_f1": 0.7285,
+      "vocab_size": 50000,
+      "fit_time_s": 36.7,
+      "pred_p50_est_ms": 0.003
+    },
+    {
+      "name": "C=10",
+      "analyzer": "char_wb",
+      "ngram_range": [
+        2,
+        4
+      ],
+      "max_features": 50000,
+      "C": 10.0,
+      "class_weight": null,
+      "f1_macro": 0.836,
+      "stacked_f1": 0.4598,
+      "time_blind_f1": 0.7169,
+      "vocab_size": 50000,
+      "fit_time_s": 37.0,
+      "pred_p50_est_ms": 0.001
+    },
+    {
+      "name": "baseline (current prod)",
+      "analyzer": "char_wb",
+      "ngram_range": [
+        2,
+        4
+      ],
+      "max_features": 50000,
+      "C": 1.0,
+      "class_weight": null,
+      "f1_macro": 0.8352,
+      "stacked_f1": 0.4711,
+      "time_blind_f1": 0.7206,
+      "vocab_size": 50000,
+      "fit_time_s": 27.6,
+      "pred_p50_est_ms": 0.001
+    },
+    {
+      "name": "max_features=100k",
+      "analyzer": "char_wb",
+      "ngram_range": [
+        2,
+        4
+      ],
+      "max_features": 100000,
+      "C": 1.0,
+      "class_weight": null,
+      "f1_macro": 0.8352,
+      "stacked_f1": 0.4745,
+      "time_blind_f1": 0.7238,
+      "vocab_size": 100000,
+      "fit_time_s": 33.9,
+      "pred_p50_est_ms": 0.002
+    },
+    {
+      "name": "class_weight=balanced",
+      "analyzer": "char_wb",
+      "ngram_range": [
+        2,
+        4
+      ],
+      "max_features": 50000,
+      "C": 1.0,
+      "class_weight": "balanced",
+      "f1_macro": 0.8352,
+      "stacked_f1": 0.4723,
+      "time_blind_f1": 0.7229,
+      "vocab_size": 50000,
+      "fit_time_s": 31.7,
+      "pred_p50_est_ms": 0.001
+    },
+    {
+      "name": "ngram(2,6)+100k+C=10",
+      "analyzer": "char_wb",
+      "ngram_range": [
+        2,
+        6
+      ],
+      "max_features": 100000,
+      "C": 10.0,
+      "class_weight": null,
+      "f1_macro": 0.8337,
+      "stacked_f1": 0.4569,
+      "time_blind_f1": 0.7101,
+      "vocab_size": 100000,
+      "fit_time_s": 48.5,
+      "pred_p50_est_ms": 0.002
+    },
+    {
+      "name": "ngram(2,5)+100k+C=10+balanced",
+      "analyzer": "char_wb",
+      "ngram_range": [
+        2,
+        5
+      ],
+      "max_features": 100000,
+      "C": 10.0,
+      "class_weight": "balanced",
+      "f1_macro": 0.8336,
+      "stacked_f1": 0.4512,
+      "time_blind_f1": 0.7206,
+      "vocab_size": 100000,
+      "fit_time_s": 41.6,
+      "pred_p50_est_ms": 0.002
+    },
+    {
+      "name": "ngram(2,5)",
+      "analyzer": "char_wb",
+      "ngram_range": [
+        2,
+        5
+      ],
+      "max_features": 50000,
+      "C": 1.0,
+      "class_weight": null,
+      "f1_macro": 0.8314,
+      "stacked_f1": 0.4564,
+      "time_blind_f1": 0.7173,
+      "vocab_size": 50000,
+      "fit_time_s": 34.1,
+      "pred_p50_est_ms": 0.001
+    },
+    {
+      "name": "ngram(2,5)+100k",
+      "analyzer": "char_wb",
+      "ngram_range": [
+        2,
+        5
+      ],
+      "max_features": 100000,
+      "C": 1.0,
+      "class_weight": null,
+      "f1_macro": 0.831,
+      "stacked_f1": 0.4569,
+      "time_blind_f1": 0.7142,
+      "vocab_size": 100000,
+      "fit_time_s": 41.0,
+      "pred_p50_est_ms": 0.002
+    },
+    {
+      "name": "ngram(2,6)",
+      "analyzer": "char_wb",
+      "ngram_range": [
+        2,
+        6
+      ],
+      "max_features": 50000,
+      "C": 1.0,
+      "class_weight": null,
+      "f1_macro": 0.8281,
+      "stacked_f1": 0.4511,
+      "time_blind_f1": 0.7171,
+      "vocab_size": 50000,
+      "fit_time_s": 43.0,
+      "pred_p50_est_ms": 0.002
+    },
+    {
+      "name": "ngram(2,5)+100k+C=10",
+      "analyzer": "char_wb",
+      "ngram_range": [
+        2,
+        5
+      ],
+      "max_features": 100000,
+      "C": 10.0,
+      "class_weight": null,
+      "f1_macro": 0.8243,
+      "stacked_f1": 0.4103,
+      "time_blind_f1": 0.713,
+      "vocab_size": 100000,
+      "fit_time_s": 43.0,
+      "pred_p50_est_ms": 0.002
+    },
+    {
+      "name": "ngram(3,6)",
+      "analyzer": "char_wb",
+      "ngram_range": [
+        3,
+        6
+      ],
+      "max_features": 50000,
+      "C": 1.0,
+      "class_weight": null,
+      "f1_macro": 0.8174,
+      "stacked_f1": 0.4167,
+      "time_blind_f1": 0.7046,
+      "vocab_size": 50000,
+      "fit_time_s": 34.0,
+      "pred_p50_est_ms": 0.001
+    },
+    {
+      "name": "C=0.1",
+      "analyzer": "char_wb",
+      "ngram_range": [
+        2,
+        4
+      ],
+      "max_features": 50000,
+      "C": 0.1,
+      "class_weight": null,
+      "f1_macro": 0.813,
+      "stacked_f1": 0.4795,
+      "time_blind_f1": 0.7222,
+      "vocab_size": 50000,
+      "fit_time_s": 25.0,
+      "pred_p50_est_ms": 0.001
+    },
+    {
+      "name": "analyzer=word",
+      "analyzer": "word",
+      "ngram_range": [
+        1,
+        2
+      ],
+      "max_features": 50000,
+      "C": 1.0,
+      "class_weight": null,
+      "f1_macro": 0.8047,
+      "stacked_f1": 0.4271,
+      "time_blind_f1": 0.6894,
+      "vocab_size": 50000,
+      "fit_time_s": 18.9,
+      "pred_p50_est_ms": 0.0
+    }
+  ]
+}

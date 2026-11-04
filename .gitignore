@@ -46,6 +46,9 @@ models/_archive/
 # Local run artifacts
 .run/
 
+# CL scenario experiment: scratch model checkpoints (regenerated per run, not lineage-critical)
+report/metrics/cl_scenario/tmp_models/
+
 # MLOps: promotion registry (lineage-critical, not weights)
 models/registry.json
 

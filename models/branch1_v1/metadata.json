@@ -1,24 +1,27 @@
 {
   "version": "branch1_v1",
   "branch": "branch1_supervised_multiclass",
-  "architecture": "tfidf_logreg",
-  "trained_at": "2026-08-20T01:02:50",
-  "train_rows": 54236,
-  "test_rows": 13560,
-  "f1_macro": 0.9906716828805351,
-  "train_time_s": 14.267253901998629,
+  "architecture": "distilbert",
+  "trained_at": "2026-08-28T13:13:57",
+  "train_rows": 71705,
+  "test_rows": 18295,
+  "f1_macro": 0.9698705289802508,
+  "train_time_s": 2067.231512582999,
   "labels": {
     "0": "normal",
     "1": "union_based",
     "2": "error_based",
     "3": "boolean_blind",
-    "4": "time_blind"
+    "4": "time_blind",
+    "5": "stacked"
   },
   "dataset": "data/processed/branch1_train.csv",
-  "tfidf": {
-    "analyzer": "char_wb",
-    "ngram_min": 2,
-    "ngram_max": 4,
-    "max_features": 50000
-  }
+  "distilbert": {
+    "pretrained": "distilbert-base-uncased",
+    "max_length": 128,
+    "batch_size": 32,
+    "epochs": 3,
+    "learning_rate": 5e-05
+  },
+  "model_size_bytes": 268557782
 }

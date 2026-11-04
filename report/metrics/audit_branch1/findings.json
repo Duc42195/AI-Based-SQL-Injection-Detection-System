@@ -1,6 +1,6 @@
 {
   "branch1_distributions": {
-    "rows": 67796,
+    "rows": 90000,
     "columns": [
       "id",
       "query_raw",
@@ -12,60 +12,62 @@
       "split"
     ],
     "split": {
-      "train": 54236,
-      "test": 13560
+      "train": 70783,
+      "test": 19217
     },
     "label_name": {
-      "time_blind": 15000,
-      "normal": 15000,
-      "boolean_blind": 15000,
       "union_based": 15000,
-      "error_based": 7796
+      "boolean_blind": 15000,
+      "normal": 15000,
+      "error_based": 15000,
+      "time_blind": 15000,
+      "stacked": 15000
     },
     "has_comment_marker": {
-      "0": 43140,
-      "1": 24656
+      "0": 56082,
+      "1": 33918
     },
     "source": {
-      "d7_srbh2020": 50959,
-      "d1_sqliv3": 12607,
-      "d7_srbh2020_normal": 4206,
-      "d4_payloadbox": 24
+      "d6_superviz25": 45300,
+      "d7_srbh2020": 36764,
+      "d1_sqliv3": 6658,
+      "d7_srbh2020_normal": 1262,
+      "d4_payloadbox": 16
     },
-    "distinct_query_canonical": 63519,
-    "distinct_query_raw": 63554
+    "distinct_query_canonical": 90000,
+    "distinct_query_raw": 89994
   },
   "branch1_duplicate_leakage": {
-    "extra_copies": 4277,
-    "distinct_duplicate_texts": 2741,
-    "duplicate_texts_straddle_train_and_test": 949,
+    "extra_copies": 0,
+    "distinct_duplicate_texts": 0,
+    "duplicate_texts_straddle_train_and_test": 0,
     "note": "extra_copies == 4,277 matches the dedup rule in build_mlops_split.py (duplicate texts straddle train/golden); here they straddle train/test inside the same file -> a cross-split leakage vector for Branch 1's own eval."
   },
   "branch1_ssrf_mislabels": {
-    "ssrf_rows_total": 1640,
+    "ssrf_rows_total": 923,
     "by_label": {
-      "normal": 1153,
-      "boolean_blind": 487
+      "normal": 466,
+      "boolean_blind": 457
     },
-    "in_normal_benign_pool": 1153,
-    "in_boolean_blind_sqli": 487,
+    "in_normal_benign_pool": 466,
+    "in_boolean_blind_sqli": 457,
     "patterns": {
-      "owasp.org": 1079,
-      "/etc/passwd": 364,
-      "shellshock": 197
+      "owasp.org": 491,
+      "/etc/passwd": 273,
+      "shellshock": 159
     },
     "note": "Rows matching SSRF/OS-cmd callbacks inside boolean_blind are label noise (doc data_contract.md ~13% measured limitation); rows inside normal are benign-pool contamination analogous to the Branch 2 SSRF leak. Per data_contract.md, SSRF leaking into normal is 'acceptable for Branch 1 (SQLi-only concern)' - SSRF cleaning is prioritized for Branch 2 (already done). Not a default fix for Branch 1."
   },
   "branch1_blog_duplication": {
-    "rows": 11920,
-    "share_of_dataset": 0.1758,
-    "distinct_canonicals": 11326,
+    "rows": 8203,
+    "share_of_dataset": 0.0911,
+    "distinct_canonicals": 8203,
     "by_label": {
-      "union_based": 5327,
-      "error_based": 3444,
-      "time_blind": 2076,
-      "boolean_blind": 962,
-      "normal": 111
+      "union_based": 3657,
+      "error_based": 2187,
+      "time_blind": 1454,
+      "boolean_blind": 870,
+      "normal": 35
     },
     "note": "WordPress /blog/index.php/2020/03 request-format rows dominate the corpus (union_based/error_based/time_blind) -> heavy content-format duplication, not per-class diversity."
   }
