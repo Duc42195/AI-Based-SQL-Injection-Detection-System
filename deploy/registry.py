@@ -25,6 +25,7 @@ import joblib
 import numpy as np
 
 from src.continual_learning.model_registry import resolve_active
+from src.models.branch1_loader import branch1_artifacts_exist, load_branch1_artifacts
 from src.models.branch2_anomaly import AnomalyDetector
 from src.models.branch3_session import SessionCorrelator
 from src.preprocessing.canonicalize import canonicalize
@@ -234,16 +235,14 @@ class ModelRegistry:
         model_dir = self._branch_version_dir(
             "branch1_supervised.active_version", "branch1_v1", branch="branch1"
         )
-        vec_path = model_dir / "vectorizer.joblib"
-        clf_path = model_dir / "model.joblib"
-        if not vec_path.exists() or not clf_path.exists():
+        if not branch1_artifacts_exist(model_dir):
             logger.warning(
                 "Branch-1 model not found under %s — reporting not_ready", model_dir
             )
             return None
         try:
-            vectorizer = joblib.load(vec_path)
-            clf = joblib.load(clf_path)
+            distilbert_cfg = self._cfg.get_path("branch1_supervised.distilbert", {})
+            vectorizer, clf = load_branch1_artifacts(model_dir, distilbert_cfg)
         except Exception:  # pragma: no cover - corrupt artifact is unexpected
             logger.exception("Failed to load Branch-1 model from %s", model_dir)
             return None
@@ -330,12 +329,12 @@ class ModelRegistry:
 
         b1_dir = self._branch_version_dir("branch1_supervised.active_version", "branch1_v1")
         b2_dir = self._branch_version_dir("branch2_anomaly.active_version", "branch2_v1")
-        if not (b1_dir / "vectorizer.joblib").exists() or not (b2_dir / "model.joblib").exists():
+        if not branch1_artifacts_exist(b1_dir) or not (b2_dir / "model.joblib").exists():
             logger.warning("Session Correlator needs Branch 1 + Branch 2 artifacts — reporting not_ready")
             return None
         try:
-            vectorizer = joblib.load(b1_dir / "vectorizer.joblib")
-            clf = joblib.load(b1_dir / "model.joblib")
+            distilbert_cfg = self._cfg.get_path("branch1_supervised.distilbert", {})
+            vectorizer, clf = load_branch1_artifacts(b1_dir, distilbert_cfg)
             b2_detector = AnomalyDetector.load(b2_dir)
             correlator = SessionCorrelator.load(correlator_dir, vectorizer, clf, b2_detector)
         except Exception:  # pragma: no cover - corrupt artifact is unexpected

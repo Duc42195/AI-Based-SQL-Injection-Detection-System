@@ -1,0 +1,26 @@
+{
+  "version": "branch1_v1",
+  "branch": "branch1_supervised_multiclass",
+  "architecture": "tfidf_logreg",
+  "trained_at": "2026-08-27T16:04:05",
+  "train_rows": 71705,
+  "test_rows": 18295,
+  "f1_macro": 0.8976786190129755,
+  "train_time_s": 29.315624694998405,
+  "labels": {
+    "0": "normal",
+    "1": "union_based",
+    "2": "error_based",
+    "3": "boolean_blind",
+    "4": "time_blind",
+    "5": "stacked"
+  },
+  "dataset": "data/processed/branch1_train.csv",
+  "tfidf": {
+    "analyzer": "char_wb",
+    "ngram_min": 1,
+    "ngram_max": 2,
+    "max_features": 50000,
+    "C": 10.0
+  }
+}

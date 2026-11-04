@@ -46,7 +46,12 @@ def check_distributions(df: pd.DataFrame) -> dict:
         "split": df["split"].value_counts().to_dict(),
         "label_name": df["label_name"].value_counts().to_dict(),
         "has_comment_marker": df["has_comment_marker"].value_counts().to_dict(),
-        "source": df["source"].value_counts().to_dict(),
+        # D6 (Superviz25) encodes its sqlmap campaign into `source` as
+        # "d6_superviz25:<attack_id>" (see load_d6_superviz25) so
+        # _group_aware_split can split by campaign - strip that suffix here
+        # or this breakdown fragments into ~46 near-empty rows instead of
+        # one "d6_superviz25" bucket.
+        "source": df["source"].str.split(":").str[0].value_counts().to_dict(),
         "distinct_query_canonical": int(df["query_canonical"].nunique()),
         "distinct_query_raw": int(df["query_raw"].nunique()),
     }

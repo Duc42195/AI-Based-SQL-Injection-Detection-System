@@ -131,7 +131,7 @@ def run_tfidf_logreg(
     X_train = vectorizer.fit_transform(train_df["query_canonical"].astype(str))
     X_test = vectorizer.transform(test_df["query_canonical"].astype(str))
 
-    clf = LogisticRegression(max_iter=1000, n_jobs=-1)
+    clf = LogisticRegression(max_iter=1000, n_jobs=-1, C=float(tfidf_cfg.get("C", 1.0)))
     t0 = time.perf_counter()
     clf.fit(X_train, train_df["label"])
     train_time_s = time.perf_counter() - t0

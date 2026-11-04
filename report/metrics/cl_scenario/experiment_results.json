@@ -6,13 +6,13 @@
     "shadow_fpr_tolerance": 0.005
   },
   "pre_bump": {
-    "f1_macro_known_classes": 0.9868,
-    "fpr": 0.0333,
+    "f1_macro_known_classes": 0.9712,
+    "fpr": 0.0073,
     "held_out_class": "union_based",
     "held_out_n": 1500,
-    "branch1_miss_rate": 0.1227,
-    "branch2_detection_rate": 0.9947,
-    "combined_coverage": 0.9967
+    "branch1_miss_rate": 0.0213,
+    "branch2_detection_rate": 0.774,
+    "combined_coverage": 0.9947
   },
   "drift_q3": {
     "windows": [
@@ -22,13 +22,13 @@
         "n": 1000,
         "n_held_out_class": 0,
         "psi": {
-          "global": 0.003111,
-          "attack_subpop": 0.039731,
-          "prediction": 0.000187,
-          "confidence": 0.007586,
-          "confidence_flagged": 0.034863
+          "global": 0.003192,
+          "attack_subpop": 0.008696,
+          "prediction": 0.001224,
+          "confidence": 0.00197,
+          "confidence_flagged": 0.008062
         },
-        "block_rate": 0.184,
+        "block_rate": 0.286,
         "alert": false
       },
       {
@@ -37,125 +37,187 @@
         "n": 1000,
         "n_held_out_class": 0,
         "psi": {
-          "global": 0.003041,
-          "attack_subpop": 0.030579,
-          "prediction": 0.000189,
-          "confidence": 0.007764,
-          "confidence_flagged": 0.031124
+          "global": 0.003133,
+          "attack_subpop": 0.006882,
+          "prediction": 0.001088,
+          "confidence": 0.001997,
+          "confidence_flagged": 0.006885
         },
-        "block_rate": 0.189,
+        "block_rate": 0.31,
         "alert": false
       },
       {
         "index": 2,
         "is_reference": false,
         "n": 1000,
-        "n_held_out_class": 392,
+        "n_held_out_class": 240,
         "psi": {
-          "global": 0.159828,
-          "attack_subpop": 0.452835,
-          "prediction": 0.407327,
-          "confidence": 0.192478,
-          "confidence_flagged": 0.286163
+          "global": 0.031763,
+          "attack_subpop": 0.139189,
+          "prediction": 0.178455,
+          "confidence": 0.157553,
+          "confidence_flagged": 0.254502
         },
-        "block_rate": 0.462,
+        "block_rate": 0.498,
         "alert": true
       },
       {
         "index": 3,
         "is_reference": false,
         "n": 1000,
-        "n_held_out_class": 406,
+        "n_held_out_class": 242,
         "psi": {
-          "global": 0.179821,
-          "attack_subpop": 0.578196,
-          "prediction": 0.413708,
-          "confidence": 0.220347,
-          "confidence_flagged": 0.354321
+          "global": 0.025001,
+          "attack_subpop": 0.180464,
+          "prediction": 0.144141,
+          "confidence": 0.194261,
+          "confidence_flagged": 0.288089
         },
-        "block_rate": 0.457,
+        "block_rate": 0.475,
         "alert": true
       },
       {
         "index": 4,
         "is_reference": false,
         "n": 1000,
-        "n_held_out_class": 393,
+        "n_held_out_class": 266,
         "psi": {
-          "global": 0.195595,
-          "attack_subpop": 0.639338,
-          "prediction": 0.343113,
-          "confidence": 0.206134,
-          "confidence_flagged": 0.301171
+          "global": 0.028858,
+          "attack_subpop": 0.189482,
+          "prediction": 0.191628,
+          "confidence": 0.171267,
+          "confidence_flagged": 0.262967
         },
-        "block_rate": 0.427,
+        "block_rate": 0.498,
         "alert": true
       },
       {
         "index": 5,
         "is_reference": false,
         "n": 1000,
-        "n_held_out_class": 409,
+        "n_held_out_class": 229,
         "psi": {
-          "global": 0.209303,
-          "attack_subpop": 0.642351,
-          "prediction": 0.428972,
-          "confidence": 0.249013,
-          "confidence_flagged": 0.508494
+          "global": 0.019072,
+          "attack_subpop": 0.173721,
+          "prediction": 0.095393,
+          "confidence": 0.104209,
+          "confidence_flagged": 0.240007
         },
-        "block_rate": 0.459,
+        "block_rate": 0.44,
         "alert": true
       },
       {
         "index": 6,
         "is_reference": false,
-        "n": 929,
-        "n_held_out_class": 400,
+        "n": 1000,
+        "n_held_out_class": 240,
         "psi": {
-          "global": 0.199461,
-          "attack_subpop": 0.652427,
-          "prediction": 0.446635,
-          "confidence": 0.257616,
-          "confidence_flagged": 0.385375
+          "global": 0.020259,
+          "attack_subpop": 0.176214,
+          "prediction": 0.149587,
+          "confidence": 0.145081,
+          "confidence_flagged": 0.292745
         },
-        "block_rate": 0.468245,
+        "block_rate": 0.482,
+        "alert": true
+      },
+      {
+        "index": 7,
+        "is_reference": false,
+        "n": 1000,
+        "n_held_out_class": 220,
+        "psi": {
+          "global": 0.026704,
+          "attack_subpop": 0.166466,
+          "prediction": 0.131656,
+          "confidence": 0.114621,
+          "confidence_flagged": 0.228195
+        },
+        "block_rate": 0.46,
+        "alert": true
+      },
+      {
+        "index": 8,
+        "is_reference": false,
+        "n": 1000,
+        "n_held_out_class": 247,
+        "psi": {
+          "global": 0.023579,
+          "attack_subpop": 0.177082,
+          "prediction": 0.174392,
+          "confidence": 0.202942,
+          "confidence_flagged": 0.352947
+        },
+        "block_rate": 0.491,
+        "alert": true
+      },
+      {
+        "index": 9,
+        "is_reference": false,
+        "n": 1000,
+        "n_held_out_class": 221,
+        "psi": {
+          "global": 0.027617,
+          "attack_subpop": 0.187482,
+          "prediction": 0.096548,
+          "confidence": 0.132497,
+          "confidence_flagged": 0.307255
+        },
+        "block_rate": 0.442,
+        "alert": true
+      },
+      {
+        "index": 10,
+        "is_reference": false,
+        "n": 406,
+        "n_held_out_class": 95,
+        "psi": {
+          "global": 0.032332,
+          "attack_subpop": 0.196649,
+          "prediction": 0.111904,
+          "confidence": 0.132265,
+          "confidence_flagged": 0.288563
+        },
+        "block_rate": 0.450739,
         "alert": true
       }
     ],
     "trigger": {
       "fired": true,
       "window_index": 3,
-      "signal": "attack_subpop",
+      "signal": "confidence_flagged",
       "sustained_windows": 2
     }
   },
   "act1_major_bump": {
-    "trigger_position": 3291,
-    "trigger_fraction_of_pour": 0.4751,
-    "confirmed_pool_rows": 1269,
+    "trigger_position": 4149,
+    "trigger_fraction_of_pour": 0.3988,
+    "confirmed_pool_rows": 1753,
     "confirmed_pool_class_mix": {
-      "normal": 634,
+      "normal": 1142,
       "union_based": 500,
-      "boolean_blind": 53,
-      "time_blind": 52,
-      "error_based": 30
+      "boolean_blind": 31,
+      "error_based": 29,
+      "time_blind": 28,
+      "stacked": 23
     },
     "candidate": {
       "model_version": "M1",
       "data_version": "2.0",
-      "f1_macro": 0.980588,
-      "fpr": 0.033333,
+      "f1_macro": 0.971144,
+      "fpr": 0.01,
       "per_class_recall": {
-        "boolean_blind": 0.978667,
-        "error_based": 1.0,
-        "normal": 0.966667,
-        "time_blind": 1.0,
-        "union_based": 0.958667
+        "boolean_blind": 0.985333,
+        "error_based": 0.977333,
+        "normal": 0.99,
+        "stacked": 0.922667,
+        "time_blind": 0.963333,
+        "union_based": 0.986
       },
-      "n_rows": 6780
+      "n_rows": 9000
     },
     "gate_decision": {
-      "ts": "2026-08-22T17:31:31+00:00",
+      "ts": "2026-08-28T09:00:01+00:00",
       "candidate": "M1",
       "champion": "M0",
       "candidate_data": "2.0",
@@ -166,29 +228,31 @@
         "candidate": {
           "model_version": "M1",
           "data_version": "2.0",
-          "f1_macro": 0.980588,
-          "fpr": 0.033333,
+          "f1_macro": 0.971144,
+          "fpr": 0.01,
           "per_class_recall": {
-            "boolean_blind": 0.978667,
-            "error_based": 1.0,
-            "normal": 0.966667,
-            "time_blind": 1.0,
-            "union_based": 0.958667
+            "boolean_blind": 0.985333,
+            "error_based": 0.977333,
+            "normal": 0.99,
+            "stacked": 0.922667,
+            "time_blind": 0.963333,
+            "union_based": 0.986
           },
-          "n_rows": 6780
+          "n_rows": 9000
         },
         "champion": {
           "model_version": "M0",
           "data_version": "1.0",
-          "f1_macro": 0.986843,
-          "fpr": 0.033333,
+          "f1_macro": 0.971216,
+          "fpr": 0.007333,
           "per_class_recall": {
-            "boolean_blind": 0.981333,
-            "error_based": 1.0,
-            "normal": 0.966667,
-            "time_blind": 1.0
+            "boolean_blind": 0.987333,
+            "error_based": 0.984667,
+            "normal": 0.992667,
+            "stacked": 0.93,
+            "time_blind": 0.96
           },
-          "n_rows": 5280
+          "n_rows": 7500
         }
       },
       "criteria": {
@@ -203,47 +267,49 @@
     "quality_floor_check": {
       "passed": true,
       "known_class_regressions": {},
-      "new_class_recall": 0.958667,
+      "new_class_recall": 0.986,
       "min_new_class_recall": 0.8,
       "max_per_class_recall_drop": 0.02
     },
     "promoted_direct": true,
-    "lifecycle": "M0 retired, M1 champion at Q3 position 3291",
-    "post_trigger_tail_recall": 0.9542,
-    "post_trigger_tail_n": 1486
+    "lifecycle": "M0 retired, M1 champion at Q3 position 4149",
+    "post_trigger_tail_recall": 0.9865,
+    "post_trigger_tail_n": 1484
   },
   "act1_ablation_control": {
-    "extra_rows": 1269,
-    "candidate_recall_on_held_out": 0.9586666666666667,
+    "extra_rows": 1753,
+    "candidate_recall_on_held_out": 0.986,
     "control_recall_on_held_out": 0.0,
     "interpretation": "Same base pool, same number of extra rows either way; the control's extra rows are resampled from known classes only. If the control also recalled the held-out class, the gain would be attributable to row count rather than to learning the class."
   },
   "act2_minor_bump": {
-    "trigger_position": 2093,
+    "trigger_position": 2497,
     "confirmed_pool_rows": 500,
     "confirmed_pool_class_mix": {
-      "time_blind": 201,
-      "boolean_blind": 188,
-      "error_based": 83,
-      "normal": 28
+      "boolean_blind": 122,
+      "time_blind": 117,
+      "stacked": 100,
+      "error_based": 96,
+      "normal": 65
     },
-    "balanced_pool_rows": 112,
+    "balanced_pool_rows": 325,
     "candidate": {
       "model_version": "M2",
       "data_version": "2.1",
-      "f1_macro": 0.981116,
-      "fpr": 0.029333,
+      "f1_macro": 0.97394,
+      "fpr": 0.020667,
       "per_class_recall": {
-        "boolean_blind": 0.978,
-        "error_based": 1.0,
-        "normal": 0.970667,
-        "time_blind": 1.0,
-        "union_based": 0.958
+        "boolean_blind": 0.982667,
+        "error_based": 0.984667,
+        "normal": 0.979333,
+        "stacked": 0.944,
+        "time_blind": 0.962667,
+        "union_based": 0.988667
       },
-      "n_rows": 6780
+      "n_rows": 9000
     },
     "gate_decision": {
-      "ts": "2026-08-22T17:31:55+00:00",
+      "ts": "2026-08-28T09:30:12+00:00",
       "candidate": "M2",
       "champion": "M1",
       "candidate_data": "2.1",
@@ -254,42 +320,44 @@
         "candidate": {
           "model_version": "M2",
           "data_version": "2.1",
-          "f1_macro": 0.981116,
-          "fpr": 0.029333,
+          "f1_macro": 0.97394,
+          "fpr": 0.020667,
           "per_class_recall": {
-            "boolean_blind": 0.978,
-            "error_based": 1.0,
-            "normal": 0.970667,
-            "time_blind": 1.0,
-            "union_based": 0.958
+            "boolean_blind": 0.982667,
+            "error_based": 0.984667,
+            "normal": 0.979333,
+            "stacked": 0.944,
+            "time_blind": 0.962667,
+            "union_based": 0.988667
           },
-          "n_rows": 6780
+          "n_rows": 9000
         },
         "champion": {
           "model_version": "M1",
           "data_version": "2.0",
-          "f1_macro": 0.980588,
-          "fpr": 0.033333,
+          "f1_macro": 0.971144,
+          "fpr": 0.01,
           "per_class_recall": {
-            "boolean_blind": 0.978667,
-            "error_based": 1.0,
-            "normal": 0.966667,
-            "time_blind": 1.0,
-            "union_based": 0.958667
+            "boolean_blind": 0.985333,
+            "error_based": 0.977333,
+            "normal": 0.99,
+            "stacked": 0.922667,
+            "time_blind": 0.963333,
+            "union_based": 0.986
           },
-          "n_rows": 6780
+          "n_rows": 9000
         }
       },
       "criteria": {
         "f1_macro_ok": true,
         "f1_macro": {
-          "candidate": 0.981116,
-          "floor": 0.980588
+          "candidate": 0.97394,
+          "floor": 0.971144
         },
-        "fpr_ok": true,
+        "fpr_ok": false,
         "fpr": {
-          "candidate": 0.029333,
-          "ceiling": 0.033333
+          "candidate": 0.020667,
+          "ceiling": 0.01
         },
         "per_class_ok": true,
         "failing_classes": [],
@@ -297,17 +365,10 @@
         "new_class_ok": true,
         "weak_new_classes": {}
       },
-      "verdict": "promote",
-      "reason": "Candidate meets every criterion on golden@2 (F1 0.9811 >= 0.9806, FPR 0.0293 <= 0.0333, no per-class regression)."
+      "verdict": "reject",
+      "reason": "FPR 0.0207 > 0.0100"
     },
-    "shadow": {
-      "n": 2000,
-      "fpr": 0.00996,
-      "fpr_tolerance_ceiling": 0.038333,
-      "f1_macro": 0.986315,
-      "passed": true
-    },
-    "lifecycle": "M1 retired, M2 champion after shadow"
+    "lifecycle": "M2 rejected by gate; M1 remains champion"
   },
   "drift_q4": {
     "windows": [
@@ -317,13 +378,13 @@
         "n": 1000,
         "n_held_out_class": 0,
         "psi": {
-          "global": 0.004499,
-          "attack_subpop": 0.012323,
-          "prediction": 0.000771,
-          "confidence": 0.003971,
-          "confidence_flagged": 0.017766
+          "global": 0.00385,
+          "attack_subpop": 0.020675,
+          "prediction": 0.003289,
+          "confidence": 0.005042,
+          "confidence_flagged": 0.008747
         },
-        "block_rate": 0.234,
+        "block_rate": 0.169,
         "alert": false
       },
       {
@@ -332,13 +393,13 @@
         "n": 1000,
         "n_held_out_class": 0,
         "psi": {
-          "global": 0.004596,
-          "attack_subpop": 0.011832,
-          "prediction": 0.000789,
-          "confidence": 0.004181,
-          "confidence_flagged": 0.018167
+          "global": 0.003872,
+          "attack_subpop": 0.016662,
+          "prediction": 0.002768,
+          "confidence": 0.004835,
+          "confidence_flagged": 0.00685
         },
-        "block_rate": 0.239,
+        "block_rate": 0.191,
         "alert": false
       },
       {
@@ -347,13 +408,13 @@
         "n": 1000,
         "n_held_out_class": 0,
         "psi": {
-          "global": 0.009517,
-          "attack_subpop": 0.084392,
-          "prediction": 0.009679,
-          "confidence": 0.006871,
-          "confidence_flagged": 0.0392
+          "global": 0.012695,
+          "attack_subpop": 0.055948,
+          "prediction": 0.004137,
+          "confidence": 0.015223,
+          "confidence_flagged": 0.071846
         },
-        "block_rate": 0.244,
+        "block_rate": 0.168,
         "alert": false
       },
       {
@@ -362,13 +423,13 @@
         "n": 1000,
         "n_held_out_class": 0,
         "psi": {
-          "global": 0.009768,
-          "attack_subpop": 0.040322,
-          "prediction": 0.007496,
-          "confidence": 0.010782,
-          "confidence_flagged": 0.061696
+          "global": 0.012065,
+          "attack_subpop": 0.066444,
+          "prediction": 0.003226,
+          "confidence": 0.011533,
+          "confidence_flagged": 0.096339
         },
-        "block_rate": 0.254,
+        "block_rate": 0.185,
         "alert": false
       },
       {
@@ -377,13 +438,13 @@
         "n": 1000,
         "n_held_out_class": 0,
         "psi": {
-          "global": 0.004333,
-          "attack_subpop": 0.0305,
-          "prediction": 0.000951,
-          "confidence": 0.015731,
-          "confidence_flagged": 0.039954
+          "global": 0.006542,
+          "attack_subpop": 0.068771,
+          "prediction": 0.011849,
+          "confidence": 0.018169,
+          "confidence_flagged": 0.086332
         },
-        "block_rate": 0.237,
+        "block_rate": 0.151,
         "alert": false
       },
       {
@@ -392,28 +453,73 @@
         "n": 1000,
         "n_held_out_class": 0,
         "psi": {
-          "global": 0.013899,
-          "attack_subpop": 0.052679,
-          "prediction": 0.007483,
-          "confidence": 0.01412,
-          "confidence_flagged": 0.079593
+          "global": 0.013255,
+          "attack_subpop": 0.08501,
+          "prediction": 0.008444,
+          "confidence": 0.00642,
+          "confidence_flagged": 0.028185
         },
-        "block_rate": 0.253,
+        "block_rate": 0.192,
         "alert": false
       },
       {
         "index": 6,
         "is_reference": false,
-        "n": 26,
+        "n": 1000,
         "n_held_out_class": 0,
         "psi": {
-          "global": 1.088261,
-          "attack_subpop": 4.979672,
-          "prediction": 0.434117,
-          "confidence": 1.441142,
-          "confidence_flagged": 9.093791
+          "global": 0.011514,
+          "attack_subpop": 0.044159,
+          "prediction": 0.011596,
+          "confidence": 0.030377,
+          "confidence_flagged": 0.102238
         },
-        "block_rate": 0.192308,
+        "block_rate": 0.159,
+        "alert": false
+      },
+      {
+        "index": 7,
+        "is_reference": false,
+        "n": 1000,
+        "n_held_out_class": 0,
+        "psi": {
+          "global": 0.004712,
+          "attack_subpop": 0.032454,
+          "prediction": 0.008965,
+          "confidence": 0.00869,
+          "confidence_flagged": 0.061355
+        },
+        "block_rate": 0.179,
+        "alert": false
+      },
+      {
+        "index": 8,
+        "is_reference": false,
+        "n": 1000,
+        "n_held_out_class": 0,
+        "psi": {
+          "global": 0.014691,
+          "attack_subpop": 0.038073,
+          "prediction": 0.001999,
+          "confidence": 0.009589,
+          "confidence_flagged": 0.100775
+        },
+        "block_rate": 0.187,
+        "alert": false
+      },
+      {
+        "index": 9,
+        "is_reference": false,
+        "n": 49,
+        "n_held_out_class": 0,
+        "psi": {
+          "global": 0.394587,
+          "attack_subpop": 4.020228,
+          "prediction": 0.019863,
+          "confidence": 0.15676,
+          "confidence_flagged": 4.876521
+        },
+        "block_rate": 0.142857,
         "alert": true
       }
     ],
@@ -424,7 +530,7 @@
       "sustained_windows": 0
     }
   },
-  "final_champion": "M2",
+  "final_champion": "M1",
   "caveats": [
     "'union_based' is a real SQLi class, subsampled to 2000 rows for this experiment's stream given the ~8.7K-row usable benign-padding budget (data/processed/branch2_normal.csv minus Branch-1/Branch-2 training overlap); its full corpus (15,000 rows) is not exhausted.",
     "Labelling is simulated: ground truth stands in for a human reviewer, as in the original mlops_contract.md design.",

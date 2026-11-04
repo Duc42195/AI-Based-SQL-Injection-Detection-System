@@ -27,9 +27,11 @@ matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 from matplotlib import rcParams
 
+from src.models.branch1_loader import load_branch1_artifacts
 from src.models.branch2_anomaly import AnomalyDetector
 from src.preprocessing.multiclass_tagger import LABEL_NAMES
 from src.preprocessing.statistical_features import extract_statistical_features
+from src.utils import load_config
 from src.utils import get_logger, load_config
 
 warnings.filterwarnings("ignore")
@@ -60,17 +62,22 @@ FIGURES_DIR.mkdir(parents=True, exist_ok=True)
 
 def load_branch1_model_and_data():
     logger.info("[Branch 1] Loading model from models/branch1_v1/")
-    vectorizer = joblib.load(PROJECT / "models/branch1_v1" / "vectorizer.joblib")
-    clf = joblib.load(PROJECT / "models/branch1_v1" / "model.joblib")
-
-    logger.info("[Branch 1] Loading test data from HF ...")
-    ds = load_dataset(
-        "Jason-42195/VNU-SQLi-Detection",
-        data_files="branch1_train.csv",
-        split="train",
+    cfg = load_config()
+    vectorizer, clf = load_branch1_artifacts(
+        PROJECT / "models/branch1_v1", cfg.get_path("branch1_supervised.distilbert", {})
     )
-    df = ds.to_pandas()
-    # Use same test split as training (20% stratified)
+
+    # LOCAL file, not HF: the HF-published copy is a snapshot from before D6
+    # (Superviz25) was added (26/8) and is now stale relative to
+    # models/branch1_v1 (6 classes, stacked included) - reading it here
+    # scored the new model against the OLD 5-class test set, a real
+    # model/data mismatch caught while regenerating this figure for the
+    # rewritten dataset section. Re-publish to HF separately if needed.
+    local_path = PROJECT / "data" / "processed" / "branch1_train.csv"
+    logger.info("[Branch 1] Loading test data from %s ...", local_path)
+    df = pd.read_csv(local_path, keep_default_na=False, na_values=[])
+    # Use same test split as training (stratified/group-aware, see
+    # train/build_branch1_dataset.py)
     test_df = df[df["split"] == "test"].copy()
     logger.info("[Branch 1] Test rows: %d", len(test_df))
     return vectorizer, clf, test_df
@@ -98,7 +105,7 @@ def compute_branch1_roc_per_class(clf, vectorizer, test_df):
 
     roc_data = {}
     fig, ax = plt.subplots(figsize=(5, 4.5))
-    colors = ["#1f77b4", "#ff7f0e", "#2ca02c", "#d62728", "#9467bd"]
+    colors = ["#1f77b4", "#ff7f0e", "#2ca02c", "#d62728", "#9467bd", "#8c564b"]
 
     for i, cls in enumerate(classes):
         fpr, tpr, _ = roc_curve(y_bin[:, i], y_score[:, i])
@@ -133,8 +140,10 @@ def update_branch1_eval(roc_data):
         report = json.load(f)
     report["roc_curves_per_class"] = roc_data
     report["eval_note"] = (
-        "Per-class ROC curves added on 21/7 for report figures. "
-        "Model unchanged from 16/7 training."
+        "Per-class ROC curves regenerated 27/8 against the LOCAL "
+        "branch1_train.csv test split (6 classes, D6/Superviz25 included) "
+        "after the retrain — the previous version of this figure had "
+        "scored the new model against a stale HF-hosted 5-class test set."
     )
     with eval_path.open("w", encoding="utf-8") as f:
         json.dump(report, f, indent=2)

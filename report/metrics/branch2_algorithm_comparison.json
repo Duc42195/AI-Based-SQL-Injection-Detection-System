@@ -1,0 +1,53 @@
+{
+  "one_class_svm": {
+    "fpr_at_p95": 0.0499,
+    "dr_at_p95": 0.1907,
+    "auc": 0.5789,
+    "benign_score_p50": -3.3507,
+    "benign_score_p99": -0.6446,
+    "benign_score_max": 14.0616,
+    "anom_score_max": 13.6918,
+    "problem_fragment_scores": {
+      "by 1-- -": 0.4699,
+      "( 15 )": 1.451,
+      "{ : ;": 1.9156,
+      "( select": -4.2529,
+      "1=1": 4.098
+    },
+    "problem_fragment_max": 4.098
+  },
+  "isolation_forest": {
+    "fpr_at_p95": 0.05,
+    "dr_at_p95": 0.631,
+    "auc": 0.9029,
+    "benign_score_p50": -0.1488,
+    "benign_score_p99": 0.0086,
+    "benign_score_max": 0.2162,
+    "anom_score_max": 0.2841,
+    "problem_fragment_scores": {
+      "by 1-- -": 0.1516,
+      "( 15 )": 0.204,
+      "{ : ;": 0.1732,
+      "( select": 0.0755,
+      "1=1": 0.2032
+    },
+    "problem_fragment_max": 0.204
+  },
+  "local_outlier_factor": {
+    "fpr_at_p95": 0.05,
+    "dr_at_p95": 0.7766,
+    "auc": 0.9151,
+    "benign_score_p50": -0.7487,
+    "benign_score_p99": 95422190.3614,
+    "benign_score_max": 24657504510.9355,
+    "anom_score_max": 36337918426.29,
+    "problem_fragment_scores": {
+      "by 1-- -": 20391203224.2286,
+      "( 15 )": 20003256839.3496,
+      "{ : ;": 15339528308.879,
+      "( select": 13986048025.8772,
+      "1=1": 11239555588.8954
+    },
+    "problem_fragment_max": 20391203224.2286
+  }
+}

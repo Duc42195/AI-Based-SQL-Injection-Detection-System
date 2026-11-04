@@ -35,16 +35,22 @@ Two branches, run independently and OR'd together:
     Branch 1 to recognize weak signal; it only changes what counts as
     "enough" attack probability for a whole session's concatenated text.
   - **Behavior check:** aggregate Branch 2's per-query anomaly scores across
-    the session (mean, fraction above a benign-calibrated threshold).
-    Branch 2 is called exactly as trained — per single query, in its
-    original feature distribution — only the values are aggregated
-    afterward, so there is no train/inference distribution mismatch here at
-    all (unlike the content check, which does venture outside Branch 1's
-    single-query training length but is empirically shown not to degrade).
+    the session (median, fraction above a benign-calibrated threshold).
+    Median rather than the arithmetic mean deliberately (see `calibrate()`'s
+    docstring): Branch 2's LocalOutlierFactor score is mathematically
+    unbounded and a handful of structurally-degenerate short queries score
+    many orders of magnitude above the rest of the distribution, which a raw
+    mean lets dominate a whole session's aggregate; the median is unmoved by
+    any single such outlier. Branch 2 is called exactly as trained — per
+    single query, in its original feature distribution — only the values are
+    aggregated afterward, so there is no train/inference distribution
+    mismatch here at all (unlike the content check, which does venture
+    outside Branch 1's single-query training length but is empirically shown
+    not to degrade).
     **Independently catches the same weak-step case as the (now-calibrated)
     content check above:** taking ONLY those same 5 weak-per-content-check
-    steps and running the behavior check alone gives `mean_score = 2.171`
-    against a calibrated `mean_threshold = -4.465` — fires clearly. Branch 2
+    steps and running the behavior check alone gives a `median_score`
+    against a calibrated `median_threshold` — fires clearly. Branch 2
     scores structural shape (length, special-char ratio, keyword count,
     entropy), not attack type, so a length-bisection query's nested
     `OR`/subquery syntax reads as anomalous regardless of Branch 1's
@@ -106,7 +112,7 @@ class SessionCorrelator:
         b2_detector: Any,
         content_threshold: float = 0.5,
         per_query_threshold: float = 0.0,
-        mean_threshold: float = 0.0,
+        median_threshold: float = 0.0,
         fraction_threshold: float = 0.0,
         max_decode_iterations: int = 3,
     ) -> None:
@@ -127,7 +133,7 @@ class SessionCorrelator:
             per_query_threshold: Branch-2 score above which one query counts
                 toward ``fraction_above`` — calibrated from benign per-query
                 scores in ``calibrate()``.
-            mean_threshold: Behavior-check cutoff on the session's mean
+            median_threshold: Behavior-check cutoff on the session's median
                 Branch-2 score — calibrated in ``calibrate()``.
             fraction_threshold: Behavior-check cutoff on the fraction of
                 steps exceeding ``per_query_threshold`` — calibrated in
@@ -153,7 +159,7 @@ class SessionCorrelator:
         self.b2_detector = b2_detector
         self.content_threshold = content_threshold
         self.per_query_threshold = per_query_threshold
-        self.mean_threshold = mean_threshold
+        self.median_threshold = median_threshold
         self.fraction_threshold = fraction_threshold
         self.max_decode_iterations = max_decode_iterations
 
@@ -185,6 +191,23 @@ class SessionCorrelator:
         session-level threshold calibrated in this gap lets the content
         check independently catch that case too, at no measured FPR cost
         (see ``report/plan/data_contract.md`` §4.2).
+
+        Session-aggregate behavior statistic is the MEDIAN of per-query
+        Branch-2 scores, not the mean. Found necessary once D3/Superviz25
+        enlarged Branch 2's benign pool: LocalOutlierFactor's score is
+        mathematically unbounded, and a small fraction of structurally
+        degenerate short queries (e.g. query-splitting fragments a few
+        characters long) score many orders of magnitude above everything
+        else — a raw mean lets one such value dominate its whole session's
+        aggregate, which measurably distorted this threshold search (mean
+        variant: behavior-check FPR 0%->37%, with `time_blind` recall
+        dropping to 0%). The median is unaffected by any single outlier
+        regardless of its magnitude, at the cost of being less sensitive to
+        a session with many moderately-elevated (but not individually
+        outlying) steps than the mean would be — a trade-off accepted here
+        because outlier-robustness matters more for a threshold search than
+        sensitivity to a pattern this check doesn't specifically target
+        (that is the content check's job).
         """
         from src.models.branch3_features import branch1_probabilities
         from src.preprocessing.canonicalize import canonicalize
@@ -194,10 +217,10 @@ class SessionCorrelator:
         )
         self.per_query_threshold = float(np.quantile(benign_scores, percentile))
 
-        mean_vals, frac_vals, content_vals, labels = [], [], [], []
+        median_vals, frac_vals, content_vals, labels = [], [], [], []
         for texts, scores, label in train_sessions:
             scores_arr = np.asarray(scores, dtype=np.float64)
-            mean_vals.append(scores_arr.mean())
+            median_vals.append(np.median(scores_arr))
             frac_vals.append(float((scores_arr > self.per_query_threshold).mean()))
 
             canonical_texts = [canonicalize(t, self.max_decode_iterations).query_canonical for t in texts]
@@ -206,7 +229,7 @@ class SessionCorrelator:
             content_vals.append(1.0 - probs[0])  # column 0 = "normal"
 
             labels.append(label)
-        mean_vals = np.array(mean_vals)
+        median_vals = np.array(median_vals)
         frac_vals = np.array(frac_vals)
         content_vals = np.array(content_vals)
         labels = np.array(labels)
@@ -221,13 +244,13 @@ class SessionCorrelator:
                     best_score, best_t = score, float(t)
             return best_t
 
-        self.mean_threshold = _best_threshold(mean_vals)
+        self.median_threshold = _best_threshold(median_vals)
         self.fraction_threshold = _best_threshold(frac_vals)
         self.content_threshold = _best_threshold(content_vals)
         logger.info(
             "Calibrated SessionCorrelator: content_threshold=%.4f per_query_threshold=%.4f "
-            "mean_threshold=%.4f fraction_threshold=%.4f",
-            self.content_threshold, self.per_query_threshold, self.mean_threshold, self.fraction_threshold,
+            "median_threshold=%.4f fraction_threshold=%.4f",
+            self.content_threshold, self.per_query_threshold, self.median_threshold, self.fraction_threshold,
         )
 
     def score(self, texts: list[str], branch2_scores: list[float] | None = None) -> dict:
@@ -244,7 +267,7 @@ class SessionCorrelator:
                 NOT on the concatenated blob (see module docstring for why).
 
         Returns:
-            Dict with ``attack_prob``, ``mean_score``, ``fraction_above``,
+            Dict with ``attack_prob``, ``median_score``, ``fraction_above``,
             ``fires_content``, ``fires_behavior``, ``is_attack``, and
             ``predicted_label`` (a specific Branch-1 class name if the content check
             fired, else ``"anomalous_session"`` if only behavior fired, else
@@ -266,9 +289,9 @@ class SessionCorrelator:
             # carry it, e.g. this module's tests).
             branch2_scores = branch2_scores_for_texts(canonical_texts, self.b2_detector)
         scores_arr = np.asarray(branch2_scores, dtype=np.float64)
-        mean_score = float(scores_arr.mean())
+        median_score = float(np.median(scores_arr))
         fraction_above = float((scores_arr > self.per_query_threshold).mean())
-        fires_behavior = (mean_score >= self.mean_threshold) or (fraction_above >= self.fraction_threshold)
+        fires_behavior = (median_score >= self.median_threshold) or (fraction_above >= self.fraction_threshold)
 
         if fires_content:
             from src.preprocessing.multiclass_tagger import LABEL_NAMES
@@ -287,7 +310,7 @@ class SessionCorrelator:
 
         return {
             "attack_prob": float(attack_prob),
-            "mean_score": mean_score,
+            "median_score": median_score,
             "fraction_above": fraction_above,
             "fires_content": bool(fires_content),
             "fires_behavior": bool(fires_behavior),
@@ -308,7 +331,7 @@ class SessionCorrelator:
             "mechanism": "session_correlator",
             "content_threshold": self.content_threshold,
             "per_query_threshold": self.per_query_threshold,
-            "mean_threshold": self.mean_threshold,
+            "median_threshold": self.median_threshold,
             "fraction_threshold": self.fraction_threshold,
             "max_decode_iterations": self.max_decode_iterations,
         }
@@ -328,7 +351,7 @@ class SessionCorrelator:
             b2_detector=b2_detector,
             content_threshold=meta["content_threshold"],
             per_query_threshold=meta["per_query_threshold"],
-            mean_threshold=meta["mean_threshold"],
+            median_threshold=meta["median_threshold"],
             fraction_threshold=meta["fraction_threshold"],
             max_decode_iterations=meta.get("max_decode_iterations", 3),
         )

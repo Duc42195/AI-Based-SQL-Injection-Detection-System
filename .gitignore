@@ -46,6 +46,9 @@ models/_archive/
 # Local run artifacts
 .run/
 
+# CL scenario experiment: scratch model checkpoints (regenerated per run, not lineage-critical)
+report/metrics/cl_scenario/tmp_models/
+
 # MLOps: promotion registry (lineage-critical, not weights)
 models/registry.json
 
@@ -53,3 +56,15 @@ models/registry.json
 report/conf/*.pdf
 report/conf/*.log
 report/conf/*.synctex.gz
+# Exception: keep the final camera-ready PDF of the paper
+!report/conf/rivf2026_paper.pdf
+
+# Midterm milestone (superseded, draft + old submission merged here) — local only
+midterm/
+
+# Early drafts / unused template scaffold — not needed to build or run the project
+report/conf/outline.md
+report/conf/research_proposal.md
+report/conf/research_proposal_vn.md
+report/conf/conference_101719.tex
+report/conf/conference_101719.log

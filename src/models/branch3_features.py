@@ -60,7 +60,13 @@ def branch2_scores_for_texts(texts: list[str], detector, feature_names: list[str
 
 # Branch 1 label ids (from configs/config.yaml: labels.classes), fixed order
 # for the probability-vector columns written to/read from the dataset CSV.
-BRANCH1_LABEL_ORDER = [0, 1, 2, 3, 4]  # normal, union_based, error_based, boolean_blind, time_blind
+# Stacked (5) added once D3/Superviz25 gave it real training examples -
+# before that fix, any probability mass Branch 1 placed on `stacked` was
+# silently dropped from this vector (not renormalized, just missing), which
+# corrupted the argmax-derived predicted_label for any query Branch 1 scored
+# as stacked. P(normal) (column 0, what the Session Correlator's content
+# check actually consumes) was never affected by this.
+BRANCH1_LABEL_ORDER = [0, 1, 2, 3, 4, 5]  # normal, union_based, error_based, boolean_blind, time_blind, stacked
 
 
 def branch1_probabilities(texts: list[str], vectorizer, clf) -> np.ndarray:

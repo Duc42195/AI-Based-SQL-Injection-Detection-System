@@ -32,6 +32,8 @@ from sklearn.linear_model import LogisticRegression
 
 from src.continual_learning.gate import ModelEvaluation, compute_evaluation
 from src.continual_learning.model_registry import load_model_registry
+from src.models.branch1_loader import branch1_artifacts_exist, load_branch1_artifacts, train_distilbert
+from src.preprocessing.multiclass_tagger import LABEL_NAMES
 from src.continual_learning.versioning import (
     compute_run_id,
     content_hash,
@@ -161,10 +163,22 @@ def train_and_seal(
     artifacts = Path(cfg.get_path("mlops.artifacts_dir", "report/metrics/continual_learning"))
     artifacts.mkdir(parents=True, exist_ok=True)
     valid_fraction = float(cfg.get_path("mlops.split.valid_fraction", 0.15))
+    architecture = cfg.get_path("branch1_supervised.architecture", "tfidf_logreg")
+    # The run_id is a cache key over whatever config actually determines the
+    # trained artifact - the TF-IDF block when serving tfidf_logreg, the
+    # DistilBERT block when serving distilbert - so switching architecture,
+    # or changing only the active one's hyperparameters, correctly busts the
+    # cache; changing the *other* architecture's config (currently inactive)
+    # correctly does not.
+    active_train_cfg = (
+        dict(cfg.get_path("branch1_supervised.distilbert"))
+        if architecture == "distilbert"
+        else tfidf_cfg
+    )
 
     data, label_space = assemble_dataset(cfg, round_id)
     digest = content_hash(zip(data["id"], data["label_name"]))
-    run_id = compute_run_id(tfidf_cfg, digest, seed)
+    run_id = compute_run_id(active_train_cfg, digest, seed)
 
     existing = find_run(run_id, artifacts / RUNS_LOG)
     if existing and not force:
@@ -209,31 +223,57 @@ def train_and_seal(
     training = data.drop(validation.index)
 
     started = time.perf_counter()
-    vectorizer = TfidfVectorizer(
-        analyzer=tfidf_cfg["analyzer"],
-        ngram_range=(tfidf_cfg["ngram_min"], tfidf_cfg["ngram_max"]),
-        max_features=tfidf_cfg["max_features"],
-    )
-    matrix = vectorizer.fit_transform(training["query_canonical"].astype(str))
-    classifier = LogisticRegression(max_iter=1000, random_state=seed)
-    classifier.fit(matrix, training["label_name"].to_numpy())
-    duration = time.perf_counter() - started
+    if architecture == "distilbert":
+        # DistilBERT's classification head is 0-indexed integers, not label
+        # names - name<->id via LABEL_NAMES (the fixed schema, not just this
+        # round's label_space) so a fold missing a class still sizes the head
+        # for the full label space and predictions map back to names exactly
+        # as compute_evaluation (below) expects.
+        distilbert_cfg = cfg.get_path("branch1_supervised.distilbert")
+        name_to_id = {name: i for i, name in LABEL_NAMES.items()}
+        train_label_ids = [name_to_id[name] for name in training["label_name"]]
+        train_distilbert(
+            training["query_canonical"].astype(str).tolist(),
+            train_label_ids,
+            model_dir,
+            num_classes=len(LABEL_NAMES),
+            distilbert_cfg=distilbert_cfg,
+            seed=seed,
+        )
+        duration = time.perf_counter() - started
+        vectorizer, classifier = load_branch1_artifacts(model_dir, distilbert_cfg)
+        pred_ids = classifier.predict(validation["query_canonical"].astype(str).tolist())
+        y_pred = [LABEL_NAMES[int(i)] for i in pred_ids]
+        train_config = dict(distilbert_cfg)
+    else:
+        vectorizer = TfidfVectorizer(
+            analyzer=tfidf_cfg["analyzer"],
+            ngram_range=(tfidf_cfg["ngram_min"], tfidf_cfg["ngram_max"]),
+            max_features=tfidf_cfg["max_features"],
+        )
+        matrix = vectorizer.fit_transform(training["query_canonical"].astype(str))
+        classifier = LogisticRegression(max_iter=1000, random_state=seed)
+        classifier.fit(matrix, training["label_name"].to_numpy())
+        duration = time.perf_counter() - started
+        y_pred = classifier.predict(
+            vectorizer.transform(validation["query_canonical"].astype(str))
+        ).tolist()
+        train_config = tfidf_cfg
 
     evaluation = compute_evaluation(
         validation["label_name"].tolist(),
-        classifier.predict(
-            vectorizer.transform(validation["query_canonical"].astype(str))
-        ).tolist(),
+        y_pred,
         model_version=model_version,
         data_version=version.version,
     )
 
-    joblib.dump(vectorizer, model_dir / "vectorizer.joblib")
-    joblib.dump(classifier, model_dir / "model.joblib")
+    if architecture != "distilbert":
+        joblib.dump(vectorizer, model_dir / "vectorizer.joblib")
+        joblib.dump(classifier, model_dir / "model.joblib")
     metadata = {
         "version": model_version,
         "branch": "branch1_supervised_multiclass",
-        "architecture": "tfidf_logreg",
+        "architecture": architecture,
         "trained_at": _now(),
         "data_version": version.version,
         "run_id": run_id,
@@ -253,7 +293,7 @@ def train_and_seal(
         "model_version": model_version,
         "data_version": version.version,
         "data_content_hash": digest,
-        "train_config": tfidf_cfg,
+        "train_config": train_config,
         "split": {
             "method": "random_holdout",
             "seed": seed,
@@ -306,11 +346,12 @@ def evaluate_on_golden(
     models_dir = Path(cfg.get_path("paths.models_dir", "models"))
     processed = Path(cfg.get_path("paths.data_processed", "data/processed"))
     model_dir = models_dir / model_version
-    if not (model_dir / "model.joblib").exists():
+    if not branch1_artifacts_exist(model_dir):
         return None
 
-    vectorizer = joblib.load(model_dir / "vectorizer.joblib")
-    classifier = joblib.load(model_dir / "model.joblib")
+    vectorizer, classifier = load_branch1_artifacts(
+        model_dir, cfg.get_path("branch1_supervised.distilbert", {})
+    )
     split = pd.read_csv(processed / "branch1_mlops_split.csv")
     golden = split[split["partition"] == "golden"]
 

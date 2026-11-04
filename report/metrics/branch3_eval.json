@@ -2,16 +2,16 @@
   "version": "branch3_v2",
   "branch": "branch3_session",
   "mechanism": "session_correlator",
-  "trained_at": "2026-08-19T18:03:08Z",
+  "trained_at": "2026-08-28T08:28:46Z",
   "dataset": "data/processed/branch3_sessions_cach_a.csv",
   "dataset_source": {
     "A_real_db": 1050,
     "A_simulated": 350
   },
   "calibration": {
-    "content_threshold": 0.3146975751420319,
-    "per_query_threshold": 4.488941,
-    "mean_threshold": 4.515294,
+    "content_threshold": 0.9993392772157677,
+    "per_query_threshold": 5.939099,
+    "median_threshold": 6.4248535,
     "fraction_threshold": 0.125
   },
   "train_sessions": 1120,
@@ -22,15 +22,15 @@
       "detection_rate": {
         "boolean_blind": 1.0,
         "time_blind": 1.0,
-        "query_splitting": 1.0
+        "query_splitting": 0.957143
       }
     },
     "behavior_only": {
       "fpr_benign": 0.0,
       "detection_rate": {
         "boolean_blind": 1.0,
-        "time_blind": 1.0,
-        "query_splitting": 0.457143
+        "time_blind": 0.0,
+        "query_splitting": 0.385714
       }
     },
     "combined": {
@@ -38,7 +38,7 @@
       "detection_rate": {
         "boolean_blind": 1.0,
         "time_blind": 1.0,
-        "query_splitting": 1.0
+        "query_splitting": 0.957143
       }
     }
   },

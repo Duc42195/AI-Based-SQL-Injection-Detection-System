@@ -6,6 +6,29 @@
 
 ---
 
+## 0. Dataset numbering — what D1 through D7 actually are (investigated 26/8)
+
+The internal D-numbers used throughout this file have gaps (D2, D5 never
+appear) that aren't explained anywhere else, and the paper (`rivf2026_paper.tex`)
+renumbers the 4 sources it actually cites (D1-D4) sequentially for clean
+prose — a DIFFERENT scheme from this file's. Both are legitimate, just not
+the same numbering; traced via git log to avoid guessing:
+
+| # (this file) | What | Status |
+|---|---|---|
+| D1 | SQLiV3 (Kaggle mirror) | Have, since Day 1 (`2bead06`, 14/7) |
+| D2 | — | **Never assigned to anything, at any point in this repo's history.** |
+| D3 | CSIC 2010 (HTTP traffic) | Have, since Day 1 |
+| D4 | payload-box | Have, since Day 1 |
+| D5 | — | **Never assigned to anything, at any point in this repo's history.** |
+| D6 | Reserved for real captured attacker traffic ("Docker-lab/sqlmap traffic" — `configs/config.yaml`'s `exclude_labels` comment: *"re-enable [stacked] once real stacked-query examples are available (e.g. from D6 Docker-lab/sqlmap traffic)"*) | **Had a name and a purpose, never executed** — this is Branch 3's never-started "Cách B" (§5). Filled 26/8 by Superviz25 — see §6. |
+| D7 | SR-BH 2020 (Harvard Dataverse honeypot) | Added AFTER Day 1, once D1 alone proved too sparse for multi-class |
+
+The paper's own D2 = this file's D3 (CSIC 2010) — cosmetic renumbering only,
+unrelated to the D2 gap above.
+
+---
+
 ## 1. Raw data downloaded (Day 1)
 
 | File | Source | Verified figures |
@@ -297,6 +320,169 @@ Neither bug showed up in `train/calibrate_branch3.py`'s own offline metrics — 
 
 **Fix** (`train/build_session_dataset.py`): partition the 100-user pool into disjoint train-target/test-target subsets (80/20) *before* generating boolean_blind/time_blind sessions, instead of splitting session IDs after the fact — so a target user can never be sampled for both splits. Dataset regenerated (seed 42, same config), re-audited clean: **0/70 byte-identical for every class.** `SessionCorrelator` recalibrated on the fixed data (`train/calibrate_branch3.py`, `train/eval_branch3_hard.py`): **FPR=0.0 / DR=1.0 unchanged** for `boolean_blind`/`time_blind`/`query_splitting` — the memorization concern the audit raised does not hold up empirically; the content check generalizes across unseen targets because Branch 1 recognizes the injection *syntax* (bisection structure), not the specific username/password values, which is exactly the "why content alone is enough" mechanism already documented in §4.1 above. The still-valid, unrelated caveat from the paragraph above this one — self-generated Cách A sessions, not independently-captured attacker traffic (Cách B) — still applies and is unaffected by this fix.
 
+## 6. D6 — Superviz25 integration (26/8)
+
+**Found:** [kaggle.com/datasets/grgorqutel/superviz25-sql-injection-detection-dataset](https://www.kaggle.com/datasets/grgorqutel/superviz25-sql-injection-detection-dataset)
+(file mtime 13 Oct 2025, i.e. it existed months before this project's July
+survey — not a "too new to find" case; more likely just low-visibility:
+obscure account, generic non-"sql injection"-led title). Fills the D6 slot
+this file always reserved for real captured attacker traffic (§0/§5) — the
+dataset is 3.69M rows of REAL sqlmap runs (verified: `tamper_method` column
+values are literal sqlmap tamper-script names — `randomcase`,
+`space2comment`, `equaltolike`, ...) against a real DB (OurAirports
+`airport`/`regions` schema), not a synthetic template.
+
+**Schema:** `full_query, label(0/1), user_inputs, attack_stage, tamper_method,
+attack_status, statement_type, query_template_id, attack_id, attack_technique,
+split`. Two things make this source NOT a drop-in load like D1/D3/D4/D7:
+
+1. **The source's own `split` column is unusable for supervised training**:
+   `train` = 100% `label=0` (335,306 rows, zero attacks), `test` = everything
+   else — a 1-class/anomaly-style split, not a stratified supervised one.
+   Ignored entirely; `load_d6_superviz25` (`src/preprocessing/data_sources.py`)
+   does its own reservoir sampling + the callers (`build_branch1_dataset.py`/
+   `build_branch2_dataset.py`) do their own split.
+2. **`attack_technique` values `inline` and `insider` are dropped, not
+   loaded, at all**: `inline` (1,389 rows) is a canary/fuzz-probe payload
+   (`'"<>` style) that doesn't map to any of Branch 1's 5 classes. `insider`
+   (1,089 rows) was hand-inspected and found to be plain session-init SQL
+   (`SET NAMES utf8mb4`, `SET AUTOCOMMIT = 0`) mislabeled as an attack — same
+   category of problem as SR-BH's mistagged `Normal=1` rows (§3.1), just the
+   mirror direction (a false attack label instead of a false normal label).
+   The remaining 5 techniques (`union/error/boolean/time/stacked`) map 1:1
+   onto Branch 1's existing schema and ARE trusted as ground truth directly —
+   **not** re-derived via `multiclass_tagger.tag_query`'s regex signatures,
+   unlike every other source. Reason: rows are real sqlmap output for a
+   KNOWN technique (ground truth by construction) and several are
+   tamper-mangled in ways that can break a hand-written regex (e.g. a
+   `multiplespaces`-tampered `SLEEP (5)` failing to match `SLEEP\(`) —
+   re-tagging from content would silently corrupt exactly the evasive
+   variants this source is valuable for.
+
+**Leakage risk found and handled:** `attack_id` (275 values) groups a whole
+sqlmap campaign's rows contiguously (verified: 100% row-contiguous) — e.g.
+`boolean-156` is 6,475 rows of one bisection run against one target,
+differing only in the comparison bound each step. A plain per-row
+stratified split (what every other source uses) would let near-duplicate
+successive probe queries from the same campaign land on both sides of
+train/test — the same leakage SHAPE as the exact-duplicate leakage the
+Branch-1 audit already found and fixed (§3.1, Mảng 2: 949 identical texts
+straddling the split), just for near-duplicates instead of exact ones, and
+the same shape as the Branch-3 target-user leakage found and fixed 20/8
+(§4.2). Fixed via `_group_aware_split` (`train/build_branch1_dataset.py`):
+D6's attack rows are split by whole `attack_id` campaign (shuffled, greedy
+fill to the target test fraction per label), never mid-campaign; every other
+source keeps the original stratified per-row split.
+
+**Zero-shot check BEFORE retraining** (`train/eval_zeroshot_superviz25.py`,
+`report/metrics/superviz25_zeroshot_eval.json`, stratified sample, no
+retraining) — run first specifically to decide whether retraining was
+warranted at all:
+
+| Stratum | n | Branch 1 flag rate | Branch 2 flag rate |
+|---|---:|---:|---:|
+| benign (plain) | 3000 | 1.10% (FPR) | 69.27% (FPR) |
+| benign, contains legitimate `UNION SELECT` | 2000 | 0.00% (FPR) | 94.70% (FPR) |
+| union | 1500 | 20.73% (DR) | 88.13% |
+| error | 1500 | 25.33% (DR) | 82.27% |
+| boolean | 1500 | 65.27% (DR) | 81.00% |
+| time | 1500 | 17.07% (DR) | 83.60% |
+| stacked | 1500 | 10.53% (DR) | 86.20% |
+
+One hypothesis going in was WRONG and is recorded as such rather than
+quietly dropped: legitimate benign `UNION SELECT` queries were expected to
+trip Branch 1's `union_based` signal (no such benign example exists in
+D1/D3/D7) — measured FPR was 0.00%, not elevated. What WAS a real problem:
+**Branch 2's FPR was 69-95%** — the LOF model had never seen benign traffic
+this structurally complex (real joins/subqueries/geo functions against the
+airport schema, vs. D1/D3/D7's simple parameter lookups), so it flagged most
+of it regardless of true label, making its "detection rate" numbers on this
+dataset meaningless (it wasn't discriminating anything). Branch 1's
+detection rate on `stacked`/`time` (10.5%/17.1%) was also far below the
+in-domain ~0.98 F1-macro — real sqlmap tamper-script evasion is measurably
+harder than the clean D1/D4/D7 payloads Branch 1 was trained on.
+
+**Retrain (26/8)** — D6 added to both branches (`d6_benign_cap=50000`,
+`d6_attack_technique_cap=20000` per class, `configs/config.yaml`); `stacked`
+un-excluded (`branch1_supervised.balance.exclude_labels: []`, was `[5]`) now
+that ~20k REAL stacked examples exist — the synthetic-only exclusion reason
+(§3.3: 100% templated, trivially separable) no longer applies once real data
+does, exactly the condition that exclusion said it was waiting on;
+`synthetic_stacked.py`'s output is no longer loaded here (still used by
+`train/build_mlops_split.py`). Branch 1 test F1-macro (all classes, all
+sources) dropped **0.9822 → 0.9180** — expected and reported honestly: the
+prior number was measured on an easier, less-evasive attack distribution;
+this one includes real tamper-script evasion.
+
+**Held-out D6 check AFTER retraining** (`train/eval_d6_holdout.py`,
+`report/metrics/d6_holdout_eval.json` — scores the REAL split="test" rows
+`build_branch1_dataset.py`/`build_branch2_dataset.py` already wrote, not a
+fresh sample, so this is genuinely held-out, not re-sampled-with-overlap-risk):
+
+| | Before (zero-shot) | After (retrained, held-out) |
+|---|---:|---:|
+| Branch 2 FPR on D6 benign | 69.3-94.7% | **7.27%** (n=7018) |
+| Branch 1 FPR on D6 benign | 1.10% | 6.92% (n=1820) |
+| Branch 1 DR — union | 20.7% | **75.79%** |
+| Branch 1 DR — error | 25.3% | **99.17%** |
+| Branch 1 DR — boolean | 65.3% | **97.07%** |
+| Branch 1 DR — time | 17.1% | **93.37%** |
+| Branch 1 DR — stacked | 10.5% | **90.31%** |
+
+Branch 2's aggregate eval (`report/metrics/branch2_eval.json`, now over the
+D1+D3+D7+D6 pool): LOF AUC=0.9151, DR@matched-FPR5%=0.7766 — essentially
+unchanged from the pre-D6 0.929/80.6% (§3.4) despite now covering a much
+broader, structurally harder benign distribution, i.e. the fix didn't trade
+away prior performance to absorb D6.
+
+Branch 1's FPR on D6 benign rose slightly (1.10% -> 6.92%) alongside the
+large detection-rate gains — a real, measured trade-off (more aggressive
+against evasive attacks, marginally less specific on this source's benign
+edge cases), stated here rather than left implicit.
+
+**Branch 3 — recalibrated, not redesigned** (`train/calibrate_branch3.py`,
+re-run against the new `branch1_v1`/`branch2_v1`; Branch 3's own session
+dataset, §4.1/§4.2, is unaffected by D6): FPR=0.0, DR=1.0 for
+`boolean_blind`/`time_blind`/`query_splitting` (combined), matching the
+pre-retrain result — confirms the Session Correlator design (reuses
+Branch 1 + Branch 2's live artifacts, no separate weights of its own) holds
+up unchanged when the underlying branches are retrained; only its
+thresholds needed recalibrating (content_threshold 0.5000 -> 0.5394), which
+`calibrate()` already does automatically.
+
+**Not done as part of this integration (deliberately out of scope, RIVF
+deadline 30/8):** D6's `attack_id` campaign grouping is real multi-step
+session structure at a much larger scale than Cách A's self-generated
+sessions (§4.1) — a plausible substitute for Branch 3's still-never-started
+Cách B (real sqlmap+Docker traffic, see §5 below), but building that is a
+separate, heavier piece of work not attempted here. D1's license-provenance
+question (research_proposal.md, "needs verification/replacement") is also
+unaffected — D6 was added alongside D1, not as its replacement.
+
+---
+
+## 7. D4 dropped + a real RNG-independence bug found and fixed (27/8)
+
+**Decision: drop D4 (payload-box) from Branch 1.** Only 124 raw payloads (union_based/boolean_blind/time_blind only — 0 error_based, 0 stacked), contributing 16 of 90,000 final training rows — negligible next to D6's per-class volume. Dropping it brings the TOTAL distinct raw sources across the whole system down to exactly 4: D1 (SQLiV3), D3 (CSIC2010, Branch 2 only), D6 (Superviz25), D7 (SR-BH 2020) — Branch 1 uses D1+D6+D7, Branch 2 uses D1+D3+D6+D7. Verified this wasn't just assumed harmless: retrained `tfidf_logreg` with D4 removed and found a **~6-point F1 drop that had nothing to do with D4** (see below) — a real bug caught in the process of checking, not something D4's removal itself caused.
+
+**Bug found: `_undersample()` and `_group_aware_split()` (`train/build_branch1_dataset.py`) shared ONE `random.Random(seed)` instance across a `for label in sorted(...)` loop.** `.sample()`/`.shuffle()`'s number of internal draws depends on the input size, so changing an EARLIER label's pool size (D4 only ever touched union_based/boolean_blind/time_blind) shifted the RNG's state before it reached a LATER label — `stacked` (processed last, label id 5) swung from 83.5% to 54.6% recall purely from this ordering artifact, even though D4 contributed zero stacked rows and stacked's own candidate pool (16,555 rows, 100% from D6) barely changed. Confirmed by reproducing the swing, then fixing it (each label gets its own `random.Random(f"{seed}:{label}")`) and confirming the result is now stable and reproducible across 5+ rebuild attempts. Same class of bug as the hardcoded-`LABEL_ORDER` F1-macro bug already found once (§3.3) — "looks fine until something upstream changes."
+
+**A second, deeper finding surfaced once the RNG bug was fixed: `stacked`'s F1 is genuinely low (0.471) and genuinely sample-dependent, for a real, understood reason — not further noise.** With the fix applied (seed=42, deterministic, reproduced identically 3+ times), `stacked` test split drew from only **8 of 45 available D6 `stacked` campaigns** (a consequence of the campaign-level group-split — §6's leakage fix — combined with `stacked` having comparatively few, size-uneven campaigns). Those 8 happened to be recon-heavy: recon-stage `stacked` rows are correctly classified only **28.1%** of the time vs **100%** for exploit-stage rows (same recon/exploit mechanism as §6), so a small, by-chance campaign sample dominates the aggregate metric. Dominant confusion: **1,552 of 3,212 `stacked` test rows predicted `time_blind`**. This is reported as a measured, mechanistically-understood result — not re-rolled to a more favorable seed, consistent with this project's fixed-seed-throughout convention (never re-randomize to chase a better number).
+
+**Corrected, final Branch 1 numbers (`models/branch1_v1`, seed=42, D4 removed, RNG bug fixed):** F1-macro = **0.8352** (90,000 rows: 71,705 train / 18,295 test). Per-class F1: normal 0.872, union_based 0.982, error_based 0.993, boolean_blind 0.973, time_blind 0.721, stacked 0.471. `error_based`/`union_based`/`boolean_blind` remain robust; `time_blind`/`stacked` carry the recon/campaign-variance problem above. Per-class ROC-AUC stays high across all six classes (0.983-0.999) even where F1 is low — ranking quality (attack vs benign) holds up; the confusion is specifically between two attack sub-types, not attack vs benign.
+
+**Implication for future work:** the right fix for `stacked`'s specific fragility is a LARGER campaign pool per class (more of D6's real campaigns admitted, currently capped at `d6_attack_technique_cap: 20000` per technique in `configs/config.yaml`), not re-seeding. Left for post-RIVF work (full-code deadline 31/12).
+
+**TF-IDF/LogReg retuned (27/8) — the config had never been re-tuned for the harder D6-era data.** `branch1_supervised.tfidf` (`ngram_min:2, ngram_max:4, max_features:50000`) was chosen back when all 4 architectures scored ~0.99 (pre-D6) and was simply carried forward — never re-tuned once D6 made the problem harder. `train/grid_search_branch1_tfidf.py` (16-config curated grid, then 2 follow-up rounds narrowing on the winning direction) found a clear, monotonic trend: **shorter n-grams do better** on this harder data — F1-macro: (2,4)=0.8352 -> (1,4)=0.8499 -> (1,3)=0.8623 -> **(1,2)=0.8941**. Adding `C=10` (up from LogisticRegression's default 1.0) pushed it further to **0.8977**. Tested (1,1) too: it pushes `stacked` recall to 0.82 but trades away `normal`'s F1 (0.82 vs 0.91), a worse overall macro-F1 (0.8715) — so (1,2) is the real optimum, not just "shorter is always better." Adopted as the new production config (`configs/config.yaml`, `train/train_branch1.py`, `train/compare_branch1_architectures.py` all updated to read `C` from config instead of hardcoding LogisticRegression's default).
+
+**Result:** F1-macro **0.8352 -> 0.8977** (+6.25 points). Per-class F1: normal 0.911, union_based 0.986, error_based 0.993, boolean_blind 0.984, time_blind 0.812 (was 0.721), **stacked 0.700 (was 0.471)**. Confusion `stacked`->`time_blind` dropped from 1,552 to 921 of 3,212 test rows — better, though still the dominant remaining error (same recon/campaign-composition mechanism as above, not resolved by this tuning, just made less severe). Re-verified the recon/exploit split specifically (§7's original finding, re-checked against this retrained model rather than left stale): recon-stage `stacked` rows correctly predicted as `stacked` rose **28.1% -> 54.8%**; exploit-stage stayed 100%. Overall D3 detection (any attack class, all 5 mapped techniques combined): exploit 99.9%->100.0%, recon 88.4%->94.0%. `rivf2026_paper.tex` initially still cited the pre-retune 28.1%/88.4% figures after this retrain — caught and fixed during a full re-read requested explicitly ("soát lại") rather than left stale, alongside one direct contradiction (Discussion still said stacked F1 "down to 0.471" after Table II had already been updated to 0.700) and two dangling `Section~\ref{sec:discussion}` cross-references pointing at content that section never actually contained. Bonus: vocabulary shrank from 50,000 to **5,037** terms — the deployed model is now smaller (~0.4MB vs ~4MB) and no slower, not a size/accuracy trade-off. All ROC-AUCs rose too (min, `stacked`, 0.934 -> 0.965). Full production Table~b1arch/b1perclass numbers in `rivf2026_paper.tex` updated to match. `word`-analyzer and longer n-grams (up to (3,6)) were also tested and are worse than the current char_wb (1,2) — a real char-level, short-substring signal, not an artifact of under-search.
+
+**Side effect: re-ran the full 4-architecture comparison with the retuned TF-IDF config (shared by logreg + LightGBM only; DistilBERT/CNN use their own tokenizers, unaffected).** LightGBM's latency dropped **60.1ms -> 3.0ms** (~20x) purely from the smaller vocabulary (5,037 vs 50,000 terms) — the exact reason LightGBM was ruled out for a real-time proxy no longer holds. Final numbers: logreg (chosen) 0.898 / 0.5ms / 0.4MB; LightGBM 0.962 / 3.0ms / 4.5MB; DistilBERT 0.965 / 2.8ms / 256MB; CNN 0.749 / 0.3ms / 152KB. DistilBERT and LightGBM are now within 0.3 points of each other, both at similar latency — LightGBM is the more interesting alternative to logreg going forward (near-DistilBERT accuracy, a fraction of the size/train-time, comparable latency to logreg itself). Production kept as logreg (simplicity, smallest footprint) but this is flagged in the paper as a choice that could reasonably go the other way now.
+
+**Knock-on effect: Session Correlator recalibration + one weakened (not broken) redundancy case.** Recalibrating `SessionCorrelator` against the retrained `branch1_v1` (`train/calibrate_branch3.py`) moved `content_threshold` from ~0.34 (post-D6, pre-D4-fix) to **0.6506** — Table-level results unchanged (FPR=0.0, DR=1.0/1.0/1.0 combined, same as every prior calibration). But `tests/test_branch3_session.py`'s `TestSessionCorrelatorContentAndBehaviorBothCoverWeakSteps` — a regression test whose own docstring says "if this starts failing, the OR'd-checks-resilient claim must be re-verified before citing it" — did start failing, and was re-verified rather than silently patched: for the ONE specific session this test illustrates, per-step attack probabilities rose (0.44-0.47 → 0.52-0.55, the retrained model is slightly more suspicious of these steps) but the threshold rose more, so content-check ALONE no longer independently rescues this particular session (0.541 vs threshold 0.6506) — only the behavior check does now. The paper's actual cited number (content-only DR=1.0 aggregated across all 70 boolean_blind TEST sessions) is unaffected — some other session(s) still clear the threshold — but the REDUNDANCY story for this one illustrative case narrowed from "both checks independently cover it" to "only one does." Test updated to assert the new, real behavior (`test_weak_content_steps_fire_via_behavior_check`), not loosened to hide it.
+
+---
+
 ## 5. Remaining work related to this contract (out of Day 1 scope)
 
 - [x] Write `src/preprocessing/canonicalize.py` matching the `query_canonical` + `has_comment_marker` columns above (Day 2).
@@ -304,6 +490,6 @@ Neither bug showed up in `train/calibrate_branch3.py`'s own offline metrics — 
 - [x] Extract parameters from D3's `raw_request` (query string/POST body) before canonicalizing — `load_d3()` in `src/preprocessing/data_sources.py` (15 Jul).
 - [x] Build `data/processed/branch2_normal.csv` (Section 3.2, 15 Jul).
 - [ ] Supplement D4 (payload-box) for rare classes once the real distribution is measured.
-- [ ] Actually train Isolation Forest for Branch 2 (not done yet — dataset just built), evaluate FPR/detection rate on `branch2_anomalous_eval.csv`.
+- [x] Actually train Isolation Forest for Branch 2 — done 16/7, superseded by LOF 19/08 (§3.4), retrained again 26/8 with D6 (§6).
 - [x] Branch 3 Cách A (simulated) session dataset + GRU model — see Section 4.1 (26 Jul).
-- [ ] Branch 3 Cách B (real sqlmap + Docker-lab traffic) — still not started; depends on the Docker lab (Day 8-9 per the original plan, never executed under the reduced 25/7 scope).
+- [ ] Branch 3 Cách B (real sqlmap + Docker-lab traffic) — still not started as originally scoped (a live Docker lab). D6/Superviz25 (§6) is real sqlmap traffic with real multi-query campaign structure (`attack_id`) and could plausibly substitute, but that integration hasn't been attempted — flagged, not done.

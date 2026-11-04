@@ -32,6 +32,19 @@ only) — D7's `load_d7` only extracts its "SQL Injection" CAPEC column, so
 these are confirmed-SQLi, not the mixed-attack-type problem D3 alone has
 (only ~9-15% of D3 "anomalous" rows match any known SQLi/XSS/OS-command
 signature — see project_history.md §3).
+
+UPDATED 26/8: adds D6 (Superviz25, see data_contract.md) benign rows to the
+pool. This is the direct fix for the zero-shot finding that motivated
+pulling D6 in: models/branch2_v1 (trained on D1/D3/D7 only) flagged 69-95%
+of D6's benign traffic as anomalous — its benign side is legitimate
+analytical SQL (joins/subqueries/geo functions against a real airport-DB
+schema), structurally unlike anything in D1/D3/D7's simple-lookup benign
+traffic, so Branch 2 had never seen this "shape" of normal at all. Same
+rationale the LOF switch (19/08) was already built on: benign traffic spans
+multiple structurally distinct sub-populations, and LOF's local-density
+notion is designed to add one more without needing a redesign. D6 attack
+rows are also added to the anomalous eval set (same precedent as D1/D7's
+attack rows above) — NOT used for training (Branch 2 remains benign-only).
 """
 
 from __future__ import annotations
@@ -43,7 +56,7 @@ from pathlib import Path
 from sklearn.model_selection import train_test_split
 
 from src.preprocessing.canonicalize import canonicalize
-from src.preprocessing.data_sources import load_d1, load_d3, load_d7
+from src.preprocessing.data_sources import load_d1, load_d3, load_d6_superviz25, load_d7
 from src.preprocessing.multiclass_tagger import matches_any_attack_signature
 from src.preprocessing.statistical_features import FEATURE_ORDER, extract_statistical_features
 from src.utils import get_logger, load_config
@@ -174,9 +187,22 @@ def main() -> None:
         raw_dir / "sr_bh_2020" / "data_capec_multilabel.csv", normal_sample_size=None, seed=seed
     )
     logger.info("D7: loaded %d rows", len(d7_rows))
+    d6_benign_cap = cfg.get_path("branch2_anomaly.d6_benign_cap", 50000)
+    d6_attack_cap = cfg.get_path("branch2_anomaly.d6_attack_technique_cap", 20000)
+    d6_rows_4tuple = load_d6_superviz25(
+        raw_dir / "superviz25" / "dataset.csv", seed=seed,
+        benign_cap=d6_benign_cap, attack_cap=d6_attack_cap,
+    )
+    # Branch 2 doesn't need D6's label_override/campaign-in-source encoding
+    # (no training split over attack rows at all here) - collapse back to the
+    # plain 3-tuple shape every other loader/helper in this file expects.
+    d6_rows = [
+        (text, is_attack, "d6_superviz25") for text, is_attack, _source, _label in d6_rows_4tuple
+    ]
+    logger.info("D6: loaded %d rows (benign + 5 mapped attack_technique classes)", len(d6_rows))
 
     logger.info("=== Canonicalizing + content-filtering benign candidates (D3/D7 URL-stripped) ===")
-    all_rows = d1_rows + d3_rows + d7_rows
+    all_rows = d1_rows + d3_rows + d7_rows + d6_rows
     clean_rows, rejected, empty_benign = _clean_benign_rows(all_rows, max_decode)
     logger.info(
         "Clean benign rows: %d (rejected %d as mislabeled/attack-like [%.1f%%], "
@@ -213,8 +239,8 @@ def main() -> None:
         "Wrote %d rows to %s (train=%d, test=%d)", len(final_rows), out_path, len(train_rows), len(test_rows)
     )
 
-    logger.info("=== Building held-out anomalous evaluation sample (D1 + D3 + D7, D3/D7 URL-stripped) ===")
-    eval_rows, empty_anom = _build_anomalous_rows(d1_rows + d3_rows + d7_rows, max_decode)
+    logger.info("=== Building held-out anomalous evaluation sample (D1 + D3 + D7 + D6, D3/D7 URL-stripped) ===")
+    eval_rows, empty_anom = _build_anomalous_rows(d1_rows + d3_rows + d7_rows + d6_rows, max_decode)
     by_source: dict[str, int] = {}
     for r in eval_rows:
         by_source[r["source"]] = by_source.get(r["source"], 0) + 1

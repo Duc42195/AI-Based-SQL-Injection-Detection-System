@@ -38,6 +38,7 @@ import joblib
 import numpy as np
 import pandas as pd
 
+from src.models.branch1_loader import load_branch1_artifacts
 from src.models.branch2_anomaly import AnomalyDetector
 from src.models.branch3_features import (
     BRANCH1_LABEL_ORDER,
@@ -56,11 +57,11 @@ from attack_simulator import (
 logger = get_logger(__name__)
 
 
-def _load_branch1(models_dir: Path, version: str) -> tuple:
-    """Load the Branch 1 vectorizer + classifier."""
+def _load_branch1(models_dir: Path, version: str, cfg=None) -> tuple:
+    """Load the Branch 1 vectorizer + classifier (sklearn or DistilBERT)."""
     model_dir = models_dir / version
-    vectorizer = joblib.load(model_dir / "vectorizer.joblib")
-    clf = joblib.load(model_dir / "model.joblib")
+    distilbert_cfg = cfg.get_path("branch1_supervised.distilbert", {}) if cfg else {}
+    vectorizer, clf = load_branch1_artifacts(model_dir, distilbert_cfg)
     logger.info("Loaded Branch 1 model from %s", model_dir)
     return vectorizer, clf
 
@@ -296,7 +297,7 @@ def main() -> None:
     rows = build_sessions(cfg, df_train, rng)
     logger.info("Generated %d rows across %d sessions", len(rows), len({r["session_id"] for r in rows}))
 
-    vectorizer, clf = _load_branch1(models_dir, cfg.get_path("branch1_supervised.active_version", "branch1_v1"))
+    vectorizer, clf = _load_branch1(models_dir, cfg.get_path("branch1_supervised.active_version", "branch1_v1"), cfg)
     detector = _load_branch2(models_dir, cfg.get_path("branch2_anomaly.active_version", "branch2_v1"))
     feature_names = list(
         cfg.get_path("branch2_anomaly.features", [

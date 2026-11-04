@@ -43,15 +43,12 @@ Run:  uv run python train/run_cl_scenario_experiment.py
 from __future__ import annotations
 
 import json
-import time
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
 
 import numpy as np
 import pandas as pd
-from sklearn.feature_extraction.text import TfidfVectorizer
-from sklearn.linear_model import LogisticRegression
 
 from src.continual_learning.gate import (
     ModelEvaluation,
@@ -59,7 +56,9 @@ from src.continual_learning.gate import (
     compute_evaluation,
     evaluate_gate,
 )
+from src.models.branch1_loader import load_branch1_artifacts, train_distilbert
 from src.models.branch2_anomaly import AnomalyDetector
+from src.preprocessing.multiclass_tagger import LABEL_NAMES
 from src.monitoring.drift import (
     ReferenceBins,
     detect_trigger,
@@ -81,35 +80,55 @@ COLUMNS = ["id", "query_raw", "query_canonical", "label", "label_name"]
 # --------------------------------------------------------------------------- #
 # Branch 1 model
 # --------------------------------------------------------------------------- #
-class Classifier:
-    """TF-IDF + logistic regression, matching the production Branch-1 path."""
+_NAME_TO_ID = {name: i for i, name in LABEL_NAMES.items()}
 
-    def __init__(self, tfidf_cfg: dict, seed: int) -> None:
-        self._vectorizer = TfidfVectorizer(
-            analyzer=tfidf_cfg["analyzer"],
-            ngram_range=(tfidf_cfg["ngram_min"], tfidf_cfg["ngram_max"]),
-            max_features=tfidf_cfg["max_features"],
-        )
-        self._clf = LogisticRegression(max_iter=1000, random_state=seed)
+
+class Classifier:
+    """DistilBERT fine-tune, matching the production Branch-1 path.
+
+    Each ``fit()`` call saves a fresh Hugging Face model to ``model_dir`` and
+    immediately reloads it via ``load_branch1_artifacts`` (the same
+    architecture-agnostic loader ``deploy.registry`` uses), rather than
+    keeping the raw model object around - so this experiment exercises
+    exactly the save/load path the deployed system does, not a shortcut.
+    """
+
+    def __init__(self, model_dir: Path, distilbert_cfg: dict, seed: int) -> None:
+        self._model_dir = Path(model_dir)
+        self._distilbert_cfg = distilbert_cfg
+        self._seed = seed
+        self._vectorizer = None
+        self._clf = None
 
     def fit(self, texts: pd.Series, labels: pd.Series) -> float:
-        started = time.perf_counter()
-        matrix = self._vectorizer.fit_transform(texts.astype(str))
-        self._clf.fit(matrix, labels.to_numpy())
-        return time.perf_counter() - started
+        label_ids = [_NAME_TO_ID[name] for name in labels]
+        metrics = train_distilbert(
+            texts.astype(str).tolist(),
+            label_ids,
+            self._model_dir,
+            num_classes=len(LABEL_NAMES),
+            distilbert_cfg=self._distilbert_cfg,
+            seed=self._seed,
+        )
+        self._vectorizer, self._clf = load_branch1_artifacts(self._model_dir, self._distilbert_cfg)
+        return metrics["train_time_s"]
 
     def predict(self, texts: pd.Series) -> np.ndarray:
-        return self._clf.predict(self._vectorizer.transform(texts.astype(str)))
+        ids = self._clf.predict(texts.astype(str).tolist())
+        return np.array([LABEL_NAMES[int(i)] for i in ids])
 
     def predict_with_confidence(self, texts: pd.Series) -> tuple[np.ndarray, np.ndarray]:
-        matrix = self._vectorizer.transform(texts.astype(str))
-        probabilities = self._clf.predict_proba(matrix)
+        probabilities = self._clf.predict_proba(texts.astype(str).tolist())
         indices = probabilities.argmax(axis=1)
-        return self._clf.classes_[indices], probabilities.max(axis=1)
+        classes = np.asarray(self._clf.classes_)
+        labels = np.array([LABEL_NAMES[int(c)] for c in classes[indices]])
+        return labels, probabilities.max(axis=1)
 
 
-def train_model(data: pd.DataFrame, tfidf_cfg: dict, seed: int, *, name: str) -> Classifier:
-    model = Classifier(tfidf_cfg, seed)
+def train_model(
+    data: pd.DataFrame, model_dir: Path, distilbert_cfg: dict, seed: int, *, name: str
+) -> Classifier:
+    model = Classifier(model_dir, distilbert_cfg, seed)
     duration = model.fit(data["query_canonical"], data["label_name"])
     logger.info(
         "Trained %-22s on %s rows (%d classes) in %.1fs",
@@ -355,7 +374,8 @@ def main() -> None:
     seed = int(cfg.get_path("cl_scenario.seed", 42))
     held_out = str(cfg.get_path("cl_scenario.held_out_class", "union_based"))
     HELD_OUT_CLASS_NAME = held_out
-    tfidf_cfg = dict(cfg.get_path("branch1_supervised.tfidf"))
+    distilbert_cfg = dict(cfg.get_path("branch1_supervised.distilbert"))
+    model_dirs = artifacts / "tmp_models"
     window_size = int(cfg.get_path("cl_scenario.stream.window_size", 1000))
     psi_bins = int(cfg.get_path("mlops.drift.psi_bins", 10))
     threshold = float(cfg.get_path("monitoring.psi_alert_threshold", 0.2))
@@ -385,7 +405,7 @@ def main() -> None:
     }}
 
     # ── Champion M0: trained on Base, never sees the held-out class ────────
-    m0 = train_model(base_train, tfidf_cfg, seed, name="M0 (champion@1.0)")
+    m0 = train_model(base_train, model_dirs / "m0", distilbert_cfg, seed, name="M0 (champion@1.0)")
     eval_m0_known = evaluate_on(
         m0, golden_known, model_version="M0", data_version="1.0"
     )
@@ -449,7 +469,7 @@ def main() -> None:
     pool_v2 = pd.concat([base_train[COLUMNS], confirmed_pool], ignore_index=True).drop_duplicates(
         subset="query_canonical"
     )
-    m1 = train_model(pool_v2, tfidf_cfg, seed, name="M1 (candidate@2.0, major bump)")
+    m1 = train_model(pool_v2, model_dirs / "m1", distilbert_cfg, seed, name="M1 (candidate@2.0, major bump)")
     eval_m1 = evaluate_on(m1, golden, model_version="M1", data_version="2.0")
     logger.info(
         "M1 on full golden: F1-macro=%.4f FPR=%.4f recall[%s]=%.4f",
@@ -494,7 +514,9 @@ def main() -> None:
         n=min(len(confirmed_pool), len(base_train)), random_state=seed
     )
     pool_control = pd.concat([base_train[COLUMNS], control_extra], ignore_index=True)
-    m_control = train_model(pool_control, tfidf_cfg, seed, name="control (same rows, no new class)")
+    m_control = train_model(
+        pool_control, model_dirs / "m_control", distilbert_cfg, seed, name="control (same rows, no new class)"
+    )
     eval_control = evaluate_on(m_control, golden, model_version="control", data_version="1.1")
     results["act1_ablation_control"] = {
         "extra_rows": len(control_extra),
@@ -551,7 +573,7 @@ def main() -> None:
     pool_v21 = pd.concat([pool_v2, balanced_q4], ignore_index=True).drop_duplicates(
         subset="query_canonical"
     )
-    m2 = train_model(pool_v21, tfidf_cfg, seed, name="M2 (candidate@2.1, minor bump)")
+    m2 = train_model(pool_v21, model_dirs / "m2", distilbert_cfg, seed, name="M2 (candidate@2.1, minor bump)")
     eval_m2 = evaluate_on(m2, golden, model_version="M2", data_version="2.1")
     champion_eval_for_minor = eval_m1 if m1_is_champion else evaluate_on(
         champion_after_q3, golden, model_version="M0", data_version="2.0"

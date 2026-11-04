@@ -34,7 +34,7 @@ def run_branch3(queries: list[str]) -> Branch3Response:
         is_attack=result["is_attack"],
         detail=(
             f"content_check={result['fires_content']} (attack_prob={result['attack_prob']:.3f}), "
-            f"behavior_check={result['fires_behavior']} (mean_score={result['mean_score']:.3f}, "
+            f"behavior_check={result['fires_behavior']} (median_score={result['median_score']:.3f}, "
             f"fraction_above={result['fraction_above']:.3f})"
         ),
     )

@@ -58,7 +58,7 @@ def main() -> None:
     test_sessions = sessions_to_correlator_inputs(test_df)
     logger.info("Train sessions=%d  Test sessions=%d", len(train_sessions), len(test_sessions))
 
-    vectorizer, clf = _load_branch1(models_dir, cfg.get_path("branch1_supervised.active_version", "branch1_v1"))
+    vectorizer, clf = _load_branch1(models_dir, cfg.get_path("branch1_supervised.active_version", "branch1_v1"), cfg)
     b2_detector = _load_branch2(models_dir, cfg.get_path("branch2_anomaly.active_version", "branch2_v1"))
     # Placeholder pre-calibration only — calibrate() below overwrites this with
     # a session-level value picked from TRAIN data (see SessionCorrelator.calibrate
@@ -98,7 +98,7 @@ def main() -> None:
         "calibration": {
             "content_threshold": correlator.content_threshold,
             "per_query_threshold": correlator.per_query_threshold,
-            "mean_threshold": correlator.mean_threshold,
+            "median_threshold": correlator.median_threshold,
             "fraction_threshold": correlator.fraction_threshold,
         },
         "train_sessions": len(train_sessions),
